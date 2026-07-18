@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+    <color name="vertice_background">
+        #0B0D10
+    </color>
+
+    <color name="vertice_surface">
+        #12161B
+    </color>
+
+    <color name="vertice_surface_elevated">
+        #191F26
+    </color>
+
+    <color name="vertice_border">
+        #2A3139
+    </color>
+
+    <color name="vertice_accent">
+        #C9F27C
+    </color>
+
+    <color name="vertice_text">
+        #F1F3F5
+    </color>
+
+    <color name="vertice_muted">
+        #8B949E
+    </color>
+
+</resources>
