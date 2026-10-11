@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 220" width="800" height="440" role="img" aria-label="VÉRTICE">
+  <rect width="400" height="220" fill="#0B0D10"/>
+  <g transform="translate(152 28)">
+    <rect x="0.5" y="0.5" width="95" height="95" rx="25" fill="#12161B" stroke="#2A3139"/>
+    <path d="M31 30 L47.5 70 L64 30" fill="none" stroke="#C9F27C" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="64" cy="30" r="4.5" fill="#F1F3F5"/>
+  </g>
+  <text x="200" y="180" text-anchor="middle" fill="#F1F3F5"
+        font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="600"
+        letter-spacing="10">VÉRTICE</text>
+</svg>

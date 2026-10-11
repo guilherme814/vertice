@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- windowBackground evita o flash claro na abertura a frio.
+         Barras transparentes: a Activity usa enableEdgeToEdge(). -->
+    <style name="Theme.Vertice" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/vertice_background</item>
+        <item name="android:colorBackground">@color/vertice_background</item>
+        <item name="android:textColorPrimary">@color/vertice_text</item>
+        <item name="android:textColorSecondary">@color/vertice_muted</item>
+        <item name="android:colorAccent">@color/vertice_accent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>
