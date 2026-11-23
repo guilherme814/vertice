@@ -57,8 +57,13 @@ fun HomeScreen(
     Box(
         Modifier
             .fillMaxSize()
-            // Véu leve sobre o papel de parede para o texto continuar legível.
-            .background(Brush.verticalGradient(listOf(Color(0x66090D14), Color(0x99090D14))))
+            // Véu leve sobre o papel de parede DO APARELHO (que não controlamos) para o texto
+            // continuar legível. Os papéis próprios já são desenhados escuros.
+            .then(
+                if (ui.wallpaper.isSystem)
+                    Modifier.background(Brush.verticalGradient(listOf(Color(0x66090D14), Color(0x99090D14))))
+                else Modifier
+            )
             .pointerInput(Unit) { detectTapGestures(onLongPress = { onOpenSheet() }) }
             .pointerInput(Unit) {
                 var total = 0f

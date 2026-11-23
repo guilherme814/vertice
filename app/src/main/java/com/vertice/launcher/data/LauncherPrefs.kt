@@ -12,6 +12,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.PerformanceProfile
+import com.vertice.launcher.core.Wallpaper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -29,7 +30,8 @@ data class Prefs(
     val categoryOverrides: Map<String, String> = emptyMap(),
     val clockStyle: ClockStyle = ClockStyle.Classic,
     val clockFormat: ClockFormat = ClockFormat.System,
-    val showDate: Boolean = true
+    val showDate: Boolean = true,
+    val wallpaper: Wallpaper = Wallpaper.System
 )
 
 class LauncherPrefs(context: Context) {
@@ -44,6 +46,7 @@ class LauncherPrefs(context: Context) {
         val clockStyle = stringPreferencesKey("clock_style")
         val clockFormat = stringPreferencesKey("clock_format")
         val showDate = booleanPreferencesKey("show_date")
+        val wallpaper = stringPreferencesKey("wallpaper")
     }
 
     val prefs: Flow<Prefs> = store.data.map { p ->
@@ -57,7 +60,8 @@ class LauncherPrefs(context: Context) {
             }.toMap(),
             clockStyle = ClockStyle.fromName(p[K.clockStyle]),
             clockFormat = ClockFormat.fromName(p[K.clockFormat]),
-            showDate = p[K.showDate] ?: true
+            showDate = p[K.showDate] ?: true,
+            wallpaper = Wallpaper.fromName(p[K.wallpaper])
         )
     }.distinctUntilChanged()
 
@@ -87,6 +91,8 @@ class LauncherPrefs(context: Context) {
     suspend fun setClockFormat(format: ClockFormat) { store.edit { it[K.clockFormat] = format.name } }
 
     suspend fun setShowDate(show: Boolean) { store.edit { it[K.showDate] = show } }
+
+    suspend fun setWallpaper(w: Wallpaper) { store.edit { it[K.wallpaper] = w.name } }
 
     suspend fun seed(profile: PerformanceProfile, dock: List<String>) {
         store.edit {

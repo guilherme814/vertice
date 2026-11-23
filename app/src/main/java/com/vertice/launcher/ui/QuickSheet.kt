@@ -1,6 +1,7 @@
 package com.vertice.launcher.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,8 +41,10 @@ import com.vertice.launcher.HomeUi
 import com.vertice.launcher.LauncherViewModel
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
+import com.vertice.launcher.core.Wallpaper
 
 enum class SheetTab(val label: String) {
+    Wallpaper("Papel de parede"),
     Clock("Relógio")
 }
 
@@ -52,7 +56,7 @@ enum class SheetTab(val label: String) {
 fun QuickSheet(
     vm: LauncherViewModel,
     ui: HomeUi,
-    initialTab: SheetTab = SheetTab.Clock,
+    initialTab: SheetTab = SheetTab.Wallpaper,
     onClose: () -> Unit
 ) {
     var tab by remember { mutableStateOf(initialTab) }
@@ -94,6 +98,7 @@ fun QuickSheet(
             Spacer(Modifier.height(14.dp))
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 when (tab) {
+                    SheetTab.Wallpaper -> WallpaperTab(vm, ui)
                     SheetTab.Clock -> ClockTab(vm, ui)
                 }
             }
@@ -136,5 +141,49 @@ private fun ClockTab(vm: LauncherViewModel, ui: HomeUi) {
     Text(
         "Toque no relógio para abrir os alarmes e na data para abrir a agenda.",
         color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp)
+    )
+}
+
+@Composable
+private fun WallpaperTab(vm: LauncherViewModel, ui: HomeUi) {
+    SectionLabel("Escolha um papel de parede")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Wallpaper.entries.forEach { w ->
+            val selected = ui.wallpaper == w
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.clip(RoundedCornerShape(18.dp)).clickable { vm.setWallpaper(w) }
+            ) {
+                Box(
+                    Modifier
+                        .size(width = 88.dp, height = 156.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .border(
+                            if (selected) 2.5.dp else 1.dp,
+                            if (selected) Mint else Muted.copy(alpha = 0.3f),
+                            RoundedCornerShape(18.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (w.isSystem) {
+                        Box(Modifier.fillMaxSize().background(PanelSoft), contentAlignment = Alignment.Center) {
+                            Text("▣", color = Muted, fontSize = 26.sp)
+                        }
+                    } else {
+                        WallpaperBackground(w, Modifier.fillMaxSize())
+                    }
+                }
+                Text(
+                    w.label, color = if (selected) Mint else Snow, fontSize = 12.sp,
+                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                    modifier = Modifier.padding(top = 6.dp, bottom = 2.dp)
+                )
+            }
+        }
+    }
+    Text(
+        "Os papéis são desenhados pelo app (sem imagens), então não pesam. " +
+            "\"Do aparelho\" usa o papel de parede que você já tem no Android.",
+        color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 10.dp)
     )
 }

@@ -8,6 +8,7 @@ import com.vertice.launcher.core.AppCategory
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.PerformanceProfile
+import com.vertice.launcher.core.Wallpaper
 import com.vertice.launcher.data.AppEntry
 import com.vertice.launcher.data.AppRepository
 import com.vertice.launcher.data.IconCache
@@ -31,7 +32,8 @@ data class HomeUi(
     val manualCategories: Set<String> = emptySet(),
     val clockStyle: ClockStyle = ClockStyle.Classic,
     val clockFormat: ClockFormat = ClockFormat.System,
-    val showDate: Boolean = true
+    val showDate: Boolean = true,
+    val wallpaper: Wallpaper = Wallpaper.System
 ) {
     fun categoryOf(app: AppEntry): AppCategory = categories[app.key] ?: AppCategory.default
 }
@@ -60,7 +62,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             manualCategories = p.categoryOverrides.keys,
             clockStyle = p.clockStyle,
             clockFormat = p.clockFormat,
-            showDate = p.showDate
+            showDate = p.showDate,
+            wallpaper = p.wallpaper
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, HomeUi())
 
@@ -110,6 +113,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun setClockFormat(format: ClockFormat) { viewModelScope.launch { prefs.setClockFormat(format) } }
 
     fun setShowDate(show: Boolean) { viewModelScope.launch { prefs.setShowDate(show) } }
+
+    fun setWallpaper(w: Wallpaper) { viewModelScope.launch { prefs.setWallpaper(w) } }
 
     fun openClock() = repo.openClockApp()
 

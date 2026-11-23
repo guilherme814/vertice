@@ -32,6 +32,7 @@ import com.vertice.launcher.ui.AppDrawer
 import com.vertice.launcher.ui.HomeScreen
 import com.vertice.launcher.ui.QuickSheet
 import com.vertice.launcher.ui.VerticeTheme
+import com.vertice.launcher.ui.WallpaperBackground
 import kotlin.math.roundToInt
 
 /** A tela inicial do aparelho. `singleTask`: o botão Home volta aqui em vez de empilhar cópias. */
@@ -68,6 +69,7 @@ class LauncherActivity : ComponentActivity() {
 
             VerticeTheme {
                 Box(Modifier.fillMaxSize()) {
+                    if (!ui.wallpaper.isSystem) WallpaperBackground(ui.wallpaper, Modifier.fillMaxSize())
                     HomeScreen(
                         vm = vm, ui = ui, onLaunch = launch,
                         onOpenDrawer = { drawerOpen = true }, onOpenSheet = { sheetOpen = true }
