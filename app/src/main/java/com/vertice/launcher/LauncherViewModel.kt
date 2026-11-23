@@ -4,6 +4,7 @@ import android.app.Application
 import android.os.Bundle
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.vertice.launcher.core.AppCategory
 import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.data.AppEntry
 import com.vertice.launcher.data.AppRepository
@@ -21,8 +22,14 @@ data class HomeUi(
     val loading: Boolean = true,
     val profile: PerformanceProfile = PerformanceProfile.Balanced,
     val apps: List<AppEntry> = emptyList(),
-    val dock: List<AppEntry> = emptyList()
-)
+    val dock: List<AppEntry> = emptyList(),
+    /** Categoria final de cada app (chave do app -> categoria). */
+    val categories: Map<String, AppCategory> = emptyMap(),
+    /** Chaves com categoria definida pelo usuário (para oferecer "voltar ao automático"). */
+    val manualCategories: Set<String> = emptySet()
+) {
+    fun categoryOf(app: AppEntry): AppCategory = categories[app.key] ?: AppCategory.default
+}
 
 class LauncherViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -40,7 +47,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             profile = profile,
             apps = apps,
             // Apps desinstalados somem do dock sozinhos; a chave salva é ignorada.
-            dock = p.dock.mapNotNull { byKey[it] }
+            dock = p.dock.mapNotNull { byKey[it] },
+            categories = apps.associate { app ->
+                app.key to (AppCategory.fromName(p.categoryOverrides[app.key])
+                    ?: AppCategory.detect(app.declaredCategory, app.packageName))
+            },
+            manualCategories = p.categoryOverrides.keys
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, HomeUi())
 
@@ -78,6 +90,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             }
             prefs.setDock(next)
         }
+    }
+
+    /** `category = null` volta a classificação automática do app. */
+    fun setCategory(app: AppEntry, category: AppCategory?) {
+        viewModelScope.launch { prefs.setCategory(app.key, category?.name) }
     }
 
     fun setProfile(profile: PerformanceProfile) {

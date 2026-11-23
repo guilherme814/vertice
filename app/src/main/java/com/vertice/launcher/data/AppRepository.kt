@@ -74,6 +74,7 @@ class AppRepository(context: Context) {
                     component = component,
                     label = info.label?.toString() ?: component.packageName,
                     installTime = info.firstInstallTime,
+                    declaredCategory = info.applicationInfo.category,
                     user = user,
                     info = info
                 )

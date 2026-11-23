@@ -13,6 +13,8 @@ class AppEntry(
     val component: ComponentName,
     val label: String,
     val installTime: Long,
+    /** Categoria declarada pelo app (ApplicationInfo.category) ou -1. */
+    val declaredCategory: Int,
     val user: UserHandle,
     val info: LauncherActivityInfo
 ) {

@@ -8,16 +8,25 @@ Meta de longo prazo: visual inspirado em HyperOS 4 / iOS 28, leve e muito person
 | Fase | Foco | Estado |
 |------|------|--------|
 | 1 | **Construção**: launcher funcional, estrutura pronta para crescer | feita |
-| 2 | Design: tema, ícones, vidro, tipografia, animações | próxima |
-| 3 | Personalização: grade, dock, gestos, ícones, backup | — |
+| 2 | **Funcionalidades**, uma por vez (categorias, páginas, ocultar/renomear, gestos, ajustes, backup) | em andamento |
+| 3 | **Interface**: papel de parede próprio, vidro, ícones, tipografia e personalização minuciosa | — |
 | 4 | Ajustes Premium e perfis de desempenho completos | — |
+
+### Fase 2 — andamento
+- [x] 2.1 Categorias de apps na gaveta (automáticas + correção manual)
+- [ ] 2.2 Páginas na tela inicial e reorganizar apps
+- [ ] 2.3 Ocultar e renomear apps
+- [ ] 2.4 Gestos (notificações, busca, duplo toque)
+- [ ] 2.5 Tela de ajustes (perfil de desempenho, grade, dock)
+- [ ] 2.6 Backup e restauração
 
 ## Fase 1 — o que existe
 - Registra-se como app **HOME** (e continua aparecendo como app comum).
 - Lista de apps via `LauncherApps` (inclui perfil de trabalho) e **atualiza sozinha** ao instalar/remover — sem polling.
 - Tela inicial: relógio, data, bateria (por broadcast) e dock persistente (até 5 apps).
 - Gaveta (deslizar para cima ou botão) com busca por nome ou pacote, sem diferenciar acentos.
-- Segurar um app: informações, colocar/tirar do dock, desinstalar.
+- Segurar um app: informações, colocar/tirar do dock, mudar categoria, desinstalar.
+- Categorias (2.1): classificação automática (categoria declarada pelo app, com heurística por pacote quando não declara) e correção manual salva; chips de filtro na gaveta; a busca vale para todas.
 - Botão Home fecha a gaveta; Voltar também.
 - **Perfis de desempenho** (Ultra Lite / Equilibrado / Premium): hoje controlam animações e o teto do cache de ícones; o perfil inicial vem do hardware (`isLowRamDevice`). Futuras fases penduram blur, vidro e taxa de quadros no mesmo perfil.
 - Cache de ícones limitado por **bytes**, para consumo de memória previsível.

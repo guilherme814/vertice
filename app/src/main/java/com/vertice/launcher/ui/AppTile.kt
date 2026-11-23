@@ -9,9 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,6 +38,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vertice.launcher.LauncherViewModel
+import com.vertice.launcher.core.AppCategory
 import com.vertice.launcher.data.AppEntry
 import kotlin.math.roundToInt
 
@@ -65,6 +69,7 @@ fun AppTile(
     modifier: Modifier = Modifier
 ) {
     var menu by remember { mutableStateOf(false) }
+    var picking by remember { mutableStateOf(false) }
     var rootPos by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
     var boxSize by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
     val haptic = LocalHapticFeedback.current
@@ -103,6 +108,8 @@ fun AppTile(
             }
         }
 
+        if (picking) CategoryDialog(app, vm) { picking = false }
+
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             DropdownMenuItem(
                 text = { Text("Informações do app") },
@@ -113,9 +120,47 @@ fun AppTile(
                 onClick = { menu = false; vm.toggleDock(app) }
             )
             DropdownMenuItem(
+                text = { Text("Mudar categoria") },
+                onClick = { menu = false; picking = true }
+            )
+            DropdownMenuItem(
                 text = { Text("Desinstalar") },
                 onClick = { menu = false; vm.uninstall(app) }
             )
         }
     }
+}
+
+/** Escolha de categoria: uma das fixas ou "Automática" (volta à classificação do app). */
+@Composable
+private fun CategoryDialog(app: AppEntry, vm: LauncherViewModel, onDismiss: () -> Unit) {
+    val ui = vm.ui.value
+    val current = ui.categoryOf(app)
+    val manual = app.key in ui.manualCategories
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(app.label) },
+        text = {
+            Column {
+                AppCategory.entries.forEach { c ->
+                    CategoryRow(c.label, selected = manual && c == current) {
+                        vm.setCategory(app, c); onDismiss()
+                    }
+                }
+                CategoryRow("Automática", selected = !manual) {
+                    vm.setCategory(app, null); onDismiss()
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Fechar") } }
+    )
+}
+
+@Composable
+private fun CategoryRow(text: String, selected: Boolean, onClick: () -> Unit) {
+    Text(
+        (if (selected) "●  " else "○  ") + text,
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 11.dp),
+        fontSize = 15.sp
+    )
 }

@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -25,11 +27,13 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vertice.launcher.HomeUi
 import com.vertice.launcher.LauncherViewModel
+import com.vertice.launcher.core.AppCategory
 import com.vertice.launcher.data.AppEntry
 import java.text.Normalizer
 
@@ -56,11 +61,24 @@ fun AppDrawer(
     onClose: () -> Unit
 ) {
     var query by remember { mutableStateOf("") }
-    // Busca ignora acentos e maiúsculas; também acha pelo nome do pacote.
-    val results = remember(query, ui.apps) {
+    // null = "Todos". Guardado por nome para sobreviver a rotação/recriação.
+    var selectedName by rememberSaveable { mutableStateOf<String?>(null) }
+    val counts = remember(ui.apps, ui.categories) {
+        AppCategory.entries.associateWith { c -> ui.apps.count { ui.categoryOf(it) == c } }
+            .filterValues { it > 0 }
+    }
+    // Se a categoria escolhida esvaziou (app movido/desinstalado), volta para "Todos".
+    val selected = AppCategory.fromName(selectedName)?.takeIf { it in counts }
+    val searching = query.isNotBlank()
+
+    // Busca ignora acentos e maiúsculas, acha também pelo pacote e vale para TODAS as categorias.
+    val results = remember(query, selected, ui.apps, ui.categories) {
         val q = query.fold().trim()
-        if (q.isEmpty()) ui.apps
-        else ui.apps.filter { it.label.fold().contains(q) || it.packageName.contains(q, ignoreCase = true) }
+        when {
+            q.isNotEmpty() -> ui.apps.filter { it.label.fold().contains(q) || it.packageName.contains(q, ignoreCase = true) }
+            selected != null -> ui.apps.filter { ui.categoryOf(it) == selected }
+            else -> ui.apps
+        }
     }
 
     Column(
@@ -98,6 +116,19 @@ fun AppDrawer(
                 focusedTextColor = Snow, unfocusedTextColor = Snow, cursorColor = Mint
             )
         )
+        if (!searching && counts.isNotEmpty()) {
+            LazyRow(
+                modifier = Modifier.padding(top = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item(key = "all") {
+                    CategoryChip("Todos  ${ui.apps.size}", selected == null) { selectedName = null }
+                }
+                items(counts.entries.toList(), key = { it.key.name }) { (category, n) ->
+                    CategoryChip("${category.label}  $n", selected == category) { selectedName = category.name }
+                }
+            }
+        }
         Text(
             if (ui.loading) "Carregando..." else "${results.size} aplicativos",
             color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
@@ -123,5 +154,22 @@ fun AppDrawer(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun CategoryChip(text: String, selected: Boolean, onClick: () -> Unit) {
+    Surface(
+        color = if (selected) Mint else PanelSoft,
+        shape = RoundedCornerShape(50),
+        modifier = Modifier.clip(RoundedCornerShape(50)).clickable(onClick = onClick)
+    ) {
+        Text(
+            text,
+            color = if (selected) Ink else Snow,
+            fontSize = 12.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+        )
     }
 }
