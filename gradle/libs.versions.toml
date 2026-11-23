@@ -1,25 +1,12 @@
+# Só o que o projeto usa hoje. Cada fase acrescenta o que precisar (Room, WorkManager, etc.).
 [versions]
 androidGradlePlugin = "8.7.3"
 kotlin = "2.0.21"
-kotlinComposePlugin = "2.0.21"
 composeBom = "2025.01.00"
 activityCompose = "1.10.0"
-lifecycleRuntimeCompose = "2.8.7"
-lifecycleViewmodelCompose = "2.8.7"
-navigationCompose = "2.8.4"
-hilt = "2.51"
-hiltNavigationCompose = "1.2.0"
-room = "2.6.1"
+lifecycle = "2.8.7"
 datastore = "1.1.1"
-workManager = "2.9.1"
-ktor = "3.0.1"
-kotlinSerialization = "1.6.3"
-coil = "2.6.0"
-tink = "1.10.0"
-junit = "4.13.2"
-androidxJunit = "1.2.1"
-espresso = "3.6.1"
-kotlinxCoroutines = "1.8.0"
+coroutines = "1.8.0"
 
 [libraries]
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
@@ -27,50 +14,17 @@ compose-ui = { module = "androidx.compose.ui:ui" }
 compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
-compose-material3 = { module = "androidx.compose.material3:material3" }
 compose-foundation = { module = "androidx.compose.foundation:foundation" }
-compose-runtime = { module = "androidx.compose.runtime:runtime" }
+compose-material3 = { module = "androidx.compose.material3:material3" }
 
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
-
-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
-
-hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
-hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
-
-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
+lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
 
 datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
-
-workmanager-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workManager" }
-
-ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
-ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
-ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
-ktor-client-serialization = { module = "io.ktor:ktor-client-serialization", version.ref = "ktor" }
-ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
-
-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinSerialization" }
-kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
-kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
-
-coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
-
-tink-android = { module = "com.google.crypto.tink:tink-android", version.ref = "tink" }
-
-junit4 = { module = "junit:junit", version.ref = "junit" }
-androidx-junit = { module = "androidx.test.ext:junit-ktx", version.ref = "androidxJunit" }
-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
-android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinComposePlugin" }
-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
