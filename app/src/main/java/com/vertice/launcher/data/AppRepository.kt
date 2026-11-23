@@ -109,6 +109,21 @@ class AppRepository(context: Context) {
         }
     }
 
+    /** Toque no relógio: abre o app de relógio/alarmes do aparelho (se houver). */
+    fun openClockApp() = startSafely(Intent(android.provider.AlarmClock.ACTION_SHOW_ALARMS))
+
+    /** Toque na data: abre a agenda do aparelho (se houver). */
+    fun openCalendarApp() =
+        startSafely(Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_CALENDAR))
+
+    private fun startSafely(intent: Intent) {
+        try {
+            appContext.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        } catch (_: Exception) {
+            // Sem app para essa ação: não há nada a fazer.
+        }
+    }
+
     /** Apps padrão para preencher o dock na primeira execução (telefone, mensagens, navegador, câmera). */
     fun defaultDockPackages(): List<String> {
         val pm = appContext.packageManager

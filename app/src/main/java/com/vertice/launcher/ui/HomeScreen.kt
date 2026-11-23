@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,10 +26,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -41,31 +42,24 @@ import androidx.compose.foundation.clickable
 import com.vertice.launcher.HomeUi
 import com.vertice.launcher.LauncherViewModel
 import com.vertice.launcher.data.AppEntry
-import kotlinx.coroutines.delay
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun HomeScreen(
     vm: LauncherViewModel,
     ui: HomeUi,
     onLaunch: (AppEntry, androidx.compose.ui.geometry.Rect?) -> Unit,
-    onOpenDrawer: () -> Unit
+    onOpenDrawer: () -> Unit,
+    onOpenSheet: () -> Unit
 ) {
     val now by rememberNow()
     val battery by rememberBatteryPercent()
-    val locale = Locale.getDefault()
-    val time = remember(now) { SimpleDateFormat("HH:mm", locale).format(Date(now)) }
-    val date = remember(now) {
-        SimpleDateFormat("EEEE, d 'de' MMMM", locale).format(Date(now)).replaceFirstChar { it.uppercase() }
-    }
 
     Box(
         Modifier
             .fillMaxSize()
             // Véu leve sobre o papel de parede para o texto continuar legível.
             .background(Brush.verticalGradient(listOf(Color(0x66090D14), Color(0x99090D14))))
+            .pointerInput(Unit) { detectTapGestures(onLongPress = { onOpenSheet() }) }
             .pointerInput(Unit) {
                 var total = 0f
                 detectVerticalDragGestures(
@@ -83,6 +77,16 @@ fun HomeScreen(
             Column {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("VÉRTICE", color = Mint, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Surface(
+                        color = PanelSoft, shape = CircleShape,
+                        modifier = Modifier.clip(CircleShape).clickable { onOpenSheet() }
+                    ) {
+                        Text(
+                            "✦  Personalizar", color = Snow, fontSize = 12.sp,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                        )
+                    }
                     Surface(color = PanelSoft, shape = CircleShape) {
                         Text(
                             "◉  " + (battery?.let { "$it%" } ?: "—"),
@@ -90,10 +94,13 @@ fun HomeScreen(
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                         )
                     }
+                    }
                 }
                 Spacer(Modifier.height(36.dp))
-                Text(time, color = Snow, fontSize = 64.sp, lineHeight = 68.sp, fontWeight = FontWeight.Light)
-                Text(date, color = Muted, fontSize = 15.sp)
+                ClockWidget(
+                    now = now, style = ui.clockStyle, format = ui.clockFormat, showDate = ui.showDate,
+                    onClockClick = { vm.openClock() }, onDateClick = { vm.openCalendar() }
+                )
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -128,15 +135,6 @@ fun HomeScreen(
                 }
             }
         }
-    }
-}
-
-/** Hora atual, atualizada só na virada do minuto. */
-@Composable
-private fun rememberNow(): State<Long> = produceState(System.currentTimeMillis()) {
-    while (true) {
-        value = System.currentTimeMillis()
-        delay(60_000L - value % 60_000L + 40L)
     }
 }
 

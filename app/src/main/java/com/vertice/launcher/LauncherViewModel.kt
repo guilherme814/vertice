@@ -5,6 +5,8 @@ import android.os.Bundle
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.vertice.launcher.core.AppCategory
+import com.vertice.launcher.core.ClockFormat
+import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.data.AppEntry
 import com.vertice.launcher.data.AppRepository
@@ -26,7 +28,10 @@ data class HomeUi(
     /** Categoria final de cada app (chave do app -> categoria). */
     val categories: Map<String, AppCategory> = emptyMap(),
     /** Chaves com categoria definida pelo usuário (para oferecer "voltar ao automático"). */
-    val manualCategories: Set<String> = emptySet()
+    val manualCategories: Set<String> = emptySet(),
+    val clockStyle: ClockStyle = ClockStyle.Classic,
+    val clockFormat: ClockFormat = ClockFormat.System,
+    val showDate: Boolean = true
 ) {
     fun categoryOf(app: AppEntry): AppCategory = categories[app.key] ?: AppCategory.default
 }
@@ -52,7 +57,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 app.key to (AppCategory.fromName(p.categoryOverrides[app.key])
                     ?: AppCategory.detect(app.declaredCategory, app.packageName))
             },
-            manualCategories = p.categoryOverrides.keys
+            manualCategories = p.categoryOverrides.keys,
+            clockStyle = p.clockStyle,
+            clockFormat = p.clockFormat,
+            showDate = p.showDate
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, HomeUi())
 
@@ -96,6 +104,16 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun setCategory(app: AppEntry, category: AppCategory?) {
         viewModelScope.launch { prefs.setCategory(app.key, category?.name) }
     }
+
+    fun setClockStyle(style: ClockStyle) { viewModelScope.launch { prefs.setClockStyle(style) } }
+
+    fun setClockFormat(format: ClockFormat) { viewModelScope.launch { prefs.setClockFormat(format) } }
+
+    fun setShowDate(show: Boolean) { viewModelScope.launch { prefs.setShowDate(show) } }
+
+    fun openClock() = repo.openClockApp()
+
+    fun openCalendar() = repo.openCalendarApp()
 
     fun setProfile(profile: PerformanceProfile) {
         viewModelScope.launch { prefs.setProfile(profile) }

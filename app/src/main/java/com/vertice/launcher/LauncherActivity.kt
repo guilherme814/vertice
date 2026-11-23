@@ -30,6 +30,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vertice.launcher.data.AppEntry
 import com.vertice.launcher.ui.AppDrawer
 import com.vertice.launcher.ui.HomeScreen
+import com.vertice.launcher.ui.QuickSheet
 import com.vertice.launcher.ui.VerticeTheme
 import kotlin.math.roundToInt
 
@@ -49,10 +50,11 @@ class LauncherActivity : ComponentActivity() {
             val ui by vm.ui.collectAsStateWithLifecycle()
             val view = LocalView.current
             var drawerOpen by remember { mutableStateOf(false) }
+            var sheetOpen by remember { mutableStateOf(false) }
 
             // Botão Home: fecha a gaveta se estiver aberta.
-            LaunchedEffect(homeSignal) { if (homeSignal > 0) drawerOpen = false }
-            BackHandler(enabled = drawerOpen) { drawerOpen = false }
+            LaunchedEffect(homeSignal) { if (homeSignal > 0) { drawerOpen = false; sheetOpen = false } }
+            BackHandler(enabled = drawerOpen || sheetOpen) { drawerOpen = false; sheetOpen = false }
 
             val launch: (AppEntry, Rect?) -> Unit = { app, r ->
                 val options = if (r != null) {
@@ -66,7 +68,10 @@ class LauncherActivity : ComponentActivity() {
 
             VerticeTheme {
                 Box(Modifier.fillMaxSize()) {
-                    HomeScreen(vm = vm, ui = ui, onLaunch = launch, onOpenDrawer = { drawerOpen = true })
+                    HomeScreen(
+                        vm = vm, ui = ui, onLaunch = launch,
+                        onOpenDrawer = { drawerOpen = true }, onOpenSheet = { sheetOpen = true }
+                    )
 
                     // Perfil Ultra Lite: sem animação nenhuma (sem custo de GPU em aparelho fraco).
                     val animate = ui.profile.animations
@@ -76,6 +81,14 @@ class LauncherActivity : ComponentActivity() {
                         exit = if (animate) slideOutVertically { it / 6 } + fadeOut() else ExitTransition.None
                     ) {
                         AppDrawer(vm = vm, ui = ui, onLaunch = launch, onClose = { drawerOpen = false })
+                    }
+
+                    AnimatedVisibility(
+                        visible = sheetOpen,
+                        enter = if (animate) slideInVertically { it / 3 } + fadeIn() else EnterTransition.None,
+                        exit = if (animate) slideOutVertically { it / 3 } + fadeOut() else ExitTransition.None
+                    ) {
+                        QuickSheet(vm = vm, ui = ui, onClose = { sheetOpen = false })
                     }
                 }
             }

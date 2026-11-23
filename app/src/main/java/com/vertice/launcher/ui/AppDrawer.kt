@@ -158,7 +158,7 @@ fun AppDrawer(
 }
 
 @Composable
-private fun CategoryChip(text: String, selected: Boolean, onClick: () -> Unit) {
+fun CategoryChip(text: String, selected: Boolean, onClick: () -> Unit) {
     Surface(
         color = if (selected) Mint else PanelSoft,
         shape = RoundedCornerShape(50),

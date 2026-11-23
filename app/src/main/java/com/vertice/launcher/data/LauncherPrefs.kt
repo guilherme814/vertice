@@ -9,6 +9,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.vertice.launcher.core.ClockFormat
+import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.PerformanceProfile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -24,7 +26,10 @@ data class Prefs(
     val dock: List<String> = emptyList(),
     val seeded: Boolean = false,
     /** Correções manuais: chave do app -> nome da categoria. Vencem a classificação automática. */
-    val categoryOverrides: Map<String, String> = emptyMap()
+    val categoryOverrides: Map<String, String> = emptyMap(),
+    val clockStyle: ClockStyle = ClockStyle.Classic,
+    val clockFormat: ClockFormat = ClockFormat.System,
+    val showDate: Boolean = true
 )
 
 class LauncherPrefs(context: Context) {
@@ -36,6 +41,9 @@ class LauncherPrefs(context: Context) {
         val dock = stringPreferencesKey("dock")
         val seeded = booleanPreferencesKey("seeded")
         val categories = stringSetPreferencesKey("category_overrides")
+        val clockStyle = stringPreferencesKey("clock_style")
+        val clockFormat = stringPreferencesKey("clock_format")
+        val showDate = booleanPreferencesKey("show_date")
     }
 
     val prefs: Flow<Prefs> = store.data.map { p ->
@@ -46,7 +54,10 @@ class LauncherPrefs(context: Context) {
             categoryOverrides = (p[K.categories] ?: emptySet()).mapNotNull { entry ->
                 val i = entry.lastIndexOf('=')
                 if (i <= 0) null else Uri.decode(entry.substring(0, i)) to entry.substring(i + 1)
-            }.toMap()
+            }.toMap(),
+            clockStyle = ClockStyle.fromName(p[K.clockStyle]),
+            clockFormat = ClockFormat.fromName(p[K.clockFormat]),
+            showDate = p[K.showDate] ?: true
         )
     }.distinctUntilChanged()
 
@@ -70,6 +81,12 @@ class LauncherPrefs(context: Context) {
             p[K.categories] = current
         }
     }
+
+    suspend fun setClockStyle(style: ClockStyle) { store.edit { it[K.clockStyle] = style.name } }
+
+    suspend fun setClockFormat(format: ClockFormat) { store.edit { it[K.clockFormat] = format.name } }
+
+    suspend fun setShowDate(show: Boolean) { store.edit { it[K.showDate] = show } }
 
     suspend fun seed(profile: PerformanceProfile, dock: List<String>) {
         store.edit {
