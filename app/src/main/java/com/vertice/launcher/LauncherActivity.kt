@@ -27,6 +27,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.vertice.launcher.core.Nav
+import com.vertice.launcher.core.NavEvent
+import com.vertice.launcher.core.NavState
+import com.vertice.launcher.core.Screen
 import com.vertice.launcher.data.AppEntry
 import com.vertice.launcher.diag.VLog
 import com.vertice.launcher.ui.AppDrawer
@@ -53,12 +57,13 @@ class LauncherActivity : ComponentActivity() {
         setContent {
             val ui by vm.ui.collectAsStateWithLifecycle()
             val view = LocalView.current
-            var drawerOpen by remember { mutableStateOf(false) }
-            var sheetOpen by remember { mutableStateOf(false) }
+            // Quem decide qual tela está à frente é a máquina de estados do domínio (Nav).
+            var nav by remember { mutableStateOf(NavState()) }
+            val dispatch: (NavEvent) -> Unit = { nav = Nav.reduce(nav, it) }
 
-            // Botão Home: fecha a gaveta se estiver aberta.
-            LaunchedEffect(homeSignal) { if (homeSignal > 0) { drawerOpen = false; sheetOpen = false } }
-            BackHandler(enabled = drawerOpen || sheetOpen) { drawerOpen = false; sheetOpen = false }
+            // Botão Home: fecha gaveta/folha e cancela o modo mover.
+            LaunchedEffect(homeSignal) { if (homeSignal > 0) dispatch(NavEvent.HomePressed) }
+            BackHandler(enabled = Nav.handlesBack(nav)) { dispatch(NavEvent.Back) }
 
             val launch: (AppEntry, Rect?) -> Unit = { app, r ->
                 val options = if (r != null) {
@@ -67,7 +72,7 @@ class LauncherActivity : ComponentActivity() {
                     ).toBundle()
                 } else null
                 vm.openApp(app, options)
-                drawerOpen = false
+                dispatch(NavEvent.AppLaunched)
             }
 
             VerticeTheme {
@@ -75,25 +80,28 @@ class LauncherActivity : ComponentActivity() {
                     if (!ui.wallpaper.isSystem) WallpaperBackground(ui.wallpaper, Modifier.fillMaxSize())
                     HomeScreen(
                         vm = vm, ui = ui, onLaunch = launch,
-                        onOpenDrawer = { drawerOpen = true }, onOpenSheet = { sheetOpen = true }
+                        moving = ui.apps.firstOrNull { it.key == nav.moving },
+                        onMoveStart = { dispatch(NavEvent.StartMove(it.key)) },
+                        onMoveEnd = { dispatch(NavEvent.EndMove) },
+                        onOpenDrawer = { dispatch(NavEvent.OpenDrawer) }, onOpenSheet = { dispatch(NavEvent.OpenSheet) }
                     )
 
                     // Perfil Ultra Lite: sem animação nenhuma (sem custo de GPU em aparelho fraco).
                     val animate = ui.profile.animations
                     AnimatedVisibility(
-                        visible = drawerOpen,
+                        visible = nav.screen == Screen.Drawer,
                         enter = if (animate) slideInVertically { it / 6 } + fadeIn() else EnterTransition.None,
                         exit = if (animate) slideOutVertically { it / 6 } + fadeOut() else ExitTransition.None
                     ) {
-                        AppDrawer(vm = vm, ui = ui, onLaunch = launch, onClose = { drawerOpen = false })
+                        AppDrawer(vm = vm, ui = ui, onLaunch = launch, onClose = { dispatch(NavEvent.Back) })
                     }
 
                     AnimatedVisibility(
-                        visible = sheetOpen,
+                        visible = nav.screen == Screen.Sheet,
                         enter = if (animate) slideInVertically { it / 3 } + fadeIn() else EnterTransition.None,
                         exit = if (animate) slideOutVertically { it / 3 } + fadeOut() else ExitTransition.None
                     ) {
-                        QuickSheet(vm = vm, ui = ui, onClose = { sheetOpen = false })
+                        QuickSheet(vm = vm, ui = ui, onClose = { dispatch(NavEvent.Back) })
                     }
                 }
             }

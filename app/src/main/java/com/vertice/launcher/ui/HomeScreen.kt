@@ -55,13 +55,15 @@ fun HomeScreen(
     vm: LauncherViewModel,
     ui: HomeUi,
     onLaunch: (AppEntry, androidx.compose.ui.geometry.Rect?) -> Unit,
+    /** App em modo "mover" (estado vem da máquina de navegação). */
+    moving: AppEntry?,
+    onMoveStart: (AppEntry) -> Unit,
+    onMoveEnd: () -> Unit,
     onOpenDrawer: () -> Unit,
     onOpenSheet: () -> Unit
 ) {
     val now by rememberNow()
     val battery by rememberBatteryPercent()
-    // Modo "mover": o app escolhido espera o toque numa célula de destino.
-    var moving by remember { mutableStateOf<AppEntry?>(null) }
     val pages = ui.pageCount + if (moving != null) 1 else 0 // página extra vazia só durante o movimento
     val pager = rememberPagerState(pageCount = { pages })
 
@@ -126,18 +128,18 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Toque numa célula para mover ${moving?.label}", color = Mint, fontSize = 12.sp)
+                        Text("Toque numa célula para mover ${moving.label}", color = Mint, fontSize = 12.sp)
                         Text(
                             "Cancelar", color = Snow, fontSize = 12.sp,
-                            modifier = Modifier.clip(CircleShape).clickable { moving = null }.padding(8.dp)
+                            modifier = Modifier.clip(CircleShape).clickable { onMoveEnd() }.padding(8.dp)
                         )
                     }
                 }
                 HorizontalPager(state = pager, modifier = Modifier.weight(1f).fillMaxWidth()) { page ->
                     HomeGridPage(
                         page = page, ui = ui, vm = vm, moving = moving,
-                        onMoveStart = { moving = it },
-                        onDrop = { x, y -> moving?.let { vm.moveToCell(it, page, x, y) }; moving = null },
+                        onMoveStart = onMoveStart,
+                        onDrop = { x, y -> moving?.let { vm.moveToCell(it, page, x, y) }; onMoveEnd() },
                         onLaunch = onLaunch
                     )
                 }
@@ -172,7 +174,7 @@ fun HomeScreen(
                         AppTile(
                             app = app, vm = vm, animateLaunch = ui.profile.animations,
                             showLabel = false, onLaunch = onLaunch,
-                            onMove = { moving = app }
+                            onMove = { onMoveStart(app) }
                         )
                     }
                 }
