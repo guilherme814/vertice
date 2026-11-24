@@ -11,7 +11,7 @@ Ordem de prioridade: **base Android funcional → recursos → acabamento premiu
 | Fase | Foco | Estado |
 |------|------|--------|
 | 0 | Auditoria e estabilização | feita — ver [`docs/FASE-0-INVENTARIO.md`](docs/FASE-0-INVENTARIO.md) |
-| 1 | Launcher mínima funcional (Home, apps, dock, grade básica, persistência) | em andamento: faltam grade na Home e posições persistidas |
+| 1 | Launcher mínima funcional (Home, apps, dock, grade básica, persistência) | implementada — aceite em [`docs/FASE-1-ACEITE.md`](docs/FASE-1-ACEITE.md) (falta confirmar reinício no aparelho) |
 | 2 | Arquitetura modular (domínio, dados, módulos) | — |
 | 3 | Experiência de uso (busca, gestos, categorias, páginas, acessibilidade) | adiantada em parte: categorias |
 | 4 | Personalização premium (tema, wallpapers, ícones, widgets) | adiantada em parte: relógio, papéis de parede |
@@ -23,7 +23,8 @@ Os itens "adiantados" compilam, mas **não contam para o aceite** até as fases 
 ## O que existe hoje
 - Registra-se como app **HOME** (e continua aparecendo como app comum); botão Home fecha a gaveta.
 - Lista de apps via `LauncherApps` (inclui perfil de trabalho), atualizada sozinha ao instalar/remover — sem polling.
-- Tela inicial com relógio, data, bateria (por broadcast) e dock persistente (até 5 apps).
+- Tela inicial com relógio, data, bateria (por broadcast), **grade 4x5 paginada** e dock (até 5 apps); posições persistidas.
+- Segurar um app: Mover (toque na célula de destino), colocar/tirar da tela inicial ou do dock.
 - Gaveta (deslizar para cima ou botão) com busca por nome ou pacote, sem diferenciar acentos.
 - Segurar um app: informações, dock, categoria, desinstalar.
 - Perfis de desempenho (Ultra Lite / Equilibrado / Premium): hoje controlam animações e o teto do cache de ícones; o inicial vem do hardware.
@@ -34,7 +35,7 @@ Os itens "adiantados" compilam, mas **não contam para o aceite** até as fases 
 app/src/main/java/com/vertice/launcher/
   LauncherActivity.kt      tela inicial do aparelho (singleTask)
   LauncherViewModel.kt     junta apps + preferências em um estado para a UI
-  core/                    PerformanceProfile
+  core/                    PerformanceProfile, HomeLayout (grade como dado + testes de JVM)
   data/                    AppRepository, AppEntry, IconCache, LauncherPrefs (DataStore)
   ui/                      HomeScreen, AppDrawer, AppTile, Theme
 ```

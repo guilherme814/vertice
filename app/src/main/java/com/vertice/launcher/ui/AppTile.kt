@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vertice.launcher.LauncherViewModel
 import com.vertice.launcher.core.AppCategory
+import com.vertice.launcher.core.Placement
 import com.vertice.launcher.data.AppEntry
 import kotlin.math.roundToInt
 
@@ -66,7 +67,11 @@ fun AppTile(
     animateLaunch: Boolean,
     showLabel: Boolean,
     onLaunch: (AppEntry, Rect?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    iconSize: Dp = 52.dp,
+    labelLines: Int = 2,
+    /** Se informado, o menu oferece "Mover" (entra no modo de mover da Home). */
+    onMove: (() -> Unit)? = null
 ) {
     var menu by remember { mutableStateOf(false) }
     var picking by remember { mutableStateOf(false) }
@@ -97,11 +102,11 @@ fun AppTile(
             Modifier.padding(vertical = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            AppIcon(app, vm, 52.dp)
+            AppIcon(app, vm, iconSize)
             if (showLabel) {
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    app.label, color = Snow, fontSize = 11.sp, maxLines = 2, lineHeight = 13.sp,
+                    app.label, color = Snow, fontSize = 11.sp, maxLines = labelLines, lineHeight = 13.sp,
                     overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -115,8 +120,17 @@ fun AppTile(
                 text = { Text("Informações do app") },
                 onClick = { menu = false; vm.openAppInfo(app) }
             )
+            val placement = vm.placementOf(app)
+            if (placement == Placement.Home && onMove != null) {
+                DropdownMenuItem(text = { Text("Mover") }, onClick = { menu = false; onMove() })
+            }
+            if (placement == Placement.Home) {
+                DropdownMenuItem(text = { Text("Tirar da tela inicial") }, onClick = { menu = false; vm.removeFromHome(app) })
+            } else {
+                DropdownMenuItem(text = { Text("Colocar na tela inicial") }, onClick = { menu = false; vm.addToHome(app) })
+            }
             DropdownMenuItem(
-                text = { Text(if (vm.isInDock(app)) "Tirar do dock" else "Colocar no dock") },
+                text = { Text(if (placement == Placement.Dock) "Tirar do dock" else "Colocar no dock") },
                 onClick = { menu = false; vm.toggleDock(app) }
             )
             DropdownMenuItem(

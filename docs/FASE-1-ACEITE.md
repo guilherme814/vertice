@@ -1,0 +1,23 @@
+# Fase 1 — critérios de aceite
+
+| Critério (PDF) | Situação | Como foi verificado |
+|---|---|---|
+| Registra-se como Home e abre | ok | Visto no aparelho (vídeo do Luis) |
+| Lista de apps, abrir app | ok | Idem (39 apps) |
+| Dock | ok | Idem |
+| Grade básica na Home (4x5, páginas) | implementada | CI compila; lógica coberta por testes de JVM (`HomeLayoutTest`) |
+| Posições persistidas (favoritos, grade) | implementada | Layout salvo no DataStore (`layout_v2`), migra o dock antigo; testes de codec e `sanitize` |
+| Edição sem condição de corrida | corrigida | `editLayout` lê-transforma-grava numa transação só |
+| Sobrevive a reinício | **pendente no aparelho** | Ver roteiro abaixo |
+
+## Roteiro no aparelho (Luis)
+1. Instale o APK novo (atenção: debug assinado pelo CI; se pedir, desinstale a versão anterior — os dados do dock antigo serão refeitos).
+2. Gaveta → segurar um app → "Colocar na tela inicial". Repita com 3–4 apps.
+3. Segurar um app na grade → "Mover" → tocar outra célula (vazia = move; ocupada = troca). Tocar na célula de uma página nova (aparece uma extra durante o movimento).
+4. Segurar → "Tirar da tela inicial"; "Colocar no dock" / "Tirar do dock".
+5. Reinicie o aparelho. Confirme: a Vértice continua como Home e tudo está no mesmo lugar.
+6. Instale/desinstale um app qualquer: o resto da grade não deve se mexer.
+
+## Limites conhecidos (ficam para as fases seguintes)
+- Mover é por toque (arrastar e soltar entra na Fase 3).
+- Sem pastas, sem widgets (Fase 4).

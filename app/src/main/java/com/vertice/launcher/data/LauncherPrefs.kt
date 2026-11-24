@@ -11,6 +11,9 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
+import com.vertice.launcher.core.Container
+import com.vertice.launcher.core.LayoutCodec
+import com.vertice.launcher.core.LayoutItem
 import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.core.Wallpaper
 import kotlinx.coroutines.flow.Flow
@@ -24,7 +27,8 @@ private val Context.launcherStore: DataStore<Preferences> by preferencesDataStor
 data class Prefs(
     /** null = ainda não escolhido (a primeira execução decide pelo hardware). */
     val profile: PerformanceProfile? = null,
-    val dock: List<String> = emptyList(),
+    /** Posição de cada app na Home e no dock (contêiner + página + célula). */
+    val layout: List<LayoutItem> = emptyList(),
     val seeded: Boolean = false,
     /** Correções manuais: chave do app -> nome da categoria. Vencem a classificação automática. */
     val categoryOverrides: Map<String, String> = emptyMap(),
@@ -40,7 +44,8 @@ class LauncherPrefs(context: Context) {
 
     private object K {
         val profile = stringPreferencesKey("profile")
-        val dock = stringPreferencesKey("dock")
+        val dock = stringPreferencesKey("dock") // legado (antes da grade); só lido para migrar
+        val layout = stringSetPreferencesKey("layout_v2")
         val seeded = booleanPreferencesKey("seeded")
         val categories = stringSetPreferencesKey("category_overrides")
         val clockStyle = stringPreferencesKey("clock_style")
@@ -52,7 +57,7 @@ class LauncherPrefs(context: Context) {
     val prefs: Flow<Prefs> = store.data.map { p ->
         Prefs(
             profile = PerformanceProfile.fromName(p[K.profile]),
-            dock = p[K.dock]?.split(SEP)?.filter { it.isNotEmpty() } ?: emptyList(),
+            layout = readLayout(p),
             seeded = p[K.seeded] ?: false,
             categoryOverrides = (p[K.categories] ?: emptySet()).mapNotNull { entry ->
                 val i = entry.lastIndexOf('=')
@@ -71,8 +76,19 @@ class LauncherPrefs(context: Context) {
         store.edit { it[K.profile] = profile.name }
     }
 
-    suspend fun setDock(keys: List<String>) {
-        store.edit { it[K.dock] = keys.joinToString(SEP) }
+    /**
+     * Leitura + transformação + escrita numa única transação do DataStore: duas edições seguidas
+     * (ex.: dois toques rápidos) nunca se sobrescrevem, ao contrário de ler o estado na UI e gravar depois.
+     */
+    suspend fun editLayout(transform: (List<LayoutItem>) -> List<LayoutItem>) {
+        store.edit { p -> p[K.layout] = LayoutCodec.encodeAll(transform(readLayout(p))) }
+    }
+
+    /** Layout novo, ou (primeira abertura depois da atualização) migrado do dock antigo. */
+    private fun readLayout(p: Preferences): List<LayoutItem> {
+        p[K.layout]?.let { return LayoutCodec.decodeAll(it) }
+        val legacy = p[K.dock]?.split(SEP)?.filter { it.isNotEmpty() } ?: return emptyList()
+        return legacy.mapIndexed { i, key -> LayoutItem(key, Container.Dock, 0, i, 0) }
     }
 
     /** `category = null` volta para a classificação automática. */
@@ -94,10 +110,10 @@ class LauncherPrefs(context: Context) {
 
     suspend fun setWallpaper(w: Wallpaper) { store.edit { it[K.wallpaper] = w.name } }
 
-    suspend fun seed(profile: PerformanceProfile, dock: List<String>) {
+    suspend fun seed(profile: PerformanceProfile, layout: List<LayoutItem>) {
         store.edit {
             it[K.profile] = profile.name
-            it[K.dock] = dock.joinToString(SEP)
+            it[K.layout] = LayoutCodec.encodeAll(layout)
             it[K.seeded] = true
         }
     }

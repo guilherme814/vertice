@@ -18,6 +18,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Rect
+import com.vertice.launcher.core.GridSpec
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
@@ -53,6 +60,10 @@ fun HomeScreen(
 ) {
     val now by rememberNow()
     val battery by rememberBatteryPercent()
+    // Modo "mover": o app escolhido espera o toque numa célula de destino.
+    var moving by remember { mutableStateOf<AppEntry?>(null) }
+    val pages = ui.pageCount + if (moving != null) 1 else 0 // página extra vazia só durante o movimento
+    val pager = rememberPagerState(pageCount = { pages })
 
     Box(
         Modifier
@@ -101,11 +112,51 @@ fun HomeScreen(
                     }
                     }
                 }
-                Spacer(Modifier.height(36.dp))
+                Spacer(Modifier.height(20.dp))
                 ClockWidget(
                     now = now, style = ui.clockStyle, format = ui.clockFormat, showDate = ui.showDate,
                     onClockClick = { vm.openClock() }, onDateClick = { vm.openCalendar() }
                 )
+            }
+
+            Column(Modifier.weight(1f)) {
+                if (moving != null) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Toque numa célula para mover ${moving?.label}", color = Mint, fontSize = 12.sp)
+                        Text(
+                            "Cancelar", color = Snow, fontSize = 12.sp,
+                            modifier = Modifier.clip(CircleShape).clickable { moving = null }.padding(8.dp)
+                        )
+                    }
+                }
+                HorizontalPager(state = pager, modifier = Modifier.weight(1f).fillMaxWidth()) { page ->
+                    HomeGridPage(
+                        page = page, ui = ui, vm = vm, moving = moving,
+                        onMoveStart = { moving = it },
+                        onDrop = { x, y -> moving?.let { vm.moveToCell(it, page, x, y) }; moving = null },
+                        onLaunch = onLaunch
+                    )
+                }
+                if (pages > 1) {
+                    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.Center) {
+                        repeat(pages) { i ->
+                            Box(
+                                Modifier.padding(horizontal = 3.dp).size(6.dp).clip(CircleShape)
+                                    .background(if (i == pager.currentPage) Mint else Muted.copy(alpha = 0.5f))
+                            )
+                        }
+                    }
+                }
+                if (ui.placed.isEmpty() && !ui.loading && moving == null) {
+                    Text(
+                        "Segure um app na gaveta e escolha “Colocar na tela inicial”.",
+                        color = Muted, fontSize = 12.sp, modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -120,7 +171,8 @@ fun HomeScreen(
                     ui.dock.forEach { app ->
                         AppTile(
                             app = app, vm = vm, animateLaunch = ui.profile.animations,
-                            showLabel = false, onLaunch = onLaunch
+                            showLabel = false, onLaunch = onLaunch,
+                            onMove = { moving = app }
                         )
                     }
                 }
@@ -136,6 +188,64 @@ fun HomeScreen(
                     ) {
                         Text("Todos os aplicativos", color = Snow, fontSize = 14.sp)
                         Text("↑", color = Mint, fontSize = 18.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Uma página da grade: COLUMNS x ROWS células iguais; célula vazia é só espaço (ou alvo, no modo mover). */
+@Composable
+private fun HomeGridPage(
+    page: Int,
+    ui: HomeUi,
+    vm: LauncherViewModel,
+    moving: AppEntry?,
+    onMoveStart: (AppEntry) -> Unit,
+    onDrop: (x: Int, y: Int) -> Unit,
+    onLaunch: (AppEntry, Rect?) -> Unit
+) {
+    val byCell = remember(ui.placed, page) {
+        ui.placed.filter { it.item.page == page }.associateBy { it.item.x to it.item.y }
+    }
+    Column(Modifier.fillMaxSize()) {
+        repeat(GridSpec.ROWS) { y ->
+            Row(Modifier.weight(1f).fillMaxWidth()) {
+                repeat(GridSpec.COLUMNS) { x ->
+                    val placed = byCell[x to y]
+                    Box(
+                        Modifier.weight(1f).fillMaxSize()
+                            .then(
+                                if (moving != null) Modifier.clickable { onDrop(x, y) }
+                                else Modifier
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (placed != null) {
+                            if (moving != null) {
+                                // No modo mover o ícone não abre o app: o toque vai para a célula.
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    AppIcon(placed.app, vm, 44.dp)
+                                    Text(
+                                        placed.app.label, color = Snow, fontSize = 11.sp, maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                    )
+                                }
+                            } else {
+                                AppTile(
+                                    app = placed.app, vm = vm, animateLaunch = ui.profile.animations,
+                                    showLabel = true, onLaunch = onLaunch,
+                                    iconSize = 44.dp, labelLines = 1,
+                                    onMove = { onMoveStart(placed.app) }
+                                )
+                            }
+                        } else if (moving != null) {
+                            Box(
+                                Modifier.size(44.dp).clip(RoundedCornerShape(12.dp))
+                                    .background(PanelSoft.copy(alpha = 0.5f))
+                            )
+                        }
                     }
                 }
             }
