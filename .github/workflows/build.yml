@@ -21,14 +21,15 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # O repositório não tem gradlew: o setup-gradle instala o Gradle pedido.
+      # Confere se o gradle-wrapper.jar é um dos oficiais (proteção contra jar adulterado).
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.10.2'
 
       - name: Build debug APK
-        run: gradle assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
@@ -39,7 +40,7 @@ jobs:
       # Versão otimizada (R8) para medir o tamanho/peso real.
       - name: Build release APK
         continue-on-error: true
-        run: gradle assembleRelease --stacktrace
+        run: ./gradlew assembleRelease --stacktrace
 
       - name: Upload release APK
         if: always()

@@ -5,31 +5,29 @@ Meta de longo prazo: visual inspirado em HyperOS 4 / iOS 28, leve e muito person
 
 ## Roteiro por fases
 
+Seguimos o *Plano de reestruturação da launcher* (PDF). Uma fase só começa quando a anterior cumpre o critério de aceite.
+Ordem de prioridade: **base Android funcional → recursos → acabamento premium**.
+
 | Fase | Foco | Estado |
 |------|------|--------|
-| 1 | **Construção**: launcher funcional, estrutura pronta para crescer | feita |
-| 2 | **Funcionalidades**, uma por vez (categorias, páginas, ocultar/renomear, gestos, ajustes, backup) | em andamento |
-| 3 | **Interface**: papel de parede próprio, vidro, ícones, tipografia e personalização minuciosa | — |
-| 4 | Ajustes Premium e perfis de desempenho completos | — |
+| 0 | Auditoria e estabilização | feita — ver [`docs/FASE-0-INVENTARIO.md`](docs/FASE-0-INVENTARIO.md) |
+| 1 | Launcher mínima funcional (Home, apps, dock, grade básica, persistência) | em andamento: faltam grade na Home e posições persistidas |
+| 2 | Arquitetura modular (domínio, dados, módulos) | — |
+| 3 | Experiência de uso (busca, gestos, categorias, páginas, acessibilidade) | adiantada em parte: categorias |
+| 4 | Personalização premium (tema, wallpapers, ícones, widgets) | adiantada em parte: relógio, papéis de parede |
+| 5 | Otimização e compatibilidade (Redmi A1 e Xiaomi 12) | — |
+| 6 | Qualidade e distribuição (assinatura, atualização, rollback) | — |
 
-### Fase 2 — andamento
-- [x] 2.1 Categorias de apps na gaveta (automáticas + correção manual)
-- [ ] 2.2 Páginas na tela inicial e reorganizar apps
-- [ ] 2.3 Ocultar e renomear apps
-- [ ] 2.4 Gestos (notificações, busca, duplo toque)
-- [ ] 2.5 Tela de ajustes (perfil de desempenho, grade, dock)
-- [ ] 2.6 Backup e restauração
+Os itens "adiantados" compilam, mas **não contam para o aceite** até as fases anteriores fecharem.
 
-## Fase 1 — o que existe
-- Registra-se como app **HOME** (e continua aparecendo como app comum).
-- Lista de apps via `LauncherApps` (inclui perfil de trabalho) e **atualiza sozinha** ao instalar/remover — sem polling.
-- Tela inicial: relógio, data, bateria (por broadcast) e dock persistente (até 5 apps).
+## O que existe hoje
+- Registra-se como app **HOME** (e continua aparecendo como app comum); botão Home fecha a gaveta.
+- Lista de apps via `LauncherApps` (inclui perfil de trabalho), atualizada sozinha ao instalar/remover — sem polling.
+- Tela inicial com relógio, data, bateria (por broadcast) e dock persistente (até 5 apps).
 - Gaveta (deslizar para cima ou botão) com busca por nome ou pacote, sem diferenciar acentos.
-- Segurar um app: informações, colocar/tirar do dock, mudar categoria, desinstalar.
-- Categorias (2.1): classificação automática (categoria declarada pelo app, com heurística por pacote quando não declara) e correção manual salva; chips de filtro na gaveta; a busca vale para todas.
-- Botão Home fecha a gaveta; Voltar também.
-- **Perfis de desempenho** (Ultra Lite / Equilibrado / Premium): hoje controlam animações e o teto do cache de ícones; o perfil inicial vem do hardware (`isLowRamDevice`). Futuras fases penduram blur, vidro e taxa de quadros no mesmo perfil.
-- Cache de ícones limitado por **bytes**, para consumo de memória previsível.
+- Segurar um app: informações, dock, categoria, desinstalar.
+- Perfis de desempenho (Ultra Lite / Equilibrado / Premium): hoje controlam animações e o teto do cache de ícones; o inicial vem do hardware.
+- Adiantados: categorias na gaveta; relógio (4 estilos) e papéis de parede próprios, pela folha "Personalizar".
 
 ## Estrutura
 ```
@@ -47,10 +45,12 @@ A tela só lê estado e dispara ações; dados e perfil não conhecem Compose. Q
 Android 8.0 (API 26)+, JDK 17, AGP 8.7.3, Kotlin 2.0.21, Compose BOM 2025.01.00, compileSdk/targetSdk 35.
 
 ## Construir
-O repositório não traz `gradlew`; o CI (`.github/workflows/build.yml`) instala o Gradle 8.10.2 e publica
+Gradle Wrapper incluído (Gradle 8.10.2, com SHA-256). O CI (`.github/workflows/build.yml`) valida o wrapper, compila e publica
 o APK debug (e o release otimizado com R8) como artefatos a cada push.
 
-Local: `gradle assembleDebug` → `app/build/outputs/apk/debug/app-debug.apk`
+Local: `./gradlew assembleDebug` → `app/build/outputs/apk/debug/app-debug.apk`
+
+Atenção: o `applicationId` é `com.vertice.launcher` (o protótipo antigo era `com.vertice.game` e é outro app para o Android).
 
 ## Definir como tela inicial
 Configurações → Aplicativos → Aplicativos padrão → App de início → **Vértice Launcher** (o caminho varia por fabricante).
