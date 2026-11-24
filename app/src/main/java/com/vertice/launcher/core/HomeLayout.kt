@@ -83,7 +83,8 @@ object LayoutOps {
 
         val pageIndex = placed.map { it.page }.distinct().sorted().withIndex().associate { (i, p) -> p to i }
         val home = placed.map { it.copy(page = pageIndex.getValue(it.page)) }
-        return dock + home
+        // Ordem canônica: o resultado não depende da ordem de entrada (e sanitize fica idempotente).
+        return dock + home.sortedWith(compareBy({ it.page }, { it.y }, { it.x }))
     }
 
     /** Coloca na primeira célula livre da Home (tira o app do dock, se estiver lá). */
