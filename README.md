@@ -33,7 +33,8 @@ Os itens "adiantados" compilam, mas **não contam para o aceite** até as fases 
 ## Estrutura
 ```
 app/     LauncherActivity, LauncherViewModel, AppContainer, ui/ (HomeScreen, AppDrawer, AppTile, QuickSheet, Diagnóstico)
-ui-core/ tema, relógio, papel de parede, AppIcon, CategoryChip
+ui-core/ tema, relógio, papel de parede, AppTile, AppIcon, CategoryChip, HomeUi/HomeActions
+feature-home/ feature-drawer/ feature-settings/   uma tela por módulo
 data/   AppRepository, AppEntry, IconCache, LauncherPrefs (DataStore), DevicePerformance, diag/ (log)
 domain/ HomeLayout, SettingsStore/Prefs, PerformanceProfile, AppCategory, ClockStyle, Wallpaper, diag/  (Kotlin puro, com testes)
 ```
@@ -42,7 +43,7 @@ A tela só lê estado e dispara ações; dados e perfil não conhecem Compose. Q
 
 Módulos: `:app` (UI e ViewModel), `:data` (LauncherApps, DataStore, cache de ícones, leitura do hardware, log)
 e `:domain` (Kotlin puro: layout da Home, preferências e seu contrato, perfis, categorias, relógio, papéis de parede — com testes de JVM).
-Setas: `app -> ui-core -> data -> domain`; nunca no sentido contrário.
+Setas: `app -> feature-* -> ui-core -> data -> domain`; nunca no sentido contrário (features não se conhecem).
 
 Diagnóstico e log (travamentos, crashes, memória): ver [`docs/DIAGNOSTICO.md`](docs/DIAGNOSTICO.md).
 

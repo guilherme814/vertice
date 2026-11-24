@@ -45,7 +45,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vertice.launcher.HomeUi
-import com.vertice.launcher.LauncherViewModel
+import com.vertice.launcher.HomeActions
 import com.vertice.launcher.core.AppCategory
 import com.vertice.launcher.data.AppEntry
 import java.text.Normalizer
@@ -55,7 +55,7 @@ private fun String.fold(): String =
 
 @Composable
 fun AppDrawer(
-    vm: LauncherViewModel,
+    vm: HomeActions,
     ui: HomeUi,
     onLaunch: (AppEntry, Rect?) -> Unit,
     onClose: () -> Unit

@@ -38,7 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vertice.launcher.HomeUi
-import com.vertice.launcher.LauncherViewModel
+import com.vertice.launcher.HomeActions
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.Wallpaper
@@ -55,7 +55,7 @@ enum class SheetTab(val label: String) {
  */
 @Composable
 fun QuickSheet(
-    vm: LauncherViewModel,
+    vm: HomeActions,
     ui: HomeUi,
     initialTab: SheetTab = SheetTab.Wallpaper,
     onClose: () -> Unit
@@ -114,7 +114,7 @@ private fun SectionLabel(text: String) {
 }
 
 @Composable
-private fun ClockTab(vm: LauncherViewModel, ui: HomeUi) {
+private fun ClockTab(vm: HomeActions, ui: HomeUi) {
     SectionLabel("Estilo")
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         ClockStyle.entries.forEach { s ->
@@ -147,7 +147,7 @@ private fun ClockTab(vm: LauncherViewModel, ui: HomeUi) {
 }
 
 @Composable
-private fun WallpaperTab(vm: LauncherViewModel, ui: HomeUi) {
+private fun WallpaperTab(vm: HomeActions, ui: HomeUi) {
     SectionLabel("Escolha um papel de parede")
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Wallpaper.entries.forEach { w ->

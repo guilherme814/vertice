@@ -32,33 +32,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** App + onde ele está na grade da Home. */
-data class PlacedApp(val app: AppEntry, val item: LayoutItem)
-
-/** Estado já resolvido para a interface: chaves salvas viram apps reais. */
-data class HomeUi(
-    val loading: Boolean = true,
-    val profile: PerformanceProfile = PerformanceProfile.Balanced,
-    val apps: List<AppEntry> = emptyList(),
-    /** Dock, na ordem da esquerda para a direita. */
-    val dock: List<AppEntry> = emptyList(),
-    /** Apps na grade da Home. */
-    val placed: List<PlacedApp> = emptyList(),
-    /** Quantas páginas a Home tem (no mínimo 1). */
-    val pageCount: Int = 1,
-    val placement: Map<String, Placement> = emptyMap(),
-    /** Categoria final de cada app (chave do app -> categoria). */
-    val categories: Map<String, AppCategory> = emptyMap(),
-    /** Chaves com categoria definida pelo usuário (para oferecer "voltar ao automático"). */
-    val manualCategories: Set<String> = emptySet(),
-    val clockStyle: ClockStyle = ClockStyle.Classic,
-    val clockFormat: ClockFormat = ClockFormat.System,
-    val showDate: Boolean = true,
-    val wallpaper: Wallpaper = Wallpaper.System
-) {
-    fun categoryOf(app: AppEntry): AppCategory = categories[app.key] ?: AppCategory.default
-}
-
 /**
  * Recebe tudo pronto (veja [AppContainer]); não cria nem fecha nada sozinho.
  * Os dados vivem no processo, não na tela: girar/recriar a Activity não recarrega a lista de apps.
@@ -66,14 +39,14 @@ data class HomeUi(
 class LauncherViewModel(
     private val prefs: SettingsStore,
     private val repo: AppRepository,
-    val icons: IconCache,
+    override val icons: IconCache,
     private val recommended: PerformanceProfile
-) : ViewModel() {
+) : ViewModel(), HomeActions {
 
     // Classificação automática só depende do app: calculada uma vez, não a cada edição de preferência.
     private val autoCategory = HashMap<String, AppCategory>()
 
-    val ui: StateFlow<HomeUi> = combine(repo.apps, prefs.prefs) { apps, p ->
+    override val ui: StateFlow<HomeUi> = combine(repo.apps, prefs.prefs) { apps, p ->
         val byKey = apps.associateBy { it.key }
         // Toda a regra (layout, dock, páginas, categorias) vive no domínio; aqui só trocamos chaves por apps.
         val state = HomeState.from(apps.map { it.model }, p) { m ->
@@ -124,13 +97,13 @@ class LauncherViewModel(
         }
     }
 
-    fun openApp(app: AppEntry, options: Bundle?) = repo.launch(app, options)
+    override fun openApp(app: AppEntry, options: Bundle?) = repo.launch(app, options)
 
-    fun openAppInfo(app: AppEntry) = repo.openAppInfo(app)
+    override fun openAppInfo(app: AppEntry) = repo.openAppInfo(app)
 
-    fun uninstall(app: AppEntry) = repo.uninstall(app)
+    override fun uninstall(app: AppEntry) = repo.uninstall(app)
 
-    fun placementOf(app: AppEntry): Placement = ui.value.placement[app.key] ?: Placement.None
+    override fun placementOf(app: AppEntry): Placement = ui.value.placement[app.key] ?: Placement.None
 
     /** Toda edição passa por aqui: transação única no DataStore, sempre normalizada. */
     private fun edit(name: String, op: (List<LayoutItem>) -> List<LayoutItem>) {
@@ -150,33 +123,33 @@ class LauncherViewModel(
         }
     }
 
-    fun toggleDock(app: AppEntry) = edit("dock ${app.packageName}") {
+    override fun toggleDock(app: AppEntry) = edit("dock ${app.packageName}") {
         if (it.any { i -> i.key == app.key && i.container == Container.Dock }) LayoutOps.removeFromDock(it, app.key)
         else LayoutOps.addToDock(it, app.key) // dock cheio: nada muda
     }
 
-    fun addToHome(app: AppEntry) = edit("colocar ${app.packageName}") { LayoutOps.addToHome(it, app.key) }
+    override fun addToHome(app: AppEntry) = edit("colocar ${app.packageName}") { LayoutOps.addToHome(it, app.key) }
 
-    fun removeFromHome(app: AppEntry) = edit("tirar ${app.packageName}") { LayoutOps.removeFromHome(it, app.key) }
+    override fun removeFromHome(app: AppEntry) = edit("tirar ${app.packageName}") { LayoutOps.removeFromHome(it, app.key) }
 
-    fun moveToCell(app: AppEntry, page: Int, x: Int, y: Int) = edit("mover ${app.packageName} p$page ($x,$y)") { LayoutOps.moveHome(it, app.key, page, x, y) }
+    override fun moveToCell(app: AppEntry, page: Int, x: Int, y: Int) = edit("mover ${app.packageName} p$page ($x,$y)") { LayoutOps.moveHome(it, app.key, page, x, y) }
 
     /** `category = null` volta a classificação automática do app. */
-    fun setCategory(app: AppEntry, category: AppCategory?) {
+    override fun setCategory(app: AppEntry, category: AppCategory?) {
         viewModelScope.launch { prefs.setCategory(app.key, category?.name) }
     }
 
-    fun setClockStyle(style: ClockStyle) { viewModelScope.launch { prefs.setClockStyle(style) } }
+    override fun setClockStyle(style: ClockStyle) { viewModelScope.launch { prefs.setClockStyle(style) } }
 
-    fun setClockFormat(format: ClockFormat) { viewModelScope.launch { prefs.setClockFormat(format) } }
+    override fun setClockFormat(format: ClockFormat) { viewModelScope.launch { prefs.setClockFormat(format) } }
 
-    fun setShowDate(show: Boolean) { viewModelScope.launch { prefs.setShowDate(show) } }
+    override fun setShowDate(show: Boolean) { viewModelScope.launch { prefs.setShowDate(show) } }
 
-    fun setWallpaper(w: Wallpaper) { viewModelScope.launch { prefs.setWallpaper(w) } }
+    override fun setWallpaper(w: Wallpaper) { viewModelScope.launch { prefs.setWallpaper(w) } }
 
-    fun openClock() = repo.openClockApp()
+    override fun openClock() = repo.openClockApp()
 
-    fun openCalendar() = repo.openCalendarApp()
+    override fun openCalendar() = repo.openCalendarApp()
 
     fun setProfile(profile: PerformanceProfile) {
         VLog.i("Prefs", "Perfil de desempenho alterado para $profile")

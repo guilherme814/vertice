@@ -47,12 +47,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import com.vertice.launcher.HomeUi
-import com.vertice.launcher.LauncherViewModel
+import com.vertice.launcher.HomeActions
 import com.vertice.launcher.data.AppEntry
 
 @Composable
 fun HomeScreen(
-    vm: LauncherViewModel,
+    vm: HomeActions,
     ui: HomeUi,
     onLaunch: (AppEntry, androidx.compose.ui.geometry.Rect?) -> Unit,
     /** App em modo "mover" (estado vem da máquina de navegação). */
@@ -202,7 +202,7 @@ fun HomeScreen(
 private fun HomeGridPage(
     page: Int,
     ui: HomeUi,
-    vm: LauncherViewModel,
+    vm: HomeActions,
     moving: AppEntry?,
     onMoveStart: (AppEntry) -> Unit,
     onDrop: (x: Int, y: Int) -> Unit,

@@ -37,7 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.vertice.launcher.LauncherViewModel
+import com.vertice.launcher.HomeActions
 import com.vertice.launcher.core.AppCategory
 import com.vertice.launcher.core.Placement
 import com.vertice.launcher.data.AppEntry
@@ -50,7 +50,7 @@ import kotlin.math.roundToInt
 @Composable
 fun AppTile(
     app: AppEntry,
-    vm: LauncherViewModel,
+    vm: HomeActions,
     animateLaunch: Boolean,
     showLabel: Boolean,
     onLaunch: (AppEntry, Rect?) -> Unit,
@@ -134,7 +134,7 @@ fun AppTile(
 
 /** Escolha de categoria: uma das fixas ou "Automática" (volta à classificação do app). */
 @Composable
-private fun CategoryDialog(app: AppEntry, vm: LauncherViewModel, onDismiss: () -> Unit) {
+private fun CategoryDialog(app: AppEntry, vm: HomeActions, onDismiss: () -> Unit) {
     val ui = vm.ui.value
     val current = ui.categoryOf(app)
     val manual = app.key in ui.manualCategories
