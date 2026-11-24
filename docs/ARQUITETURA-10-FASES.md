@@ -41,7 +41,8 @@ log/diagnóstico (`docs/DIAGNOSTICO.md`).
 | # | Estado |
 |---|---|
 | 1 | **feito** — ver abaixo |
-| 2–10 | pendentes (um de cada vez) |
+| 2 | **feito** — `AppModel` (domínio) + `AppEntry` envolve o modelo |
+| 3–10 | pendentes (um de cada vez) |
 
 ### Passo 1 — o que mudou
 - `:domain` agora contém `PerformanceProfile`, `AppCategory` (com as constantes de `ApplicationInfo` copiadas e travadas por teste), `Prefs`, `SettingsStore`.

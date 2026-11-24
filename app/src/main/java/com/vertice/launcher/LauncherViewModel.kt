@@ -88,7 +88,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             placement = layout.associate { it.key to if (it.container == Container.Dock) Placement.Dock else Placement.Home },
             categories = apps.associate { app ->
                 app.key to (AppCategory.fromName(p.categoryOverrides[app.key])
-                    ?: autoCategory.getOrPut(app.key) { AppCategory.detect(app.declaredCategory, app.packageName) })
+                    ?: autoCategory.getOrPut(app.key) { app.model.autoCategory })
             },
             manualCategories = p.categoryOverrides.keys,
             clockStyle = p.clockStyle,

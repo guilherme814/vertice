@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.vertice.launcher.core.AppModel
 import com.vertice.launcher.diag.VLog
 import java.text.Collator
 
@@ -82,11 +83,14 @@ class AppRepository(context: Context) {
                 val component = info.componentName
                 if (component.packageName == appContext.packageName) continue
                 result += AppEntry(
-                    key = component.flattenToString() + suffix,
+                    model = AppModel(
+                        key = component.flattenToString() + suffix,
+                        packageName = component.packageName,
+                        label = info.label?.toString() ?: component.packageName,
+                        installTime = info.firstInstallTime,
+                        declaredCategory = info.applicationInfo.category
+                    ),
                     component = component,
-                    label = info.label?.toString() ?: component.packageName,
-                    installTime = info.firstInstallTime,
-                    declaredCategory = info.applicationInfo.category,
                     user = user,
                     info = info
                 )
