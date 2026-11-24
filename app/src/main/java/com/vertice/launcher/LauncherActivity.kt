@@ -28,6 +28,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vertice.launcher.data.AppEntry
+import com.vertice.launcher.diag.VLog
 import com.vertice.launcher.ui.AppDrawer
 import com.vertice.launcher.ui.HomeScreen
 import com.vertice.launcher.ui.QuickSheet
@@ -99,6 +100,13 @@ class LauncherActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if (intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)) homeSignal++
+        val home = intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)
+        VLog.i("Home", "onNewIntent action=${intent.action} home=$home")
+        if (home) homeSignal++
+    }
+
+    override fun onPause() {
+        vm.logIconStats()
+        super.onPause()
     }
 }

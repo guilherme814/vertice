@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.vertice.launcher.diag.VLog
 import java.text.Collator
 
 /**
@@ -39,11 +40,14 @@ class AppRepository(context: Context) {
     private var refreshJob: Job? = null
 
     private val callback = object : LauncherApps.Callback() {
-        override fun onPackageRemoved(packageName: String?, user: UserHandle?) = refresh()
-        override fun onPackageAdded(packageName: String?, user: UserHandle?) = refresh()
-        override fun onPackageChanged(packageName: String?, user: UserHandle?) = refresh()
-        override fun onPackagesAvailable(packageNames: Array<out String>?, user: UserHandle?, replacing: Boolean) = refresh()
-        override fun onPackagesUnavailable(packageNames: Array<out String>?, user: UserHandle?, replacing: Boolean) = refresh()
+        private fun event(what: String, pkg: String?) { VLog.d("Apps", "Evento do sistema: $what $pkg"); refresh() }
+        override fun onPackageRemoved(packageName: String?, user: UserHandle?) = event("removido", packageName)
+        override fun onPackageAdded(packageName: String?, user: UserHandle?) = event("instalado", packageName)
+        override fun onPackageChanged(packageName: String?, user: UserHandle?) = event("alterado", packageName)
+        override fun onPackagesAvailable(packageNames: Array<out String>?, user: UserHandle?, replacing: Boolean) =
+            event("disponível", packageNames?.joinToString())
+        override fun onPackagesUnavailable(packageNames: Array<out String>?, user: UserHandle?, replacing: Boolean) =
+            event("indisponível", packageNames?.joinToString())
     }
 
     init {
@@ -56,7 +60,15 @@ class AppRepository(context: Context) {
         refreshJob?.cancel()
         refreshJob = scope.launch {
             if (!immediate) delay(350)
-            _apps.value = load()
+            val t0 = System.nanoTime()
+            try {
+                val list = load()
+                _apps.value = list
+                VLog.i("Apps", "Lista carregada: ${list.size} apps em ${(System.nanoTime() - t0) / 1_000_000}ms")
+            } catch (e: Exception) {
+                // Mantém a lista anterior: melhor desatualizada do que vazia ou crash.
+                VLog.e("Apps", "Falha ao carregar a lista de apps", e)
+            }
         }
     }
 
@@ -86,9 +98,11 @@ class AppRepository(context: Context) {
 
     fun launch(app: AppEntry, options: Bundle?) {
         try {
+            VLog.d("Apps", "Abrindo ${app.component.flattenToShortString()}")
             launcherApps.startMainActivity(app.component, app.user, null, options)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             // App removido no meio do caminho ou perfil indisponível.
+            VLog.w("Apps", "Falha ao abrir ${app.component.flattenToShortString()}", e)
             refresh(immediate = true)
         }
     }
@@ -96,7 +110,8 @@ class AppRepository(context: Context) {
     fun openAppInfo(app: AppEntry) {
         try {
             launcherApps.startAppDetailsActivity(app.component, app.user, null, null)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            VLog.w("Apps", "Falha ao abrir informações de ${app.packageName}", e)
         }
     }
 
@@ -105,7 +120,8 @@ class AppRepository(context: Context) {
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         try {
             appContext.startActivity(intent)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            VLog.w("Apps", "Falha ao desinstalar ${app.packageName}", e)
         }
     }
 
@@ -119,8 +135,8 @@ class AppRepository(context: Context) {
     private fun startSafely(intent: Intent) {
         try {
             appContext.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        } catch (_: Exception) {
-            // Sem app para essa ação: não há nada a fazer.
+        } catch (e: Exception) {
+            VLog.w("Apps", "Nenhum app para ${intent.action}", e)
         }
     }
 

@@ -13,7 +13,11 @@ android {
         minSdk = 26
         targetSdk = 35
         versionCode = 1
-        versionName = "1.0.0"
+        // No CI o nome da versão ganha o número da execução e o commit (ex.: 1.0.0+ci42.abc1234):
+        // aparece no log e na tela de diagnóstico, para saber exatamente qual APK está no aparelho.
+        versionName = "1.0.0" + (System.getenv("GITHUB_RUN_NUMBER")?.let { n ->
+            "+ci$n" + (System.getenv("GITHUB_SHA")?.take(7)?.let { ".$it" } ?: "")
+        } ?: "")
         vectorDrawables.useSupportLibrary = true
     }
 

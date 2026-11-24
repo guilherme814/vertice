@@ -43,6 +43,8 @@ Módulos: `:app` (UI e ViewModel), `:data` (LauncherApps, DataStore, cache de í
 e `:domain` (Kotlin puro: layout da Home, relógio, papéis de parede, contrato `LayoutStore` — com testes de JVM).
 Setas: `app -> data -> domain`; nunca no sentido contrário.
 
+Diagnóstico e log (travamentos, crashes, memória): ver [`docs/DIAGNOSTICO.md`](docs/DIAGNOSTICO.md).
+
 ## Compatibilidade
 Android 8.0 (API 26)+, JDK 17, AGP 8.7.3, Kotlin 2.0.21, Compose BOM 2025.01.00, compileSdk/targetSdk 35.
 

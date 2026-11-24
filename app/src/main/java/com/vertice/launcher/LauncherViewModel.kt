@@ -18,6 +18,8 @@ import com.vertice.launcher.data.AppEntry
 import com.vertice.launcher.data.AppRepository
 import com.vertice.launcher.data.IconCache
 import com.vertice.launcher.data.LauncherPrefs
+import com.vertice.launcher.diag.SystemSnapshot
+import com.vertice.launcher.diag.VLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -98,6 +100,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         .stateIn(viewModelScope, SharingStarted.Eagerly, HomeUi())
 
     init {
+        // Marco de abertura: quando a Home tem dados reais para mostrar.
+        viewModelScope.launch {
+            val ready = ui.first { !it.loading }
+            VLog.i("Abertura", "Home pronta: ${ready.apps.size} apps, ${ready.placed.size} na grade, ${ready.dock.size} no dock, " +
+                "perfil=${ready.profile} (+${SystemSnapshot.sinceProcessStartMs()}ms desde o início do processo)")
+        }
         // Primeira execução: escolhe o perfil pelo hardware e monta o dock inicial.
         viewModelScope.launch {
             val apps = repo.apps.first { it.isNotEmpty() }
@@ -106,6 +114,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 val dock = wanted.mapNotNull { pkg -> apps.firstOrNull { it.packageName == pkg }?.key }
                     .take(GridSpec.DOCK_SLOTS)
                     .mapIndexed { i, key -> LayoutItem(key, Container.Dock, 0, i, 0) }
+                VLog.i("Prefs", "Primeira execução: perfil recomendado=$recommended, dock inicial=${dock.size} apps")
                 prefs.seed(recommended, dock)
             }
         }
@@ -124,27 +133,33 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun placementOf(app: AppEntry): Placement = ui.value.placement[app.key] ?: Placement.None
 
     /** Toda edição passa por aqui: transação única no DataStore, sempre normalizada. */
-    private fun edit(op: (List<LayoutItem>) -> List<LayoutItem>) {
+    private fun edit(name: String, op: (List<LayoutItem>) -> List<LayoutItem>) {
         viewModelScope.launch {
             val present = repo.apps.value.map { it.key }.toSet()
-            prefs.editLayout { current ->
-                val next = op(current)
-                // Com a lista de apps ainda vazia, não apaga nada do que foi salvo.
-                if (present.isEmpty()) next else LayoutOps.sanitize(next, present)
+            try {
+                prefs.editLayout { current ->
+                    val next = op(current)
+                    // Com a lista de apps ainda vazia, não apaga nada do que foi salvo.
+                    val result = if (present.isEmpty()) next else LayoutOps.sanitize(next, present)
+                    VLog.d("Layout", "$name: ${current.size} -> ${result.size} itens${if (result == current) " (sem mudança)" else ""}")
+                    result
+                }
+            } catch (e: Exception) {
+                VLog.e("Layout", "Falha ao salvar a edição '$name'", e)
             }
         }
     }
 
-    fun toggleDock(app: AppEntry) = edit {
+    fun toggleDock(app: AppEntry) = edit("dock ${app.packageName}") {
         if (it.any { i -> i.key == app.key && i.container == Container.Dock }) LayoutOps.removeFromDock(it, app.key)
         else LayoutOps.addToDock(it, app.key) // dock cheio: nada muda
     }
 
-    fun addToHome(app: AppEntry) = edit { LayoutOps.addToHome(it, app.key) }
+    fun addToHome(app: AppEntry) = edit("colocar ${app.packageName}") { LayoutOps.addToHome(it, app.key) }
 
-    fun removeFromHome(app: AppEntry) = edit { LayoutOps.removeFromHome(it, app.key) }
+    fun removeFromHome(app: AppEntry) = edit("tirar ${app.packageName}") { LayoutOps.removeFromHome(it, app.key) }
 
-    fun moveToCell(app: AppEntry, page: Int, x: Int, y: Int) = edit { LayoutOps.moveHome(it, app.key, page, x, y) }
+    fun moveToCell(app: AppEntry, page: Int, x: Int, y: Int) = edit("mover ${app.packageName} p$page ($x,$y)") { LayoutOps.moveHome(it, app.key, page, x, y) }
 
     /** `category = null` volta a classificação automática do app. */
     fun setCategory(app: AppEntry, category: AppCategory?) {
@@ -164,10 +179,15 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun openCalendar() = repo.openCalendarApp()
 
     fun setProfile(profile: PerformanceProfile) {
+        VLog.i("Prefs", "Perfil de desempenho alterado para $profile")
         viewModelScope.launch { prefs.setProfile(profile) }
     }
 
+    /** Resumo de uso do cache de ícones, pedido pela Activity ao sair da tela. */
+    fun logIconStats() = VLog.i("Ícones", icons.stats())
+
     override fun onCleared() {
+        VLog.i("App", "ViewModel destruído")
         repo.close()
         super.onCleared()
     }

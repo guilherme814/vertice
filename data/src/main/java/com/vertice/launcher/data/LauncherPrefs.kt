@@ -17,7 +17,11 @@ import com.vertice.launcher.core.LayoutItem
 import com.vertice.launcher.core.LayoutStore
 import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.core.Wallpaper
+import com.vertice.launcher.diag.VLog
+import androidx.datastore.preferences.core.emptyPreferences
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import java.io.IOException
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -55,7 +59,13 @@ class LauncherPrefs(context: Context) : LayoutStore {
         val wallpaper = stringPreferencesKey("wallpaper")
     }
 
-    val prefs: Flow<Prefs> = store.data.map { p ->
+    val prefs: Flow<Prefs> = store.data.catch { e ->
+        if (e is IOException) {
+            // Arquivo de preferências ilegível: segue com os padrões em vez de derrubar a launcher.
+            VLog.e("Prefs", "Falha ao ler as preferências; usando padrões", e)
+            emit(emptyPreferences())
+        } else throw e
+    }.map { p ->
         Prefs(
             profile = PerformanceProfile.fromName(p[K.profile]),
             layout = readLayout(p),

@@ -45,7 +45,8 @@ import com.vertice.launcher.core.Wallpaper
 
 enum class SheetTab(val label: String) {
     Wallpaper("Papel de parede"),
-    Clock("Relógio")
+    Clock("Relógio"),
+    Diagnostics("Diagnóstico")
 }
 
 /**
@@ -100,6 +101,7 @@ fun QuickSheet(
                 when (tab) {
                     SheetTab.Wallpaper -> WallpaperTab(vm, ui)
                     SheetTab.Clock -> ClockTab(vm, ui)
+                    SheetTab.Diagnostics -> DiagnosticsTab()
                 }
             }
         }
