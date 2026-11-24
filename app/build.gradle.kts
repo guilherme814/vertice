@@ -50,6 +50,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":domain"))
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
@@ -64,6 +65,4 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     debugImplementation(libs.compose.ui.tooling)
-
-    testImplementation(libs.junit)
 }
