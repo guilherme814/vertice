@@ -39,7 +39,9 @@ import kotlin.math.roundToInt
 /** A tela inicial do aparelho. `singleTask`: o botão Home volta aqui em vez de empilhar cópias. */
 class LauncherActivity : ComponentActivity() {
 
-    private val vm: LauncherViewModel by viewModels()
+    private val vm: LauncherViewModel by viewModels {
+        LauncherViewModel.factory((application as VerticeApp).container)
+    }
 
     /** Incrementa a cada toque no botão Home com a launcher já aberta. */
     private var homeSignal by mutableIntStateOf(0)

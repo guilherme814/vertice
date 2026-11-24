@@ -1,8 +1,9 @@
 package com.vertice.launcher
 
-import android.app.Application
 import android.os.Bundle
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewModelScope
 import com.vertice.launcher.core.AppCategory
 import com.vertice.launcher.core.ClockFormat
@@ -19,8 +20,6 @@ import com.vertice.launcher.core.Wallpaper
 import com.vertice.launcher.data.AppEntry
 import com.vertice.launcher.data.AppRepository
 import com.vertice.launcher.data.IconCache
-import com.vertice.launcher.data.DevicePerformance
-import com.vertice.launcher.data.LauncherPrefs
 import com.vertice.launcher.diag.SystemSnapshot
 import com.vertice.launcher.diag.VLog
 import kotlinx.coroutines.Dispatchers
@@ -60,13 +59,16 @@ data class HomeUi(
     fun categoryOf(app: AppEntry): AppCategory = categories[app.key] ?: AppCategory.default
 }
 
-class LauncherViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val prefs: SettingsStore = LauncherPrefs(application)
-    private val repo = AppRepository(application)
-    private val recommended = DevicePerformance.recommended(application)
-
-    val icons = IconCache(application, recommended)
+/**
+ * Recebe tudo pronto (veja [AppContainer]); não cria nem fecha nada sozinho.
+ * Os dados vivem no processo, não na tela: girar/recriar a Activity não recarrega a lista de apps.
+ */
+class LauncherViewModel(
+    private val prefs: SettingsStore,
+    private val repo: AppRepository,
+    val icons: IconCache,
+    private val recommended: PerformanceProfile
+) : ViewModel() {
 
     // Classificação automática só depende do app: calculada uma vez, não a cada edição de preferência.
     private val autoCategory = HashMap<String, AppCategory>()
@@ -185,8 +187,15 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun logIconStats() = VLog.i("Ícones", icons.stats())
 
     override fun onCleared() {
-        VLog.i("App", "ViewModel destruído")
-        repo.close()
+        VLog.i("App", "ViewModel destruído (os dados continuam no processo)")
         super.onCleared()
+    }
+
+    companion object {
+        fun factory(container: AppContainer) = viewModelFactory {
+            initializer {
+                LauncherViewModel(container.settings, container.apps, container.icons, container.recommendedProfile)
+            }
+        }
     }
 }

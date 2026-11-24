@@ -17,8 +17,13 @@ import com.vertice.launcher.diag.Watchdog
  */
 class VerticeApp : Application() {
 
+    /** Dependências do processo (criadas uma vez, compartilhadas por todas as telas). */
+    lateinit var container: AppContainer
+        private set
+
     override fun onCreate() {
         super.onCreate()
+        container = AppContainer(this)
         VLog.init(this)
         CrashReporter.install(this)
         StrictModeBridge.install()
