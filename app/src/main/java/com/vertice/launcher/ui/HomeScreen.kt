@@ -228,7 +228,7 @@ private fun HomeGridPage(
                             if (moving != null) {
                                 // No modo mover o ícone não abre o app: o toque vai para a célula.
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    AppIcon(placed.app, vm, 44.dp)
+                                    AppIcon(placed.app, vm.icons, 44.dp)
                                     Text(
                                         placed.app.label, color = Snow, fontSize = 11.sp, maxLines = 1,
                                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis

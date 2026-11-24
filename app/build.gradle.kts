@@ -56,6 +56,7 @@ android {
 dependencies {
     implementation(project(":domain"))
     implementation(project(":data"))
+    implementation(project(":ui-core"))
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)

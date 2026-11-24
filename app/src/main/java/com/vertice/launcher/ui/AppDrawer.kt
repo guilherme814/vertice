@@ -156,20 +156,3 @@ fun AppDrawer(
         }
     }
 }
-
-@Composable
-fun CategoryChip(text: String, selected: Boolean, onClick: () -> Unit) {
-    Surface(
-        color = if (selected) Mint else PanelSoft,
-        shape = RoundedCornerShape(50),
-        modifier = Modifier.clip(RoundedCornerShape(50)).clickable(onClick = onClick)
-    ) {
-        Text(
-            text,
-            color = if (selected) Ink else Snow,
-            fontSize = 12.sp,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-        )
-    }
-}

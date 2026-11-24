@@ -43,19 +43,6 @@ import com.vertice.launcher.core.Placement
 import com.vertice.launcher.data.AppEntry
 import kotlin.math.roundToInt
 
-/** Ícone assíncrono: usa o cache e só decodifica se faltar. */
-@Composable
-fun AppIcon(app: AppEntry, vm: LauncherViewModel, size: Dp, modifier: Modifier = Modifier) {
-    val px = with(LocalDensity.current) { size.toPx() }.roundToInt()
-    var bitmap: ImageBitmap? by remember(app.key, px) { mutableStateOf(vm.icons.peek(app, px)) }
-    LaunchedEffect(app.key, px) {
-        if (bitmap == null) bitmap = vm.icons.load(app, px)
-    }
-    Box(modifier.size(size)) {
-        bitmap?.let { Image(bitmap = it, contentDescription = app.label, modifier = Modifier.size(size)) }
-    }
-}
-
 /**
  * App tocável: toque abre (com animação de zoom a partir do ícone, se o perfil permitir);
  * segurar abre o menu. Arrastar para reorganizar entra numa fase futura.
@@ -102,7 +89,7 @@ fun AppTile(
             Modifier.padding(vertical = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            AppIcon(app, vm, iconSize)
+            AppIcon(app, vm.icons, iconSize)
             if (showLabel) {
                 Spacer(Modifier.height(6.dp))
                 Text(
