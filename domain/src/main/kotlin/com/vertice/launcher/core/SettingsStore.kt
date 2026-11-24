@@ -37,6 +37,9 @@ interface SettingsStore : LayoutStore {
     suspend fun setShowDate(show: Boolean)
     suspend fun setWallpaper(w: Wallpaper)
 
+    /** Substitui todas as preferências (restauração de backup). Grava o formato atual. */
+    suspend fun restore(prefs: Prefs)
+
     /** Primeira execução: grava perfil e layout iniciais e marca como semeado. */
     suspend fun seed(profile: PerformanceProfile, layout: List<LayoutItem>)
 }

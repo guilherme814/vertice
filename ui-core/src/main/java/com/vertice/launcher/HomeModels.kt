@@ -69,4 +69,10 @@ interface HomeActions {
     fun setClockFormat(format: ClockFormat)
     fun setShowDate(show: Boolean)
     fun setWallpaper(w: Wallpaper)
+
+    /** Texto do backup das preferências atuais. */
+    suspend fun backupText(): String
+
+    /** Restaura de um backup; devolve a mensagem para mostrar ao usuário. */
+    suspend fun restoreBackup(text: String): String
 }

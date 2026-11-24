@@ -6,15 +6,16 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
-import com.vertice.launcher.core.Container
 import com.vertice.launcher.core.LayoutCodec
 import com.vertice.launcher.core.LayoutItem
 import com.vertice.launcher.core.Prefs
+import com.vertice.launcher.core.SettingsSchema
 import com.vertice.launcher.core.SettingsStore
 import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.core.Wallpaper
@@ -36,6 +37,7 @@ class LauncherPrefs(context: Context) : SettingsStore {
         val profile = stringPreferencesKey("profile")
         val dock = stringPreferencesKey("dock") // legado (antes da grade); só lido para migrar
         val layout = stringSetPreferencesKey("layout_v2")
+        val schemaVersion = intPreferencesKey("schema_version")
         val seeded = booleanPreferencesKey("seeded")
         val categories = stringSetPreferencesKey("category_overrides")
         val clockStyle = stringPreferencesKey("clock_style")
@@ -75,14 +77,16 @@ class LauncherPrefs(context: Context) : SettingsStore {
      * (ex.: dois toques rápidos) nunca se sobrescrevem, ao contrário de ler o estado na UI e gravar depois.
      */
     override suspend fun editLayout(transform: (List<LayoutItem>) -> List<LayoutItem>) {
-        store.edit { p -> p[K.layout] = LayoutCodec.encodeAll(transform(readLayout(p))) }
+        store.edit { p ->
+            p[K.layout] = LayoutCodec.encodeAll(transform(readLayout(p)))
+            p[K.schemaVersion] = SettingsSchema.CURRENT
+        }
     }
 
     /** Layout novo, ou (primeira abertura depois da atualização) migrado do dock antigo. */
     private fun readLayout(p: Preferences): List<LayoutItem> {
         p[K.layout]?.let { return LayoutCodec.decodeAll(it) }
-        val legacy = p[K.dock]?.split(SEP)?.filter { it.isNotEmpty() } ?: return emptyList()
-        return legacy.mapIndexed { i, key -> LayoutItem(key, Container.Dock, 0, i, 0) }
+        return SettingsSchema.layoutFromLegacyDock(p[K.dock])
     }
 
     /** `category = null` volta para a classificação automática. */
@@ -104,10 +108,25 @@ class LauncherPrefs(context: Context) : SettingsStore {
 
     override suspend fun setWallpaper(w: Wallpaper) { store.edit { it[K.wallpaper] = w.name } }
 
+    override suspend fun restore(prefs: Prefs) {
+        store.edit {
+            prefs.profile?.let { p -> it[K.profile] = p.name } ?: it.remove(K.profile)
+            it[K.layout] = LayoutCodec.encodeAll(prefs.layout)
+            it[K.categories] = prefs.categoryOverrides.map { (k, v) -> "${Uri.encode(k)}=$v" }.toSet()
+            it[K.clockStyle] = prefs.clockStyle.name
+            it[K.clockFormat] = prefs.clockFormat.name
+            it[K.showDate] = prefs.showDate
+            it[K.wallpaper] = prefs.wallpaper.name
+            it[K.schemaVersion] = SettingsSchema.CURRENT
+            it[K.seeded] = true
+        }
+    }
+
     override suspend fun seed(profile: PerformanceProfile, layout: List<LayoutItem>) {
         store.edit {
             it[K.profile] = profile.name
             it[K.layout] = LayoutCodec.encodeAll(layout)
+            it[K.schemaVersion] = SettingsSchema.CURRENT
             it[K.seeded] = true
         }
     }

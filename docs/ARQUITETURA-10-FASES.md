@@ -48,7 +48,8 @@ log/diagnóstico (`docs/DIAGNOSTICO.md`).
 | 6 | **feito** — `:ui-core` (tema, relógio, papel de parede, `AppIcon`, `CategoryChip`); depende de `:data`/`:domain`, nunca do `:app` |
 | 7 | **feito** — `:feature-home`, `:feature-drawer`, `:feature-settings`; telas falam com `HomeActions`, não com o ViewModel |
 | 8 | **feito** — `AppCatalog`, `AppLauncher`, `BatteryStatus` (pacote `platform` em `:data`); a bateria virou `Flow` em vez de receptor dentro da tela |
-| 9–10 | pendentes (um de cada vez) |
+| 9 | **feito** — `SettingsSchema` (versão 2, migração do dock antigo testada), `BackupCodec` (texto, tolerante, recusa versão futura), `restore` no `SettingsStore`, aba Backup (exportar/restaurar) |
+| 10 | pendente |
 
 ### Passo 1 — o que mudou
 - `:domain` agora contém `PerformanceProfile`, `AppCategory` (com as constantes de `ApplicationInfo` copiadas e travadas por teste), `Prefs`, `SettingsStore`.

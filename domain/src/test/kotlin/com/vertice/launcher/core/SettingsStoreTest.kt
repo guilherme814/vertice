@@ -25,6 +25,7 @@ class InMemorySettings : SettingsStore {
     override suspend fun setClockFormat(format: ClockFormat) { state.value = state.value.copy(clockFormat = format) }
     override suspend fun setShowDate(show: Boolean) { state.value = state.value.copy(showDate = show) }
     override suspend fun setWallpaper(w: Wallpaper) { state.value = state.value.copy(wallpaper = w) }
+    override suspend fun restore(prefs: Prefs) { state.value = prefs.copy(seeded = true) }
     override suspend fun seed(profile: PerformanceProfile, layout: List<LayoutItem>) {
         state.value = state.value.copy(profile = profile, layout = layout, seeded = true)
     }
@@ -53,5 +54,15 @@ class SettingsStoreTest {
         assertEquals("Games", s.current().categoryOverrides["k"])
         s.setCategory("k", null)
         assertTrue(s.current().categoryOverrides.isEmpty())
+    }
+
+    @Test fun `restaurar substitui tudo`() = runBlocking {
+        val s = InMemorySettings()
+        s.setCategory("x", "Games")
+        s.restore(Prefs(layout = listOf(LayoutItem("a", Container.Home, 0, 0, 0)), showDate = false))
+        val p = s.current()
+        assertTrue(p.seeded)
+        assertTrue(p.categoryOverrides.isEmpty())
+        assertEquals(false, p.showDate)
     }
 }
