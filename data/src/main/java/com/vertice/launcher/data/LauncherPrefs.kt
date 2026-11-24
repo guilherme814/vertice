@@ -14,7 +14,8 @@ import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.Container
 import com.vertice.launcher.core.LayoutCodec
 import com.vertice.launcher.core.LayoutItem
-import com.vertice.launcher.core.LayoutStore
+import com.vertice.launcher.core.Prefs
+import com.vertice.launcher.core.SettingsStore
 import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.core.Wallpaper
 import com.vertice.launcher.diag.VLog
@@ -23,27 +24,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import java.io.IOException
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 private val Context.launcherStore: DataStore<Preferences> by preferencesDataStore(name = "vertice_launcher")
 
-/** O que é guardado no aparelho. Tudo local: sem conta, sem rede. */
-data class Prefs(
-    /** null = ainda não escolhido (a primeira execução decide pelo hardware). */
-    val profile: PerformanceProfile? = null,
-    /** Posição de cada app na Home e no dock (contêiner + página + célula). */
-    val layout: List<LayoutItem> = emptyList(),
-    val seeded: Boolean = false,
-    /** Correções manuais: chave do app -> nome da categoria. Vencem a classificação automática. */
-    val categoryOverrides: Map<String, String> = emptyMap(),
-    val clockStyle: ClockStyle = ClockStyle.Classic,
-    val clockFormat: ClockFormat = ClockFormat.System,
-    val showDate: Boolean = true,
-    val wallpaper: Wallpaper = Wallpaper.System
-)
-
-class LauncherPrefs(context: Context) : LayoutStore {
+class LauncherPrefs(context: Context) : SettingsStore {
 
     private val store = context.applicationContext.launcherStore
 
@@ -59,7 +44,7 @@ class LauncherPrefs(context: Context) : LayoutStore {
         val wallpaper = stringPreferencesKey("wallpaper")
     }
 
-    val prefs: Flow<Prefs> = store.data.catch { e ->
+    override val prefs: Flow<Prefs> = store.data.catch { e ->
         if (e is IOException) {
             // Arquivo de preferências ilegível: segue com os padrões em vez de derrubar a launcher.
             VLog.e("Prefs", "Falha ao ler as preferências; usando padrões", e)
@@ -81,9 +66,7 @@ class LauncherPrefs(context: Context) : LayoutStore {
         )
     }.distinctUntilChanged()
 
-    suspend fun current(): Prefs = prefs.first()
-
-    suspend fun setProfile(profile: PerformanceProfile) {
+    override suspend fun setProfile(profile: PerformanceProfile) {
         store.edit { it[K.profile] = profile.name }
     }
 
@@ -103,7 +86,7 @@ class LauncherPrefs(context: Context) : LayoutStore {
     }
 
     /** `category = null` volta para a classificação automática. */
-    suspend fun setCategory(key: String, category: String?) {
+    override suspend fun setCategory(key: String, category: String?) {
         store.edit { p ->
             val current = (p[K.categories] ?: emptySet())
                 .filterNot { Uri.decode(it.substringBeforeLast('=')) == key }
@@ -113,15 +96,15 @@ class LauncherPrefs(context: Context) : LayoutStore {
         }
     }
 
-    suspend fun setClockStyle(style: ClockStyle) { store.edit { it[K.clockStyle] = style.name } }
+    override suspend fun setClockStyle(style: ClockStyle) { store.edit { it[K.clockStyle] = style.name } }
 
-    suspend fun setClockFormat(format: ClockFormat) { store.edit { it[K.clockFormat] = format.name } }
+    override suspend fun setClockFormat(format: ClockFormat) { store.edit { it[K.clockFormat] = format.name } }
 
-    suspend fun setShowDate(show: Boolean) { store.edit { it[K.showDate] = show } }
+    override suspend fun setShowDate(show: Boolean) { store.edit { it[K.showDate] = show } }
 
-    suspend fun setWallpaper(w: Wallpaper) { store.edit { it[K.wallpaper] = w.name } }
+    override suspend fun setWallpaper(w: Wallpaper) { store.edit { it[K.wallpaper] = w.name } }
 
-    suspend fun seed(profile: PerformanceProfile, layout: List<LayoutItem>) {
+    override suspend fun seed(profile: PerformanceProfile, layout: List<LayoutItem>) {
         store.edit {
             it[K.profile] = profile.name
             it[K.layout] = LayoutCodec.encodeAll(layout)

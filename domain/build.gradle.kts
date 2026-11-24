@@ -6,5 +6,6 @@ plugins {
 kotlin { jvmToolchain(17) }
 
 dependencies {
+    api(libs.kotlinx.coroutines.core) // Flow nos contratos
     testImplementation(libs.junit)
 }

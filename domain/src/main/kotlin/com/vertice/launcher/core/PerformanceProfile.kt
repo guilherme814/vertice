@@ -1,8 +1,5 @@
 package com.vertice.launcher.core
 
-import android.app.ActivityManager
-import android.content.Context
-
 /**
  * Perfis de desempenho (roteiro da Vértice: Ultra Lite / Equilibrado / Premium).
  *
@@ -21,11 +18,8 @@ enum class PerformanceProfile(
     Premium("Premium", animations = true, iconCacheMb = 32, iconMaxPx = 192);
 
     companion object {
-        /** Sugestão inicial: aparelhos de pouca RAM começam no Ultra Lite. */
-        fun recommended(context: Context): PerformanceProfile {
-            val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            return if (am.isLowRamDevice) UltraLite else Balanced
-        }
+        /** Sugestão inicial: aparelhos de pouca RAM começam no Ultra Lite. (Quem sabe se é pouca RAM é o :data.) */
+        fun recommended(lowRam: Boolean): PerformanceProfile = if (lowRam) UltraLite else Balanced
 
         fun fromName(name: String?): PerformanceProfile? = entries.firstOrNull { it.name == name }
     }

@@ -1,7 +1,5 @@
 package com.vertice.launcher.core
 
-import android.content.pm.ApplicationInfo
-
 /**
  * Categorias de apps. A ordem aqui é a ordem em que aparecem na gaveta.
  *
@@ -23,16 +21,27 @@ enum class AppCategory(val label: String) {
     companion object {
         val default = Tools
 
+        // Valores de ApplicationInfo.CATEGORY_* (constantes estáveis do Android), copiados para o domínio
+        // não depender do SDK. Os testes travam estes números.
+        const val CAT_GAME = 0
+        const val CAT_AUDIO = 1
+        const val CAT_VIDEO = 2
+        const val CAT_IMAGE = 3
+        const val CAT_SOCIAL = 4
+        const val CAT_NEWS = 5
+        const val CAT_MAPS = 6
+        const val CAT_PRODUCTIVITY = 7
+
         fun fromName(name: String?): AppCategory? = entries.firstOrNull { it.name == name }
 
         fun detect(declared: Int, packageName: String): AppCategory = when (declared) {
-            ApplicationInfo.CATEGORY_SOCIAL -> Social
-            ApplicationInfo.CATEGORY_AUDIO, ApplicationInfo.CATEGORY_VIDEO -> Entertainment
-            ApplicationInfo.CATEGORY_IMAGE -> Photos
-            ApplicationInfo.CATEGORY_GAME -> Games
-            ApplicationInfo.CATEGORY_PRODUCTIVITY -> Productivity
-            ApplicationInfo.CATEGORY_NEWS -> News
-            ApplicationInfo.CATEGORY_MAPS -> Travel
+            CAT_SOCIAL -> Social
+            CAT_AUDIO, CAT_VIDEO -> Entertainment
+            CAT_IMAGE -> Photos
+            CAT_GAME -> Games
+            CAT_PRODUCTIVITY -> Productivity
+            CAT_NEWS -> News
+            CAT_MAPS -> Travel
             else -> guess(packageName)
         }
 

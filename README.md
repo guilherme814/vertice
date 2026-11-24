@@ -12,7 +12,7 @@ Ordem de prioridade: **base Android funcional → recursos → acabamento premiu
 |------|------|--------|
 | 0 | Auditoria e estabilização | feita — ver [`docs/FASE-0-INVENTARIO.md`](docs/FASE-0-INVENTARIO.md) |
 | 1 | Launcher mínima funcional (Home, apps, dock, grade básica, persistência) | implementada — aceite em [`docs/FASE-1-ACEITE.md`](docs/FASE-1-ACEITE.md) (falta confirmar reinício no aparelho) |
-| 2 | Arquitetura modular (domínio, dados, módulos) | — |
+| 2 | Arquitetura modular (domínio, dados, módulos) | em andamento, 10 passos — ver [`docs/ARQUITETURA-10-FASES.md`](docs/ARQUITETURA-10-FASES.md) (passo 1 feito) |
 | 3 | Experiência de uso (busca, gestos, categorias, páginas, acessibilidade) | adiantada em parte: categorias |
 | 4 | Personalização premium (tema, wallpapers, ícones, widgets) | adiantada em parte: relógio, papéis de parede |
 | 5 | Otimização e compatibilidade (Redmi A1 e Xiaomi 12) | — |
@@ -33,14 +33,14 @@ Os itens "adiantados" compilam, mas **não contam para o aceite** até as fases 
 ## Estrutura
 ```
 app/    LauncherActivity, LauncherViewModel, ui/ (HomeScreen, AppDrawer, AppTile, Theme...)
-data/   AppRepository, AppEntry, IconCache, LauncherPrefs (DataStore), PerformanceProfile, AppCategory
-domain/ HomeLayout (grade como dado), LayoutStore, ClockStyle, Wallpaper  (Kotlin puro, com testes)
+data/   AppRepository, AppEntry, IconCache, LauncherPrefs (DataStore), DevicePerformance, diag/ (log)
+domain/ HomeLayout, SettingsStore/Prefs, PerformanceProfile, AppCategory, ClockStyle, Wallpaper, diag/  (Kotlin puro, com testes)
 ```
 A tela só lê estado e dispara ações; dados e perfil não conhecem Compose. Quando um pedaço crescer
 (ex.: ajustes), ele vira módulo Gradle sem reescrever o resto.
 
-Módulos: `:app` (UI e ViewModel), `:data` (LauncherApps, DataStore, cache de ícones, perfil de desempenho, categorias)
-e `:domain` (Kotlin puro: layout da Home, relógio, papéis de parede, contrato `LayoutStore` — com testes de JVM).
+Módulos: `:app` (UI e ViewModel), `:data` (LauncherApps, DataStore, cache de ícones, leitura do hardware, log)
+e `:domain` (Kotlin puro: layout da Home, preferências e seu contrato, perfis, categorias, relógio, papéis de parede — com testes de JVM).
 Setas: `app -> data -> domain`; nunca no sentido contrário.
 
 Diagnóstico e log (travamentos, crashes, memória): ver [`docs/DIAGNOSTICO.md`](docs/DIAGNOSTICO.md).

@@ -12,11 +12,13 @@ import com.vertice.launcher.core.GridSpec
 import com.vertice.launcher.core.LayoutItem
 import com.vertice.launcher.core.LayoutOps
 import com.vertice.launcher.core.Placement
+import com.vertice.launcher.core.SettingsStore
 import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.core.Wallpaper
 import com.vertice.launcher.data.AppEntry
 import com.vertice.launcher.data.AppRepository
 import com.vertice.launcher.data.IconCache
+import com.vertice.launcher.data.DevicePerformance
 import com.vertice.launcher.data.LauncherPrefs
 import com.vertice.launcher.diag.SystemSnapshot
 import com.vertice.launcher.diag.VLog
@@ -59,9 +61,9 @@ data class HomeUi(
 
 class LauncherViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val prefs = LauncherPrefs(application)
+    private val prefs: SettingsStore = LauncherPrefs(application)
     private val repo = AppRepository(application)
-    private val recommended = PerformanceProfile.recommended(application)
+    private val recommended = DevicePerformance.recommended(application)
 
     val icons = IconCache(application, recommended)
 
