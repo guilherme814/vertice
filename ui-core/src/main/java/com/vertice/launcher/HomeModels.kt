@@ -10,6 +10,7 @@ import com.vertice.launcher.core.Placement
 import com.vertice.launcher.core.Wallpaper
 import com.vertice.launcher.data.AppEntry
 import com.vertice.launcher.data.IconCache
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /** App + onde ele está na grade da Home. */
@@ -46,6 +47,9 @@ data class HomeUi(
 interface HomeActions {
     val ui: StateFlow<HomeUi>
     val icons: IconCache
+
+    /** Bateria em %, null se desconhecida. */
+    val batteryPercent: Flow<Int?>
 
     fun openApp(app: AppEntry, options: Bundle?)
     fun openAppInfo(app: AppEntry)

@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -63,7 +64,7 @@ fun HomeScreen(
     onOpenSheet: () -> Unit
 ) {
     val now by rememberNow()
-    val battery by rememberBatteryPercent()
+    val battery by vm.batteryPercent.collectAsState(initial = null)
     val pages = ui.pageCount + if (moving != null) 1 else 0 // página extra vazia só durante o movimento
     val pager = rememberPagerState(pageCount = { pages })
 
@@ -253,25 +254,4 @@ private fun HomeGridPage(
             }
         }
     }
-}
-
-/** Bateria por broadcast (o sistema avisa só quando muda; sem polling). */
-@Composable
-private fun rememberBatteryPercent(): State<Int?> {
-    val context = LocalContext.current
-    val state = remember { androidx.compose.runtime.mutableStateOf<Int?>(null) }
-    DisposableEffect(context) {
-        fun read(intent: Intent?) {
-            val level = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
-            val scale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, 100) ?: 100
-            state.value = if (level >= 0 && scale > 0) level * 100 / scale else null
-        }
-        val receiver = object : BroadcastReceiver() {
-            override fun onReceive(c: Context?, intent: Intent?) = read(intent)
-        }
-        // ACTION_BATTERY_CHANGED é "sticky": o registro já devolve o valor atual.
-        read(context.registerReceiver(receiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED)))
-        onDispose { context.unregisterReceiver(receiver) }
-    }
-    return state
 }

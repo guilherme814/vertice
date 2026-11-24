@@ -47,7 +47,8 @@ log/diagnóstico (`docs/DIAGNOSTICO.md`).
 | 5 | **feito** — `Nav`/`NavState`/`NavEvent` no domínio (Home, Gaveta, Folha, Mover); Activity só despacha eventos |
 | 6 | **feito** — `:ui-core` (tema, relógio, papel de parede, `AppIcon`, `CategoryChip`); depende de `:data`/`:domain`, nunca do `:app` |
 | 7 | **feito** — `:feature-home`, `:feature-drawer`, `:feature-settings`; telas falam com `HomeActions`, não com o ViewModel |
-| 8–10 | pendentes (um de cada vez) |
+| 8 | **feito** — `AppCatalog`, `AppLauncher`, `BatteryStatus` (pacote `platform` em `:data`); a bateria virou `Flow` em vez de receptor dentro da tela |
+| 9–10 | pendentes (um de cada vez) |
 
 ### Passo 1 — o que mudou
 - `:domain` agora contém `PerformanceProfile`, `AppCategory` (com as constantes de `ApplicationInfo` copiadas e travadas por teste), `Prefs`, `SettingsStore`.

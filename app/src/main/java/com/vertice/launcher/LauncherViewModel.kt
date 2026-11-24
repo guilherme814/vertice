@@ -18,7 +18,9 @@ import com.vertice.launcher.core.SettingsStore
 import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.core.Wallpaper
 import com.vertice.launcher.data.AppEntry
-import com.vertice.launcher.data.AppRepository
+import com.vertice.launcher.platform.AppCatalog
+import com.vertice.launcher.platform.AppLauncher
+import com.vertice.launcher.platform.BatteryStatus
 import com.vertice.launcher.data.IconCache
 import com.vertice.launcher.diag.SystemSnapshot
 import com.vertice.launcher.diag.VLog
@@ -38,7 +40,9 @@ import kotlinx.coroutines.launch
  */
 class LauncherViewModel(
     private val prefs: SettingsStore,
-    private val repo: AppRepository,
+    private val catalog: AppCatalog,
+    private val launcher: AppLauncher,
+    battery: BatteryStatus,
     override val icons: IconCache,
     private val recommended: PerformanceProfile
 ) : ViewModel(), HomeActions {
@@ -46,7 +50,9 @@ class LauncherViewModel(
     // Classificação automática só depende do app: calculada uma vez, não a cada edição de preferência.
     private val autoCategory = HashMap<String, AppCategory>()
 
-    override val ui: StateFlow<HomeUi> = combine(repo.apps, prefs.prefs) { apps, p ->
+    override val batteryPercent = battery.percent
+
+    override val ui: StateFlow<HomeUi> = combine(catalog.apps, prefs.prefs) { apps, p ->
         val byKey = apps.associateBy { it.key }
         // Toda a regra (layout, dock, páginas, categorias) vive no domínio; aqui só trocamos chaves por apps.
         val state = HomeState.from(apps.map { it.model }, p) { m ->
@@ -81,9 +87,9 @@ class LauncherViewModel(
         }
         // Primeira execução: escolhe o perfil pelo hardware e monta o dock inicial.
         viewModelScope.launch {
-            val apps = repo.apps.first { it.isNotEmpty() }
+            val apps = catalog.apps.first { it.isNotEmpty() }
             if (!prefs.current().seeded) {
-                val wanted = repo.defaultDockPackages()
+                val wanted = launcher.defaultDockPackages()
                 val dock = wanted.mapNotNull { pkg -> apps.firstOrNull { it.packageName == pkg }?.key }
                     .take(GridSpec.DOCK_SLOTS)
                     .mapIndexed { i, key -> LayoutItem(key, Container.Dock, 0, i, 0) }
@@ -97,18 +103,18 @@ class LauncherViewModel(
         }
     }
 
-    override fun openApp(app: AppEntry, options: Bundle?) = repo.launch(app, options)
+    override fun openApp(app: AppEntry, options: Bundle?) = launcher.launch(app, options)
 
-    override fun openAppInfo(app: AppEntry) = repo.openAppInfo(app)
+    override fun openAppInfo(app: AppEntry) = launcher.openAppInfo(app)
 
-    override fun uninstall(app: AppEntry) = repo.uninstall(app)
+    override fun uninstall(app: AppEntry) = launcher.uninstall(app)
 
     override fun placementOf(app: AppEntry): Placement = ui.value.placement[app.key] ?: Placement.None
 
     /** Toda edição passa por aqui: transação única no DataStore, sempre normalizada. */
     private fun edit(name: String, op: (List<LayoutItem>) -> List<LayoutItem>) {
         viewModelScope.launch {
-            val present = repo.apps.value.map { it.key }.toSet()
+            val present = catalog.apps.value.map { it.key }.toSet()
             try {
                 prefs.editLayout { current ->
                     val next = op(current)
@@ -147,9 +153,9 @@ class LauncherViewModel(
 
     override fun setWallpaper(w: Wallpaper) { viewModelScope.launch { prefs.setWallpaper(w) } }
 
-    override fun openClock() = repo.openClockApp()
+    override fun openClock() = launcher.openClockApp()
 
-    override fun openCalendar() = repo.openCalendarApp()
+    override fun openCalendar() = launcher.openCalendarApp()
 
     fun setProfile(profile: PerformanceProfile) {
         VLog.i("Prefs", "Perfil de desempenho alterado para $profile")
@@ -167,7 +173,10 @@ class LauncherViewModel(
     companion object {
         fun factory(container: AppContainer) = viewModelFactory {
             initializer {
-                LauncherViewModel(container.settings, container.apps, container.icons, container.recommendedProfile)
+                LauncherViewModel(
+                    container.settings, container.catalog, container.launcher, container.battery,
+                    container.icons, container.recommendedProfile
+                )
             }
         }
     }

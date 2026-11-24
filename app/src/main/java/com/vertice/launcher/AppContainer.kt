@@ -7,6 +7,10 @@ import com.vertice.launcher.data.AppRepository
 import com.vertice.launcher.data.DevicePerformance
 import com.vertice.launcher.data.IconCache
 import com.vertice.launcher.data.LauncherPrefs
+import com.vertice.launcher.platform.AppCatalog
+import com.vertice.launcher.platform.AppLauncher
+import com.vertice.launcher.platform.BatteryMonitor
+import com.vertice.launcher.platform.BatteryStatus
 
 /**
  * Montagem manual das dependências (sem framework de injeção: a launcher é pequena e precisa abrir rápido).
@@ -16,6 +20,9 @@ import com.vertice.launcher.data.LauncherPrefs
 class AppContainer(private val app: Application) {
     val settings: SettingsStore by lazy { LauncherPrefs(app) }
     val recommendedProfile: PerformanceProfile by lazy { DevicePerformance.recommended(app) }
-    val apps: AppRepository by lazy { AppRepository(app) }
+    private val appRepository: AppRepository by lazy { AppRepository(app) }
+    val catalog: AppCatalog get() = appRepository
+    val launcher: AppLauncher get() = appRepository
+    val battery: BatteryStatus by lazy { BatteryMonitor(app) }
     val icons: IconCache by lazy { IconCache(app, recommendedProfile) }
 }

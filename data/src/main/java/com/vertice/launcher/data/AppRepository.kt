@@ -22,13 +22,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.vertice.launcher.core.AppModel
 import com.vertice.launcher.diag.VLog
+import com.vertice.launcher.platform.AppCatalog
+import com.vertice.launcher.platform.AppLauncher
 import java.text.Collator
 
 /**
  * Lista os apps lançáveis (inclui perfil de trabalho) e se mantém atualizada quando
  * algo é instalado, removido ou atualizado — sem polling.
  */
-class AppRepository(context: Context) {
+class AppRepository(context: Context) : AppCatalog, AppLauncher {
 
     private val appContext = context.applicationContext
     private val launcherApps = appContext.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
@@ -36,7 +38,7 @@ class AppRepository(context: Context) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     private val _apps = MutableStateFlow<List<AppEntry>>(emptyList())
-    val apps: StateFlow<List<AppEntry>> = _apps.asStateFlow()
+    override val apps: StateFlow<List<AppEntry>> = _apps.asStateFlow()
 
     private var refreshJob: Job? = null
 
@@ -57,7 +59,7 @@ class AppRepository(context: Context) {
     }
 
     /** Recarrega (com debounce, porque instalar um app dispara vários eventos seguidos). */
-    fun refresh(immediate: Boolean = false) {
+    override fun refresh(immediate: Boolean) {
         refreshJob?.cancel()
         refreshJob = scope.launch {
             if (!immediate) delay(350)
@@ -100,7 +102,7 @@ class AppRepository(context: Context) {
         return result.sortedWith(compareBy(collator) { it.label })
     }
 
-    fun launch(app: AppEntry, options: Bundle?) {
+    override fun launch(app: AppEntry, options: Bundle?) {
         try {
             VLog.d("Apps", "Abrindo ${app.component.flattenToShortString()}")
             launcherApps.startMainActivity(app.component, app.user, null, options)
@@ -111,7 +113,7 @@ class AppRepository(context: Context) {
         }
     }
 
-    fun openAppInfo(app: AppEntry) {
+    override fun openAppInfo(app: AppEntry) {
         try {
             launcherApps.startAppDetailsActivity(app.component, app.user, null, null)
         } catch (e: Exception) {
@@ -119,7 +121,7 @@ class AppRepository(context: Context) {
         }
     }
 
-    fun uninstall(app: AppEntry) {
+    override fun uninstall(app: AppEntry) {
         val intent = Intent(Intent.ACTION_DELETE, Uri.parse("package:${app.packageName}"))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         try {
@@ -130,10 +132,10 @@ class AppRepository(context: Context) {
     }
 
     /** Toque no relógio: abre o app de relógio/alarmes do aparelho (se houver). */
-    fun openClockApp() = startSafely(Intent(android.provider.AlarmClock.ACTION_SHOW_ALARMS))
+    override fun openClockApp() = startSafely(Intent(android.provider.AlarmClock.ACTION_SHOW_ALARMS))
 
     /** Toque na data: abre a agenda do aparelho (se houver). */
-    fun openCalendarApp() =
+    override fun openCalendarApp() =
         startSafely(Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_CALENDAR))
 
     private fun startSafely(intent: Intent) {
@@ -145,7 +147,7 @@ class AppRepository(context: Context) {
     }
 
     /** Apps padrão para preencher o dock na primeira execução (telefone, mensagens, navegador, câmera). */
-    fun defaultDockPackages(): List<String> {
+    override fun defaultDockPackages(): List<String> {
         val pm = appContext.packageManager
         val intents = listOf(
             Intent(Intent.ACTION_DIAL),
