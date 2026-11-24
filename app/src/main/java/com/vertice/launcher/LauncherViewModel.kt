@@ -18,7 +18,10 @@ import com.vertice.launcher.data.AppEntry
 import com.vertice.launcher.data.AppRepository
 import com.vertice.launcher.data.IconCache
 import com.vertice.launcher.data.LauncherPrefs
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -60,6 +63,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     val icons = IconCache(application, recommended)
 
+    // Classificação automática só depende do app: calculada uma vez, não a cada edição de preferência.
+    private val autoCategory = HashMap<String, AppCategory>()
+
     val ui: StateFlow<HomeUi> = combine(repo.apps, prefs.prefs) { apps, p ->
         val profile = p.profile ?: recommended
         val byKey = apps.associateBy { it.key }
@@ -78,7 +84,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             placement = layout.associate { it.key to if (it.container == Container.Dock) Placement.Dock else Placement.Home },
             categories = apps.associate { app ->
                 app.key to (AppCategory.fromName(p.categoryOverrides[app.key])
-                    ?: AppCategory.detect(app.declaredCategory, app.packageName))
+                    ?: autoCategory.getOrPut(app.key) { AppCategory.detect(app.declaredCategory, app.packageName) })
             },
             manualCategories = p.categoryOverrides.keys,
             clockStyle = p.clockStyle,
@@ -86,7 +92,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             showDate = p.showDate,
             wallpaper = p.wallpaper
         )
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, HomeUi())
+    }
+        .distinctUntilChanged()          // recarga sem mudança real não redesenha a Home
+        .flowOn(Dispatchers.Default)     // montar o estado não ocupa a thread da interface
+        .stateIn(viewModelScope, SharingStarted.Eagerly, HomeUi())
 
     init {
         // Primeira execução: escolhe o perfil pelo hardware e monta o dock inicial.

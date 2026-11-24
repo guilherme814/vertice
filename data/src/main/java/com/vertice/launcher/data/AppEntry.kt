@@ -19,4 +19,12 @@ class AppEntry(
     val info: LauncherActivityInfo
 ) {
     val packageName: String get() = component.packageName
+
+    // Igualdade pelo conteúdo (o `info` é só a alça do sistema). Sem isso, cada recarga da lista criaria
+    // objetos "diferentes" e a tela inteira seria redesenhada à toa.
+    override fun equals(other: Any?): Boolean =
+        other is AppEntry && key == other.key && label == other.label &&
+            installTime == other.installTime && declaredCategory == other.declaredCategory
+
+    override fun hashCode(): Int = key.hashCode() * 31 + label.hashCode()
 }
