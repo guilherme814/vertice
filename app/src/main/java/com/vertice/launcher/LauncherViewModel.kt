@@ -8,6 +8,7 @@ import com.vertice.launcher.core.AppCategory
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.Container
+import com.vertice.launcher.core.HomeState
 import com.vertice.launcher.core.GridSpec
 import com.vertice.launcher.core.LayoutItem
 import com.vertice.launcher.core.LayoutOps
@@ -71,26 +72,21 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val autoCategory = HashMap<String, AppCategory>()
 
     val ui: StateFlow<HomeUi> = combine(repo.apps, prefs.prefs) { apps, p ->
-        val profile = p.profile ?: recommended
         val byKey = apps.associateBy { it.key }
-        // Apps desinstalados somem sozinhos do layout; a chave salva é ignorada (e limpa na próxima edição).
-        val layout = LayoutOps.sanitize(p.layout, byKey.keys)
-        val dockItems = layout.filter { it.container == Container.Dock }.sortedBy { it.x }
-        val placed = layout.filter { it.container == Container.Home }
-            .mapNotNull { item -> byKey[item.key]?.let { PlacedApp(it, item) } }
+        // Toda a regra (layout, dock, páginas, categorias) vive no domínio; aqui só trocamos chaves por apps.
+        val state = HomeState.from(apps.map { it.model }, p) { m ->
+            autoCategory.getOrPut(m.key) { m.autoCategory }
+        }
         HomeUi(
             loading = !p.seeded,
-            profile = profile,
+            profile = p.profile ?: recommended,
             apps = apps,
-            dock = dockItems.mapNotNull { byKey[it.key] },
-            placed = placed,
-            pageCount = (placed.maxOfOrNull { it.item.page } ?: 0) + 1,
-            placement = layout.associate { it.key to if (it.container == Container.Dock) Placement.Dock else Placement.Home },
-            categories = apps.associate { app ->
-                app.key to (AppCategory.fromName(p.categoryOverrides[app.key])
-                    ?: autoCategory.getOrPut(app.key) { app.model.autoCategory })
-            },
-            manualCategories = p.categoryOverrides.keys,
+            dock = state.dock.mapNotNull { byKey[it] },
+            placed = state.grid.mapNotNull { item -> byKey[item.key]?.let { PlacedApp(it, item) } },
+            pageCount = state.pageCount,
+            placement = state.placement,
+            categories = state.categories,
+            manualCategories = state.manualCategories,
             clockStyle = p.clockStyle,
             clockFormat = p.clockFormat,
             showDate = p.showDate,

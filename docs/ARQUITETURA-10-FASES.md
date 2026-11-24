@@ -42,7 +42,8 @@ log/diagnóstico (`docs/DIAGNOSTICO.md`).
 |---|---|
 | 1 | **feito** — ver abaixo |
 | 2 | **feito** — `AppModel` (domínio) + `AppEntry` envolve o modelo |
-| 3–10 | pendentes (um de cada vez) |
+| 3 | **feito** — `HomeState.from(apps, prefs)` no domínio; o ViewModel só troca chaves por apps |
+| 4–10 | pendentes (um de cada vez) |
 
 ### Passo 1 — o que mudou
 - `:domain` agora contém `PerformanceProfile`, `AppCategory` (com as constantes de `ApplicationInfo` copiadas e travadas por teste), `Prefs`, `SettingsStore`.
