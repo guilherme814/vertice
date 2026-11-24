@@ -18,3 +18,4 @@ rootProject.name = "VerticeLauncher"
 
 include(":app")
 include(":domain")
+include(":data")

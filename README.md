@@ -32,18 +32,16 @@ Os itens "adiantados" compilam, mas **não contam para o aceite** até as fases 
 
 ## Estrutura
 ```
-app/src/main/java/com/vertice/launcher/
-  LauncherActivity.kt      tela inicial do aparelho (singleTask)
-  LauncherViewModel.kt     junta apps + preferências em um estado para a UI
-  core/                    PerformanceProfile, AppCategory (dependem do Android)
-  data/                    AppRepository, AppEntry, IconCache, LauncherPrefs (DataStore)
-  ui/                      HomeScreen, AppDrawer, AppTile, Theme
+app/    LauncherActivity, LauncherViewModel, ui/ (HomeScreen, AppDrawer, AppTile, Theme...)
+data/   AppRepository, AppEntry, IconCache, LauncherPrefs (DataStore), PerformanceProfile, AppCategory
+domain/ HomeLayout (grade como dado), LayoutStore, ClockStyle, Wallpaper  (Kotlin puro, com testes)
 ```
 A tela só lê estado e dispara ações; dados e perfil não conhecem Compose. Quando um pedaço crescer
 (ex.: ajustes), ele vira módulo Gradle sem reescrever o resto.
 
-Módulos: `:app` (Android, UI e dados) e `:domain` (Kotlin puro: layout da Home, relógio, papéis de parede — com testes de JVM).
-A seta de dependência é `app -> domain`, nunca o contrário.
+Módulos: `:app` (UI e ViewModel), `:data` (LauncherApps, DataStore, cache de ícones, perfil de desempenho, categorias)
+e `:domain` (Kotlin puro: layout da Home, relógio, papéis de parede, contrato `LayoutStore` — com testes de JVM).
+Setas: `app -> data -> domain`; nunca no sentido contrário.
 
 ## Compatibilidade
 Android 8.0 (API 26)+, JDK 17, AGP 8.7.3, Kotlin 2.0.21, Compose BOM 2025.01.00, compileSdk/targetSdk 35.

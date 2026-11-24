@@ -14,6 +14,7 @@ import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.Container
 import com.vertice.launcher.core.LayoutCodec
 import com.vertice.launcher.core.LayoutItem
+import com.vertice.launcher.core.LayoutStore
 import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.core.Wallpaper
 import kotlinx.coroutines.flow.Flow
@@ -38,7 +39,7 @@ data class Prefs(
     val wallpaper: Wallpaper = Wallpaper.System
 )
 
-class LauncherPrefs(context: Context) {
+class LauncherPrefs(context: Context) : LayoutStore {
 
     private val store = context.applicationContext.launcherStore
 
@@ -80,7 +81,7 @@ class LauncherPrefs(context: Context) {
      * Leitura + transformação + escrita numa única transação do DataStore: duas edições seguidas
      * (ex.: dois toques rápidos) nunca se sobrescrevem, ao contrário de ler o estado na UI e gravar depois.
      */
-    suspend fun editLayout(transform: (List<LayoutItem>) -> List<LayoutItem>) {
+    override suspend fun editLayout(transform: (List<LayoutItem>) -> List<LayoutItem>) {
         store.edit { p -> p[K.layout] = LayoutCodec.encodeAll(transform(readLayout(p))) }
     }
 
