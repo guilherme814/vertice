@@ -150,6 +150,11 @@ fun AppTile(
                 text = { Text("Mudar categoria") },
                 onClick = { menu = false; picking = true }
             )
+            val isHidden = app.key in vm.ui.value.hidden
+            DropdownMenuItem(
+                text = { Text(if (isHidden) "Mostrar na gaveta" else "Ocultar da gaveta") },
+                onClick = { menu = false; vm.setHidden(app, !isHidden) }
+            )
             DropdownMenuItem(
                 text = { Text("Desinstalar") },
                 onClick = { menu = false; vm.uninstall(app) }

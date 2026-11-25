@@ -49,10 +49,18 @@ import com.vertice.launcher.HomeUi
 import com.vertice.launcher.HomeActions
 import com.vertice.launcher.core.AppCategory
 import com.vertice.launcher.data.AppEntry
-import java.text.Normalizer
-
-private fun String.fold(): String =
-    Normalizer.normalize(this, Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "").lowercase()
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.unit.IntSize
+import com.vertice.launcher.core.DrawerList
+import com.vertice.launcher.core.DrawerSort
+import com.vertice.launcher.core.foldForSearch
+import kotlinx.coroutines.launch
 
 @Composable
 fun AppDrawer(
@@ -70,8 +78,19 @@ fun AppDrawer(
     var query by remember { mutableStateOf("") }
     // null = "Todos". Guardado por nome para sobreviver a rotação/recriação.
     var selectedName by rememberSaveable { mutableStateOf<String?>(null) }
-    val counts = remember(ui.apps, ui.categories) {
-        AppCategory.entries.associateWith { c -> ui.apps.count { ui.categoryOf(it) == c } }
+    var showHidden by rememberSaveable { mutableStateOf(false) }
+    val hiddenCount = remember(ui.apps, ui.hidden) { ui.apps.count { it.key in ui.hidden } }
+    // Sem nenhum oculto, o modo "Ocultos" não faz sentido: volta ao normal.
+    val hiddenMode = showHidden && hiddenCount > 0
+    // Base da gaveta: sempre sem os ocultos (a menos que o modo "Ocultos" esteja ligado).
+    val base = remember(ui.apps, ui.hidden, ui.drawerSort, hiddenMode) {
+        val models = ui.apps.associateBy { it.key }
+        val sorted = if (hiddenMode) ui.apps.filter { it.key in ui.hidden }.sortedBy { it.label.foldForSearch() }
+        else DrawerList.sorted(ui.apps.map { it.model }, ui.drawerSort, ui.hidden).mapNotNull { models[it.key] }
+        sorted
+    }
+    val counts = remember(base, ui.categories) {
+        AppCategory.entries.associateWith { c -> base.count { ui.categoryOf(it) == c } }
             .filterValues { it > 0 }
     }
     // Se a categoria escolhida esvaziou (app movido/desinstalado), volta para "Todos".
@@ -79,14 +98,23 @@ fun AppDrawer(
     val searching = query.isNotBlank()
 
     // Busca ignora acentos e maiúsculas, acha também pelo pacote e vale para TODAS as categorias.
-    val results = remember(query, selected, ui.apps, ui.categories) {
-        val q = query.fold().trim()
+    val results = remember(query, selected, base, ui.categories) {
+        val q = query.foldForSearch().trim()
         when {
-            q.isNotEmpty() -> ui.apps.filter { it.label.fold().contains(q) || it.packageName.contains(q, ignoreCase = true) }
-            selected != null -> ui.apps.filter { ui.categoryOf(it) == selected }
-            else -> ui.apps
+            q.isNotEmpty() -> base.filter { it.label.foldForSearch().contains(q) || it.packageName.contains(q, ignoreCase = true) }
+            selected != null -> base.filter { ui.categoryOf(it) == selected }
+            else -> base
         }
     }
+    val sectioned = !searching && !hiddenMode && ui.drawerSort == DrawerSort.AZ
+    val sections = remember(results, sectioned) {
+        if (!sectioned) emptyList() else {
+            val byKey = results.associateBy { it.key }
+            DrawerList.sections(results.map { it.model }).map { s -> s.letter to s.items.mapNotNull { byKey[it.key] } }
+        }
+    }
+    val gridState = rememberLazyGridState()
+    val scope = rememberCoroutineScope()
 
     Column(
         Modifier
@@ -123,13 +151,22 @@ fun AppDrawer(
                 focusedTextColor = Snow, unfocusedTextColor = Snow, cursorColor = Mint
             )
         )
+        Row(
+            Modifier.fillMaxWidth().padding(top = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically
+        ) {
+            DrawerSort.entries.forEach { s ->
+                CategoryChip(s.label, !hiddenMode && ui.drawerSort == s) { showHidden = false; vm.setDrawerSort(s) }
+            }
+            if (hiddenCount > 0) CategoryChip("Ocultos  $hiddenCount", hiddenMode) { showHidden = !hiddenMode }
+        }
         if (!searching && counts.isNotEmpty()) {
             LazyRow(
                 modifier = Modifier.padding(top = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item(key = "all") {
-                    CategoryChip("Todos  ${ui.apps.size}", selected == null) { selectedName = null }
+                    CategoryChip("Todos  ${base.size}", selected == null) { selectedName = null }
                 }
                 items(counts.entries.toList(), key = { it.key.name }) { (category, n) ->
                     CategoryChip("${category.label}  $n", selected == category) { selectedName = category.name }
@@ -137,7 +174,7 @@ fun AppDrawer(
             }
         }
         Text(
-            if (ui.loading) "Carregando..." else "${results.size} aplicativos",
+            if (ui.loading) "Carregando..." else if (hiddenMode) "${results.size} ocultos · toque e segure para mostrar" else "${results.size} aplicativos",
             color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
         )
 
@@ -146,22 +183,85 @@ fun AppDrawer(
                 Text("Nenhum aplicativo encontrado.", color = Muted)
             }
         } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(4),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                items(results, key = { it.key }) { app ->
-                    AppTile(
-                        app = app, vm = vm, animateLaunch = ui.profile.animations,
-                        showLabel = true, onLaunch = onLaunch,
-                        iconSize = 52.dp * ui.iconSize.scale,
-                        iconStyle = ui.iconStyle
+            Box(Modifier.fillMaxSize()) {
+                LazyVerticalGrid(
+                    state = gridState,
+                    columns = GridCells.Fixed(4),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 24.dp, end = if (sectioned) 22.dp else 0.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    if (sectioned) {
+                        sections.forEach { (letter, apps) ->
+                            item(key = "h$letter", span = { GridItemSpan(maxLineSpan) }) {
+                                Text(
+                                    letter.toString(), color = Mint, fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(start = 6.dp, top = 8.dp)
+                                )
+                            }
+                            items(apps, key = { it.key }) { app -> DrawerTile(app, vm, ui, onLaunch) }
+                        }
+                    } else {
+                        items(results, key = { it.key }) { app -> DrawerTile(app, vm, ui, onLaunch) }
+                    }
+                }
+                if (sectioned && sections.size > 1) {
+                    // Posição de cada cabeçalho na grade: cada letra ocupa 1 item + seus apps.
+                    val starts = remember(sections) {
+                        var n = 0
+                        sections.map { (_, apps) -> n.also { n += 1 + apps.size } }
+                    }
+                    LetterIndex(
+                        letters = sections.map { it.first },
+                        modifier = Modifier.align(Alignment.CenterEnd),
+                        onPick = { i -> scope.launch { gridState.scrollToItem(starts[i]) } }
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun DrawerTile(app: AppEntry, vm: HomeActions, ui: HomeUi, onLaunch: (AppEntry, Rect?) -> Unit) {
+    AppTile(
+        app = app, vm = vm, animateLaunch = ui.profile.animations,
+        showLabel = true, onLaunch = onLaunch,
+        iconSize = 52.dp * ui.iconSize.scale,
+        iconStyle = ui.iconStyle
+    )
+}
+
+/** Índice lateral: toque ou arraste sobre as letras para saltar de seção. */
+@Composable
+private fun LetterIndex(letters: List<Char>, modifier: Modifier = Modifier, onPick: (Int) -> Unit) {
+    var size by remember { mutableStateOf(IntSize.Zero) }
+    var last by remember { mutableStateOf(-1) }
+    fun pick(y: Float) {
+        if (size.height == 0 || letters.isEmpty()) return
+        val i = (y / size.height * letters.size).toInt().coerceIn(0, letters.size - 1)
+        if (i != last) { last = i; onPick(i) }
+    }
+    Column(
+        modifier
+            .width(22.dp)
+            .clip(RoundedCornerShape(11.dp))
+            .background(Panel.copy(alpha = Glass.pill))
+            .onSizeChanged { size = it }
+            .pointerInput(letters) {
+                detectTapGestures { pick(it.y) }
+            }
+            .pointerInput(letters) {
+                detectVerticalDragGestures(
+                    onDragStart = { last = -1; pick(it.y) },
+                    onVerticalDrag = { change, _ -> pick(change.position.y) }
+                )
+            }
+            .padding(vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        letters.forEach { Text(it.toString(), color = Snow, fontSize = 10.sp, fontWeight = FontWeight.SemiBold) }
     }
 }

@@ -22,7 +22,10 @@ data class Prefs(
     val accent: Accent = Accent.Mint,
     val glass: GlassLevel = GlassLevel.Medium,
     val iconShape: IconShape = IconShape.Original,
-    val iconShadow: Boolean = false
+    val iconShadow: Boolean = false,
+    val drawerSort: DrawerSort = DrawerSort.AZ,
+    /** Chaves dos apps escondidos da gaveta. */
+    val hiddenApps: Set<String> = emptySet()
 )
 
 /**
@@ -50,6 +53,8 @@ interface SettingsStore : LayoutStore {
     suspend fun setGlass(glass: GlassLevel)
     suspend fun setIconShape(shape: IconShape)
     suspend fun setIconShadow(on: Boolean)
+    suspend fun setDrawerSort(sort: DrawerSort)
+    suspend fun setHidden(key: String, hidden: Boolean)
 
     /** Substitui todas as preferências (restauração de backup). Grava o formato atual. */
     suspend fun restore(prefs: Prefs)

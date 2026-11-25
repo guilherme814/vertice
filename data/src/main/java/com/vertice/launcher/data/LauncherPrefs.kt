@@ -16,6 +16,7 @@ import com.vertice.launcher.core.Accent
 import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.GridConfig
 import com.vertice.launcher.core.GridSpec
+import com.vertice.launcher.core.DrawerSort
 import com.vertice.launcher.core.IconShape
 import com.vertice.launcher.core.IconSize
 import com.vertice.launcher.core.LayoutCodec
@@ -52,6 +53,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
         val glass = stringPreferencesKey("glass")
         val iconShape = stringPreferencesKey("icon_shape")
         val iconShadow = booleanPreferencesKey("icon_shadow")
+        val drawerSort = stringPreferencesKey("drawer_sort")
+        val hidden = stringSetPreferencesKey("hidden_apps")
         val seeded = booleanPreferencesKey("seeded")
         val categories = stringSetPreferencesKey("category_overrides")
         val clockStyle = stringPreferencesKey("clock_style")
@@ -85,7 +88,9 @@ class LauncherPrefs(context: Context) : SettingsStore {
             accent = Accent.fromName(p[K.accent]),
             glass = GlassLevel.fromName(p[K.glass]),
             iconShape = IconShape.fromName(p[K.iconShape]),
-            iconShadow = p[K.iconShadow] ?: false
+            iconShadow = p[K.iconShadow] ?: false,
+            drawerSort = DrawerSort.fromName(p[K.drawerSort]),
+            hiddenApps = p[K.hidden] ?: emptySet()
         )
     }.distinctUntilChanged()
 
@@ -145,6 +150,15 @@ class LauncherPrefs(context: Context) : SettingsStore {
 
     override suspend fun setIconShadow(on: Boolean) { store.edit { it[K.iconShadow] = on } }
 
+    override suspend fun setDrawerSort(sort: DrawerSort) { store.edit { it[K.drawerSort] = sort.name } }
+
+    override suspend fun setHidden(key: String, hidden: Boolean) {
+        store.edit { p ->
+            val cur = p[K.hidden] ?: emptySet()
+            p[K.hidden] = if (hidden) cur + key else cur - key
+        }
+    }
+
     override suspend fun restore(prefs: Prefs) {
         store.edit {
             prefs.profile?.let { p -> it[K.profile] = p.name } ?: it.remove(K.profile)
@@ -162,6 +176,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
             it[K.glass] = prefs.glass.name
             it[K.iconShape] = prefs.iconShape.name
             it[K.iconShadow] = prefs.iconShadow
+            it[K.drawerSort] = prefs.drawerSort.name
+            it[K.hidden] = prefs.hiddenApps
             it[K.schemaVersion] = SettingsSchema.CURRENT
             it[K.seeded] = true
         }

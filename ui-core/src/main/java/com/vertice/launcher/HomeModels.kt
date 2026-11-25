@@ -7,6 +7,7 @@ import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.GridConfig
+import com.vertice.launcher.core.DrawerSort
 import com.vertice.launcher.core.IconShape
 import com.vertice.launcher.core.IconSize
 import com.vertice.launcher.core.IconStyle
@@ -47,7 +48,9 @@ data class HomeUi(
     val showLabels: Boolean = true,
     val accent: Accent = Accent.Mint,
     val glass: GlassLevel = GlassLevel.Medium,
-    val iconStyle: IconStyle = IconStyle()
+    val iconStyle: IconStyle = IconStyle(),
+    val drawerSort: DrawerSort = DrawerSort.AZ,
+    val hidden: Set<String> = emptySet()
 ) {
     fun categoryOf(app: AppEntry): AppCategory = categories[app.key] ?: AppCategory.default
 }
@@ -88,6 +91,12 @@ interface AppearanceActions {
     fun setIconShadow(on: Boolean)
 }
 
+/** Gaveta: ordem e apps ocultos. */
+interface DrawerActions {
+    fun setDrawerSort(sort: DrawerSort)
+    fun setHidden(app: AppEntry, hidden: Boolean)
+}
+
 /** Backup e restauração das preferências. */
 interface BackupActions {
     /** Texto do backup das preferências atuais. */
@@ -101,7 +110,7 @@ interface BackupActions {
  * O que as telas enxergam: estado pronto + contratos pequenos por assunto.
  * As telas conhecem só isto (não o ViewModel), então vivem em módulos próprios e testam com versão falsa.
  */
-interface HomeActions : AppActions, OrganizeActions, AppearanceActions, BackupActions {
+interface HomeActions : AppActions, OrganizeActions, AppearanceActions, BackupActions, DrawerActions {
     val ui: StateFlow<HomeUi>
     val icons: IconCache
 

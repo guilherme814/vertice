@@ -51,6 +51,8 @@ object BackupCodec {
         appendLine("glass=${p.glass.name}")
         appendLine("iconShape=${p.iconShape.name}")
         appendLine("iconShadow=${p.iconShadow}")
+        appendLine("drawerSort=${p.drawerSort.name}")
+        p.hiddenApps.toSortedSet().forEach { appendLine("hidden=${enc(it)}") }
         p.categoryOverrides.toSortedMap().forEach { (k, v) -> appendLine("category=${enc(k)}=$v") }
         p.layout.forEach { appendLine("layout=${LayoutCodec.encode(it)}") }
     }
@@ -65,6 +67,7 @@ object BackupCodec {
         var prefs = Prefs(seeded = true)
         val layout = ArrayList<LayoutItem>()
         val categories = LinkedHashMap<String, String>()
+        val hidden = LinkedHashSet<String>()
         var ignored = 0
         for (line in lines.drop(1)) {
             val i = line.indexOf('=')
@@ -85,6 +88,8 @@ object BackupCodec {
                 "glass" -> prefs = prefs.copy(glass = GlassLevel.fromName(value))
                 "iconShape" -> prefs = prefs.copy(iconShape = IconShape.fromName(value))
                 "iconShadow" -> prefs = prefs.copy(iconShadow = value == "true")
+                "drawerSort" -> prefs = prefs.copy(drawerSort = DrawerSort.fromName(value))
+                "hidden" -> try { hidden += dec(value) } catch (_: IllegalArgumentException) { ignored++ }
                 "category" -> {
                     val j = value.lastIndexOf('=')
                     if (j <= 0) ignored++ else try { categories[dec(value.substring(0, j))] = value.substring(j + 1) } catch (_: IllegalArgumentException) { ignored++ }
@@ -93,6 +98,6 @@ object BackupCodec {
                 else -> ignored++
             }
         }
-        return Result.Ok(prefs.copy(layout = layout, categoryOverrides = categories), ignored)
+        return Result.Ok(prefs.copy(layout = layout, categoryOverrides = categories, hiddenApps = hidden), ignored)
     }
 }

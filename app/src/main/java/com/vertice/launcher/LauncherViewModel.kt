@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewModelScope
 import com.vertice.launcher.core.Accent
 import com.vertice.launcher.core.AppCategory
+import com.vertice.launcher.core.DrawerSort
 import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.BackupCodec
 import com.vertice.launcher.core.ClockFormat
@@ -85,6 +86,8 @@ class LauncherViewModel(
             accent = p.accent,
             glass = p.glass,
             // Sombra custa desenho: o Ultra Lite nunca a usa.
+            drawerSort = p.drawerSort,
+            hidden = p.hiddenApps,
             iconStyle = IconStyle(p.iconShape, p.iconShadow && (p.profile ?: recommended) != PerformanceProfile.UltraLite)
         )
     }
@@ -187,6 +190,10 @@ class LauncherViewModel(
     override fun setIconShape(shape: IconShape) { viewModelScope.launch { prefs.setIconShape(shape) } }
 
     override fun setIconShadow(on: Boolean) { viewModelScope.launch { prefs.setIconShadow(on) } }
+
+    override fun setDrawerSort(sort: DrawerSort) { viewModelScope.launch { prefs.setDrawerSort(sort) } }
+
+    override fun setHidden(app: AppEntry, hidden: Boolean) { viewModelScope.launch { prefs.setHidden(app.key, hidden) } }
 
     override fun openClock() = launcher.openClockApp()
 

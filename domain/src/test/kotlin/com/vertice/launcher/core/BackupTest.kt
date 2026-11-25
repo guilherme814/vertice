@@ -23,7 +23,9 @@ class BackupTest {
         accent = Accent.Violet,
         glass = GlassLevel.Strong,
         iconShape = IconShape.Squircle,
-        iconShadow = true
+        iconShadow = true,
+        drawerSort = DrawerSort.Newest,
+        hiddenApps = setOf("com.a/.Main", "x=y&z ç")
     )
 
     @Test fun `ida e volta preserva tudo`() {
