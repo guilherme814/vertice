@@ -38,15 +38,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vertice.launcher.HomeUi
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.vertice.launcher.HomeActions
 import com.vertice.launcher.core.ClockFormat
+import com.vertice.launcher.core.Accent
 import com.vertice.launcher.core.ClockStyle
+import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.GridSpec
 import com.vertice.launcher.core.IconSize
 import com.vertice.launcher.core.Wallpaper
 
 enum class SheetTab(val label: String) {
     Wallpaper("Papel de parede"),
+    Theme("Tema"),
     Grid("Grade e ícones"),
     Clock("Relógio"),
     Backup("Backup"),
@@ -104,6 +109,7 @@ fun QuickSheet(
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 when (tab) {
                     SheetTab.Wallpaper -> WallpaperTab(vm, ui)
+                    SheetTab.Theme -> ThemeTab(vm, ui)
                     SheetTab.Grid -> GridTab(vm, ui)
                     SheetTab.Clock -> ClockTab(vm, ui)
                     SheetTab.Backup -> BackupTab(vm)
@@ -117,6 +123,39 @@ fun QuickSheet(
 @Composable
 private fun SectionLabel(text: String) {
     Text(text, color = Muted, fontSize = 12.sp, modifier = Modifier.padding(bottom = 8.dp, top = 4.dp))
+}
+
+@Composable
+private fun ThemeTab(vm: HomeActions, ui: HomeUi) {
+    SectionLabel("Cor de destaque")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Accent.entries.forEach { a ->
+            val selected = ui.accent == a
+            Box(
+                Modifier.size(40.dp).clip(CircleShape)
+                    .background(androidx.compose.ui.graphics.Color(a.argb.toInt()))
+                    .then(if (selected) Modifier.border(3.dp, Snow, CircleShape) else Modifier)
+                    .clickable(onClickLabel = a.label) { vm.setAccent(a) }
+                    .semantics { contentDescription = a.label },
+                contentAlignment = Alignment.Center
+            ) {
+                if (a == Accent.System) Text("✦", color = Ink, fontSize = 16.sp)
+            }
+        }
+    }
+    Text(
+        ui.accent.label + if (ui.accent == Accent.System) " (usa as cores do papel de parede no Android 12+)" else "",
+        color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp)
+    )
+    Spacer(Modifier.height(16.dp))
+    SectionLabel("Intensidade do vidro (dock e botões)")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        GlassLevel.entries.forEach { g -> CategoryChip(g.label, ui.glass == g) { vm.setGlass(g) } }
+    }
+    Text(
+        "Mais forte = painéis mais opacos e texto mais legível sobre papéis de parede claros.",
+        color = Muted, fontSize = 11.sp, modifier = Modifier.padding(top = 8.dp)
+    )
 }
 
 @Composable

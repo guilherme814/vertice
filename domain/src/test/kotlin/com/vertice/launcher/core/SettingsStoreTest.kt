@@ -28,6 +28,8 @@ class InMemorySettings : SettingsStore {
     override suspend fun setGrid(grid: GridConfig) { state.value = state.value.copy(grid = grid) }
     override suspend fun setIconSize(size: IconSize) { state.value = state.value.copy(iconSize = size) }
     override suspend fun setShowLabels(show: Boolean) { state.value = state.value.copy(showLabels = show) }
+    override suspend fun setAccent(accent: Accent) { state.value = state.value.copy(accent = accent) }
+    override suspend fun setGlass(glass: GlassLevel) { state.value = state.value.copy(glass = glass) }
     override suspend fun restore(prefs: Prefs) { state.value = prefs.copy(seeded = true) }
     override suspend fun seed(profile: PerformanceProfile, layout: List<LayoutItem>) {
         state.value = state.value.copy(profile = profile, layout = layout, seeded = true)

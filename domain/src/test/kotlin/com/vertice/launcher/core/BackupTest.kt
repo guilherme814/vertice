@@ -19,7 +19,9 @@ class BackupTest {
         wallpaper = Wallpaper.entries.last(),
         grid = GridConfig(5, 6),
         iconSize = IconSize.Large,
-        showLabels = false
+        showLabels = false,
+        accent = Accent.Violet,
+        glass = GlassLevel.Strong
     )
 
     @Test fun `ida e volta preserva tudo`() {

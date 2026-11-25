@@ -6,7 +6,7 @@ Uma fase por vez; cada uma só fecha com CI verde (testes + regras de arquitetur
 | # | Fase | Entrega | Estado |
 |---|---|---|---|
 | 1 | **Estrutura final** | `HomeActions` dividido em contratos menores; tokens de design (espaço, raio, tipografia) em `:ui-core` | **feita** |
-| 2 | **Sistema de temas** | cor de destaque (8 + cor do sistema no Android 12+), claro/escuro/automático, intensidade do vidro; persistido, no backup | — |
+| 2 | **Sistema de temas** | cor de destaque (8 + cor do sistema no Android 12+) e intensidade do vidro; persistido, no backup. (Modo claro fica para depois: exige separar cores "sobre o papel de parede" das superfícies) | **feita** |
 | 3 | **Estilo de ícones** | forma (círculo, squircle, quadrado arredondado), sombra, borda; um só lugar aplica em Home, dock e gaveta | — |
 | 4 | **Gaveta nova** | ordenar (A–Z, recentes), seções por letra com índice lateral, ocultar apps | — |
 | 5 | **Arrastar e soltar** | mover na grade e no dock arrastando, com sombra e destino destacado (substitui o "toque na célula") | — |

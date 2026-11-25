@@ -170,7 +170,7 @@ fun HomeScreen(
                 Row(
                     Modifier.fillMaxWidth()
                         .clip(RoundedCornerShape(Radius.dock))
-                        .background(PanelSoft.copy(alpha = 0.55f))
+                        .background(PanelSoft.copy(alpha = Glass.panel))
                         .padding(horizontal = Space.s, vertical = Space.xs + 2.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
@@ -188,7 +188,7 @@ fun HomeScreen(
                     }
                 }
                 Surface(
-                    color = PanelSoft.copy(alpha = 0.7f),
+                    color = PanelSoft.copy(alpha = Glass.pill),
                     shape = RoundedCornerShape(50),
                     modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(50))
                         .clickable(onClickLabel = "Abrir todos os aplicativos") { onOpenDrawer() }

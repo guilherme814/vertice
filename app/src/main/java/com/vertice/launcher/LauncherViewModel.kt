@@ -5,7 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewModelScope
+import com.vertice.launcher.core.Accent
 import com.vertice.launcher.core.AppCategory
+import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.BackupCodec
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
@@ -77,7 +79,9 @@ class LauncherViewModel(
             wallpaper = p.wallpaper,
             grid = p.grid,
             iconSize = p.iconSize,
-            showLabels = p.showLabels
+            showLabels = p.showLabels,
+            accent = p.accent,
+            glass = p.glass
         )
     }
         .distinctUntilChanged()          // recarga sem mudança real não redesenha a Home
@@ -171,6 +175,10 @@ class LauncherViewModel(
     override fun setIconSize(size: IconSize) { viewModelScope.launch { prefs.setIconSize(size) } }
 
     override fun setShowLabels(show: Boolean) { viewModelScope.launch { prefs.setShowLabels(show) } }
+
+    override fun setAccent(accent: Accent) { viewModelScope.launch { prefs.setAccent(accent) } }
+
+    override fun setGlass(glass: GlassLevel) { viewModelScope.launch { prefs.setGlass(glass) } }
 
     override fun openClock() = launcher.openClockApp()
 

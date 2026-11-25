@@ -18,7 +18,9 @@ data class Prefs(
     val wallpaper: Wallpaper = Wallpaper.System,
     val grid: GridConfig = GridConfig.Default,
     val iconSize: IconSize = IconSize.Medium,
-    val showLabels: Boolean = true
+    val showLabels: Boolean = true,
+    val accent: Accent = Accent.Mint,
+    val glass: GlassLevel = GlassLevel.Medium
 )
 
 /**
@@ -42,6 +44,8 @@ interface SettingsStore : LayoutStore {
     suspend fun setGrid(grid: GridConfig)
     suspend fun setIconSize(size: IconSize)
     suspend fun setShowLabels(show: Boolean)
+    suspend fun setAccent(accent: Accent)
+    suspend fun setGlass(glass: GlassLevel)
 
     /** Substitui todas as preferências (restauração de backup). Grava o formato atual. */
     suspend fun restore(prefs: Prefs)

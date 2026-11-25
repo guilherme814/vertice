@@ -12,6 +12,8 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
+import com.vertice.launcher.core.Accent
+import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.GridConfig
 import com.vertice.launcher.core.GridSpec
 import com.vertice.launcher.core.IconSize
@@ -45,6 +47,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
         val gridRows = intPreferencesKey("grid_rows")
         val iconSize = stringPreferencesKey("icon_size")
         val showLabels = booleanPreferencesKey("show_labels")
+        val accent = stringPreferencesKey("accent")
+        val glass = stringPreferencesKey("glass")
         val seeded = booleanPreferencesKey("seeded")
         val categories = stringSetPreferencesKey("category_overrides")
         val clockStyle = stringPreferencesKey("clock_style")
@@ -74,7 +78,9 @@ class LauncherPrefs(context: Context) : SettingsStore {
             wallpaper = Wallpaper.fromName(p[K.wallpaper]),
             grid = GridConfig.coerced(p[K.gridColumns] ?: GridSpec.COLUMNS, p[K.gridRows] ?: GridSpec.ROWS),
             iconSize = IconSize.fromName(p[K.iconSize]),
-            showLabels = p[K.showLabels] ?: true
+            showLabels = p[K.showLabels] ?: true,
+            accent = Accent.fromName(p[K.accent]),
+            glass = GlassLevel.fromName(p[K.glass])
         )
     }.distinctUntilChanged()
 
@@ -126,6 +132,10 @@ class LauncherPrefs(context: Context) : SettingsStore {
 
     override suspend fun setShowLabels(show: Boolean) { store.edit { it[K.showLabels] = show } }
 
+    override suspend fun setAccent(accent: Accent) { store.edit { it[K.accent] = accent.name } }
+
+    override suspend fun setGlass(glass: GlassLevel) { store.edit { it[K.glass] = glass.name } }
+
     override suspend fun restore(prefs: Prefs) {
         store.edit {
             prefs.profile?.let { p -> it[K.profile] = p.name } ?: it.remove(K.profile)
@@ -139,6 +149,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
             it[K.gridRows] = prefs.grid.rows
             it[K.iconSize] = prefs.iconSize.name
             it[K.showLabels] = prefs.showLabels
+            it[K.accent] = prefs.accent.name
+            it[K.glass] = prefs.glass.name
             it[K.schemaVersion] = SettingsSchema.CURRENT
             it[K.seeded] = true
         }

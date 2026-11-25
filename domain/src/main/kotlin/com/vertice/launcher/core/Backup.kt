@@ -47,6 +47,8 @@ object BackupCodec {
         appendLine("gridRows=${p.grid.rows}")
         appendLine("iconSize=${p.iconSize.name}")
         appendLine("showLabels=${p.showLabels}")
+        appendLine("accent=${p.accent.name}")
+        appendLine("glass=${p.glass.name}")
         p.categoryOverrides.toSortedMap().forEach { (k, v) -> appendLine("category=${enc(k)}=$v") }
         p.layout.forEach { appendLine("layout=${LayoutCodec.encode(it)}") }
     }
@@ -77,6 +79,8 @@ object BackupCodec {
                 "gridRows" -> value.toIntOrNull()?.let { prefs = prefs.copy(grid = GridConfig.coerced(prefs.grid.columns, it)) } ?: ignored++
                 "iconSize" -> prefs = prefs.copy(iconSize = IconSize.fromName(value))
                 "showLabels" -> prefs = prefs.copy(showLabels = value != "false")
+                "accent" -> prefs = prefs.copy(accent = Accent.fromName(value))
+                "glass" -> prefs = prefs.copy(glass = GlassLevel.fromName(value))
                 "category" -> {
                     val j = value.lastIndexOf('=')
                     if (j <= 0) ignored++ else try { categories[dec(value.substring(0, j))] = value.substring(j + 1) } catch (_: IllegalArgumentException) { ignored++ }

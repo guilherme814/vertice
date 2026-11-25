@@ -85,7 +85,7 @@ class LauncherActivity : ComponentActivity() {
                 dispatch(NavEvent.AppLaunched)
             }
 
-            VerticeTheme {
+            VerticeTheme(accent = ui.accent, glass = ui.glass) {
                 Box(Modifier.fillMaxSize()) {
                     if (!ui.wallpaper.isSystem) WallpaperBackground(ui.wallpaper, Modifier.fillMaxSize())
                     HomeScreen(

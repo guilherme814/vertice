@@ -1,7 +1,9 @@
 package com.vertice.launcher
 
 import android.os.Bundle
+import com.vertice.launcher.core.Accent
 import com.vertice.launcher.core.AppCategory
+import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.GridConfig
@@ -40,7 +42,9 @@ data class HomeUi(
     val wallpaper: Wallpaper = Wallpaper.System,
     val grid: GridConfig = GridConfig.Default,
     val iconSize: IconSize = IconSize.Medium,
-    val showLabels: Boolean = true
+    val showLabels: Boolean = true,
+    val accent: Accent = Accent.Mint,
+    val glass: GlassLevel = GlassLevel.Medium
 ) {
     fun categoryOf(app: AppEntry): AppCategory = categories[app.key] ?: AppCategory.default
 }
@@ -75,6 +79,8 @@ interface AppearanceActions {
     fun setWallpaper(w: Wallpaper)
     fun setIconSize(size: IconSize)
     fun setShowLabels(show: Boolean)
+    fun setAccent(accent: Accent)
+    fun setGlass(glass: GlassLevel)
 }
 
 /** Backup e restauração das preferências. */
