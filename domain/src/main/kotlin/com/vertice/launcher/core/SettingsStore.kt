@@ -15,7 +15,10 @@ data class Prefs(
     val clockStyle: ClockStyle = ClockStyle.Classic,
     val clockFormat: ClockFormat = ClockFormat.System,
     val showDate: Boolean = true,
-    val wallpaper: Wallpaper = Wallpaper.System
+    val wallpaper: Wallpaper = Wallpaper.System,
+    val grid: GridConfig = GridConfig.Default,
+    val iconSize: IconSize = IconSize.Medium,
+    val showLabels: Boolean = true
 )
 
 /**
@@ -36,6 +39,9 @@ interface SettingsStore : LayoutStore {
     suspend fun setClockFormat(format: ClockFormat)
     suspend fun setShowDate(show: Boolean)
     suspend fun setWallpaper(w: Wallpaper)
+    suspend fun setGrid(grid: GridConfig)
+    suspend fun setIconSize(size: IconSize)
+    suspend fun setShowLabels(show: Boolean)
 
     /** Substitui todas as preferências (restauração de backup). Grava o formato atual. */
     suspend fun restore(prefs: Prefs)

@@ -43,6 +43,10 @@ object BackupCodec {
         appendLine("clockFormat=${p.clockFormat.name}")
         appendLine("showDate=${p.showDate}")
         appendLine("wallpaper=${p.wallpaper.name}")
+        appendLine("gridColumns=${p.grid.columns}")
+        appendLine("gridRows=${p.grid.rows}")
+        appendLine("iconSize=${p.iconSize.name}")
+        appendLine("showLabels=${p.showLabels}")
         p.categoryOverrides.toSortedMap().forEach { (k, v) -> appendLine("category=${enc(k)}=$v") }
         p.layout.forEach { appendLine("layout=${LayoutCodec.encode(it)}") }
     }
@@ -69,6 +73,10 @@ object BackupCodec {
                 "clockFormat" -> prefs = prefs.copy(clockFormat = ClockFormat.fromName(value))
                 "showDate" -> prefs = prefs.copy(showDate = value != "false")
                 "wallpaper" -> prefs = prefs.copy(wallpaper = Wallpaper.fromName(value))
+                "gridColumns" -> value.toIntOrNull()?.let { prefs = prefs.copy(grid = GridConfig.coerced(it, prefs.grid.rows)) } ?: ignored++
+                "gridRows" -> value.toIntOrNull()?.let { prefs = prefs.copy(grid = GridConfig.coerced(prefs.grid.columns, it)) } ?: ignored++
+                "iconSize" -> prefs = prefs.copy(iconSize = IconSize.fromName(value))
+                "showLabels" -> prefs = prefs.copy(showLabels = value != "false")
                 "category" -> {
                     val j = value.lastIndexOf('=')
                     if (j <= 0) ignored++ else try { categories[dec(value.substring(0, j))] = value.substring(j + 1) } catch (_: IllegalArgumentException) { ignored++ }

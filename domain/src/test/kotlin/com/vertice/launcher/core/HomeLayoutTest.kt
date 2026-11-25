@@ -135,3 +135,41 @@ class HomeLayoutTest {
         assertTrue(LayoutCodec.decodeAll(setOf(ok, "lixo")).size == 1)
     }
 }
+
+class GridConfigTest {
+    private fun home(key: String, page: Int, x: Int, y: Int) = LayoutItem(key, Container.Home, page, x, y)
+
+    @Test fun `limites da grade sao respeitados`() {
+        assertEquals(GridConfig(6, 7), GridConfig.coerced(99, 99))
+        assertEquals(GridConfig(3, 4), GridConfig.coerced(0, 0))
+        val ruim = runCatching { GridConfig(2, 5) }
+        assertTrue(ruim.isFailure)
+    }
+
+    @Test fun `grade menor realoca o que ficou fora sem perder app`() {
+        val grande = GridConfig(5, 6)
+        val itens = listOf(home("a", 0, 4, 5), home("b", 0, 0, 0))
+        val pequena = GridConfig(3, 4)
+        val r = LayoutOps.sanitize(itens, setOf("a", "b"), pequena)
+        assertEquals(2, r.size)
+        assertTrue(r.all { it.x in 0 until pequena.columns && it.y in 0 until pequena.rows })
+        // a mesma lista continua válida na grade grande
+        assertEquals(itens.toSet(), LayoutOps.sanitize(itens, setOf("a", "b"), grande).toSet())
+    }
+
+    @Test fun `addToHome respeita as colunas configuradas`() {
+        val g = GridConfig(3, 4)
+        var l = emptyList<LayoutItem>()
+        for (i in 0 until 12) l = LayoutOps.addToHome(l, "a$i", g)
+        assertTrue(l.all { it.page == 0 })
+        l = LayoutOps.addToHome(l, "extra", g)
+        assertEquals(1, l.first { it.key == "extra" }.page)
+    }
+
+    @Test fun `moveHome fora da grade configurada nao faz nada`() {
+        val g = GridConfig(3, 4)
+        val l = listOf(home("a", 0, 0, 0))
+        assertEquals(l, LayoutOps.moveHome(l, "a", 0, 3, 0, g))
+        assertEquals(listOf(home("a", 0, 2, 3)), LayoutOps.moveHome(l, "a", 0, 2, 3, g))
+    }
+}

@@ -11,7 +11,9 @@ import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.Container
 import com.vertice.launcher.core.HomeState
+import com.vertice.launcher.core.GridConfig
 import com.vertice.launcher.core.GridSpec
+import com.vertice.launcher.core.IconSize
 import com.vertice.launcher.core.LayoutItem
 import com.vertice.launcher.core.LayoutOps
 import com.vertice.launcher.core.Placement
@@ -72,7 +74,10 @@ class LauncherViewModel(
             clockStyle = p.clockStyle,
             clockFormat = p.clockFormat,
             showDate = p.showDate,
-            wallpaper = p.wallpaper
+            wallpaper = p.wallpaper,
+            grid = p.grid,
+            iconSize = p.iconSize,
+            showLabels = p.showLabels
         )
     }
         .distinctUntilChanged()          // recarga sem mudança real não redesenha a Home
@@ -113,14 +118,14 @@ class LauncherViewModel(
     override fun placementOf(app: AppEntry): Placement = ui.value.placement[app.key] ?: Placement.None
 
     /** Toda edição passa por aqui: transação única no DataStore, sempre normalizada. */
-    private fun edit(name: String, op: (List<LayoutItem>) -> List<LayoutItem>) {
+    private fun edit(name: String, grid: GridConfig = ui.value.grid, op: (List<LayoutItem>) -> List<LayoutItem>) {
         viewModelScope.launch {
             val present = catalog.apps.value.map { it.key }.toSet()
             try {
                 prefs.editLayout { current ->
                     val next = op(current)
                     // Com a lista de apps ainda vazia, não apaga nada do que foi salvo.
-                    val result = if (present.isEmpty()) next else LayoutOps.sanitize(next, present)
+                    val result = if (present.isEmpty()) next else LayoutOps.sanitize(next, present, grid)
                     VLog.d("Layout", "$name: ${current.size} -> ${result.size} itens${if (result == current) " (sem mudança)" else ""}")
                     result
                 }
@@ -135,11 +140,11 @@ class LauncherViewModel(
         else LayoutOps.addToDock(it, app.key) // dock cheio: nada muda
     }
 
-    override fun addToHome(app: AppEntry) = edit("colocar ${app.packageName}") { LayoutOps.addToHome(it, app.key) }
+    override fun addToHome(app: AppEntry) = edit("colocar ${app.packageName}") { LayoutOps.addToHome(it, app.key, ui.value.grid) }
 
     override fun removeFromHome(app: AppEntry) = edit("tirar ${app.packageName}") { LayoutOps.removeFromHome(it, app.key) }
 
-    override fun moveToCell(app: AppEntry, page: Int, x: Int, y: Int) = edit("mover ${app.packageName} p$page ($x,$y)") { LayoutOps.moveHome(it, app.key, page, x, y) }
+    override fun moveToCell(app: AppEntry, page: Int, x: Int, y: Int) = edit("mover ${app.packageName} p$page ($x,$y)") { LayoutOps.moveHome(it, app.key, page, x, y, ui.value.grid) }
 
     /** `category = null` volta a classificação automática do app. */
     override fun setCategory(app: AppEntry, category: AppCategory?) {
@@ -153,6 +158,19 @@ class LauncherViewModel(
     override fun setShowDate(show: Boolean) { viewModelScope.launch { prefs.setShowDate(show) } }
 
     override fun setWallpaper(w: Wallpaper) { viewModelScope.launch { prefs.setWallpaper(w) } }
+
+    override fun setGrid(columns: Int, rows: Int) {
+        val g = GridConfig.coerced(columns, rows)
+        VLog.i("Layout", "Grade alterada para ${g.columns}x${g.rows}")
+        viewModelScope.launch {
+            prefs.setGrid(g)
+            edit("grade ${g.columns}x${g.rows}", g) { it } // reorganiza e grava o que não cabe mais
+        }
+    }
+
+    override fun setIconSize(size: IconSize) { viewModelScope.launch { prefs.setIconSize(size) } }
+
+    override fun setShowLabels(show: Boolean) { viewModelScope.launch { prefs.setShowLabels(show) } }
 
     override fun openClock() = launcher.openClockApp()
 

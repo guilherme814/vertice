@@ -16,7 +16,10 @@ class BackupTest {
         clockStyle = ClockStyle.Minimal,
         clockFormat = ClockFormat.H24,
         showDate = false,
-        wallpaper = Wallpaper.entries.last()
+        wallpaper = Wallpaper.entries.last(),
+        grid = GridConfig(5, 6),
+        iconSize = IconSize.Large,
+        showLabels = false
     )
 
     @Test fun `ida e volta preserva tudo`() {

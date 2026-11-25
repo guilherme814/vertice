@@ -149,7 +149,8 @@ fun AppDrawer(
                 items(results, key = { it.key }) { app ->
                     AppTile(
                         app = app, vm = vm, animateLaunch = ui.profile.animations,
-                        showLabel = true, onLaunch = onLaunch
+                        showLabel = true, onLaunch = onLaunch,
+                        iconSize = 52.dp * ui.iconSize.scale
                     )
                 }
             }

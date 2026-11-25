@@ -9,6 +9,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,7 +25,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Rect
-import com.vertice.launcher.core.GridSpec
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
@@ -181,6 +181,7 @@ fun HomeScreen(
                         AppTile(
                             app = app, vm = vm, animateLaunch = ui.profile.animations,
                             showLabel = false, onLaunch = onLaunch,
+                            iconSize = (52.dp * ui.iconSize.scale).coerceAtMost(60.dp),
                             onMove = { onMoveStart(app) }
                         )
                     }
@@ -219,10 +220,19 @@ private fun HomeGridPage(
     val byCell = remember(ui.placed, page) {
         ui.placed.filter { it.item.page == page }.associateBy { it.item.x to it.item.y }
     }
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+    val grid = ui.grid
+    // O ícone nunca passa do que a célula comporta (grades densas ficam menores sozinhas).
+    val labelH = if (ui.showLabels) 16.dp else 0.dp
+    val iconSize = minOf(
+        48.dp * ui.iconSize.scale,
+        maxHeight / grid.rows - labelH - 8.dp,
+        maxWidth / grid.columns - 12.dp
+    ).coerceAtLeast(28.dp)
     Column(Modifier.fillMaxSize()) {
-        repeat(GridSpec.ROWS) { y ->
+        repeat(grid.rows) { y ->
             Row(Modifier.weight(1f).fillMaxWidth()) {
-                repeat(GridSpec.COLUMNS) { x ->
+                repeat(grid.columns) { x ->
                     val placed = byCell[x to y]
                     Box(
                         Modifier.weight(1f).fillMaxSize()
@@ -236,7 +246,7 @@ private fun HomeGridPage(
                             if (moving != null) {
                                 // No modo mover o ícone não abre o app: o toque vai para a célula.
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    AppIcon(placed.app, vm.icons, 44.dp)
+                                    AppIcon(placed.app, vm.icons, iconSize)
                                     Text(
                                         placed.app.label, color = Snow, fontSize = 11.sp, maxLines = 1,
                                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
@@ -245,14 +255,14 @@ private fun HomeGridPage(
                             } else {
                                 AppTile(
                                     app = placed.app, vm = vm, animateLaunch = ui.profile.animations,
-                                    showLabel = true, onLaunch = onLaunch,
-                                    iconSize = 44.dp, labelLines = 1,
+                                    showLabel = ui.showLabels, onLaunch = onLaunch,
+                                    iconSize = iconSize, labelLines = 1,
                                     onMove = { onMoveStart(placed.app) }
                                 )
                             }
                         } else if (moving != null) {
                             Box(
-                                Modifier.size(44.dp).clip(RoundedCornerShape(12.dp))
+                                Modifier.size(iconSize).clip(RoundedCornerShape(12.dp))
                                     .background(PanelSoft.copy(alpha = 0.5f))
                             )
                         }
@@ -260,5 +270,6 @@ private fun HomeGridPage(
                 }
             }
         }
+    }
     }
 }

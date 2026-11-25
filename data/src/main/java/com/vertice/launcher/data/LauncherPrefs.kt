@@ -12,6 +12,9 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
+import com.vertice.launcher.core.GridConfig
+import com.vertice.launcher.core.GridSpec
+import com.vertice.launcher.core.IconSize
 import com.vertice.launcher.core.LayoutCodec
 import com.vertice.launcher.core.LayoutItem
 import com.vertice.launcher.core.Prefs
@@ -38,6 +41,10 @@ class LauncherPrefs(context: Context) : SettingsStore {
         val dock = stringPreferencesKey("dock") // legado (antes da grade); só lido para migrar
         val layout = stringSetPreferencesKey("layout_v2")
         val schemaVersion = intPreferencesKey("schema_version")
+        val gridColumns = intPreferencesKey("grid_columns")
+        val gridRows = intPreferencesKey("grid_rows")
+        val iconSize = stringPreferencesKey("icon_size")
+        val showLabels = booleanPreferencesKey("show_labels")
         val seeded = booleanPreferencesKey("seeded")
         val categories = stringSetPreferencesKey("category_overrides")
         val clockStyle = stringPreferencesKey("clock_style")
@@ -64,7 +71,10 @@ class LauncherPrefs(context: Context) : SettingsStore {
             clockStyle = ClockStyle.fromName(p[K.clockStyle]),
             clockFormat = ClockFormat.fromName(p[K.clockFormat]),
             showDate = p[K.showDate] ?: true,
-            wallpaper = Wallpaper.fromName(p[K.wallpaper])
+            wallpaper = Wallpaper.fromName(p[K.wallpaper]),
+            grid = GridConfig.coerced(p[K.gridColumns] ?: GridSpec.COLUMNS, p[K.gridRows] ?: GridSpec.ROWS),
+            iconSize = IconSize.fromName(p[K.iconSize]),
+            showLabels = p[K.showLabels] ?: true
         )
     }.distinctUntilChanged()
 
@@ -108,6 +118,14 @@ class LauncherPrefs(context: Context) : SettingsStore {
 
     override suspend fun setWallpaper(w: Wallpaper) { store.edit { it[K.wallpaper] = w.name } }
 
+    override suspend fun setGrid(grid: GridConfig) {
+        store.edit { it[K.gridColumns] = grid.columns; it[K.gridRows] = grid.rows }
+    }
+
+    override suspend fun setIconSize(size: IconSize) { store.edit { it[K.iconSize] = size.name } }
+
+    override suspend fun setShowLabels(show: Boolean) { store.edit { it[K.showLabels] = show } }
+
     override suspend fun restore(prefs: Prefs) {
         store.edit {
             prefs.profile?.let { p -> it[K.profile] = p.name } ?: it.remove(K.profile)
@@ -117,6 +135,10 @@ class LauncherPrefs(context: Context) : SettingsStore {
             it[K.clockFormat] = prefs.clockFormat.name
             it[K.showDate] = prefs.showDate
             it[K.wallpaper] = prefs.wallpaper.name
+            it[K.gridColumns] = prefs.grid.columns
+            it[K.gridRows] = prefs.grid.rows
+            it[K.iconSize] = prefs.iconSize.name
+            it[K.showLabels] = prefs.showLabels
             it[K.schemaVersion] = SettingsSchema.CURRENT
             it[K.seeded] = true
         }

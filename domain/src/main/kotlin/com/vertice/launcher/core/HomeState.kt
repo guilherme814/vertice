@@ -26,7 +26,7 @@ data class HomeState(
             auto: (AppModel) -> AppCategory = { it.autoCategory }
         ): HomeState {
             // Apps desinstalados somem sozinhos do layout; a chave salva é ignorada.
-            val layout = LayoutOps.sanitize(prefs.layout, apps.map { it.key }.toSet())
+            val layout = LayoutOps.sanitize(prefs.layout, apps.map { it.key }.toSet(), prefs.grid)
             val dock = layout.filter { it.container == Container.Dock }.sortedBy { it.x }.map { it.key }
             val grid = layout.filter { it.container == Container.Home }
             return HomeState(

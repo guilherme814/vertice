@@ -4,6 +4,8 @@ import android.os.Bundle
 import com.vertice.launcher.core.AppCategory
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
+import com.vertice.launcher.core.GridConfig
+import com.vertice.launcher.core.IconSize
 import com.vertice.launcher.core.LayoutItem
 import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.core.Placement
@@ -35,7 +37,10 @@ data class HomeUi(
     val clockStyle: ClockStyle = ClockStyle.Classic,
     val clockFormat: ClockFormat = ClockFormat.System,
     val showDate: Boolean = true,
-    val wallpaper: Wallpaper = Wallpaper.System
+    val wallpaper: Wallpaper = Wallpaper.System,
+    val grid: GridConfig = GridConfig.Default,
+    val iconSize: IconSize = IconSize.Medium,
+    val showLabels: Boolean = true
 ) {
     fun categoryOf(app: AppEntry): AppCategory = categories[app.key] ?: AppCategory.default
 }
@@ -69,6 +74,9 @@ interface HomeActions {
     fun setClockFormat(format: ClockFormat)
     fun setShowDate(show: Boolean)
     fun setWallpaper(w: Wallpaper)
+    fun setGrid(columns: Int, rows: Int)
+    fun setIconSize(size: IconSize)
+    fun setShowLabels(show: Boolean)
 
     /** Texto do backup das preferências atuais. */
     suspend fun backupText(): String

@@ -41,10 +41,13 @@ import com.vertice.launcher.HomeUi
 import com.vertice.launcher.HomeActions
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
+import com.vertice.launcher.core.GridSpec
+import com.vertice.launcher.core.IconSize
 import com.vertice.launcher.core.Wallpaper
 
 enum class SheetTab(val label: String) {
     Wallpaper("Papel de parede"),
+    Grid("Grade e ícones"),
     Clock("Relógio"),
     Backup("Backup"),
     Diagnostics("Diagnóstico")
@@ -101,6 +104,7 @@ fun QuickSheet(
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 when (tab) {
                     SheetTab.Wallpaper -> WallpaperTab(vm, ui)
+                    SheetTab.Grid -> GridTab(vm, ui)
                     SheetTab.Clock -> ClockTab(vm, ui)
                     SheetTab.Backup -> BackupTab(vm)
                     SheetTab.Diagnostics -> DiagnosticsTab()
@@ -113,6 +117,44 @@ fun QuickSheet(
 @Composable
 private fun SectionLabel(text: String) {
     Text(text, color = Muted, fontSize = 12.sp, modifier = Modifier.padding(bottom = 8.dp, top = 4.dp))
+}
+
+@Composable
+private fun GridTab(vm: HomeActions, ui: HomeUi) {
+    SectionLabel("Colunas")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        (GridSpec.MIN_COLUMNS..GridSpec.MAX_COLUMNS).forEach { c ->
+            CategoryChip("$c", ui.grid.columns == c) { vm.setGrid(c, ui.grid.rows) }
+        }
+    }
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Linhas")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        (GridSpec.MIN_ROWS..GridSpec.MAX_ROWS).forEach { r ->
+            CategoryChip("$r", ui.grid.rows == r) { vm.setGrid(ui.grid.columns, r) }
+        }
+    }
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Tamanho dos ícones")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        IconSize.entries.forEach { s -> CategoryChip(s.label, ui.iconSize == s) { vm.setIconSize(s) } }
+    }
+    Spacer(Modifier.height(10.dp))
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        Text("Mostrar nomes dos apps", color = Snow, fontSize = 15.sp)
+        Switch(
+            checked = ui.showLabels,
+            onCheckedChange = { vm.setShowLabels(it) },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Ink, checkedTrackColor = Mint,
+                uncheckedThumbColor = Muted, uncheckedTrackColor = PanelSoft
+            )
+        )
+    }
+    Text(
+        "Ao diminuir a grade, os apps que não cabem vão para a próxima página; nada é perdido.",
+        color = Muted, fontSize = 11.sp, modifier = Modifier.padding(top = 8.dp)
+    )
 }
 
 @Composable
