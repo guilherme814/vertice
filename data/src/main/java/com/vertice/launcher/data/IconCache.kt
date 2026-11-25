@@ -48,7 +48,8 @@ class IconCache(context: Context, profile: PerformanceProfile) {
 
     private fun keyOf(app: AppEntry, px: Int) = "${app.key}@$px"
 
-    private fun target(px: Int) = px.coerceIn(16, maxPx)
+    /** Tamanhos agrupados de 8 em 8 px: tamanhos quase iguais (grades diferentes) reaproveitam o mesmo bitmap. */
+    private fun target(px: Int) = (((px.coerceIn(16, maxPx)) + 7) / 8 * 8).coerceAtMost(maxPx)
 
     /** Resposta imediata se já estiver pronto (evita piscar ao rolar a gaveta). */
     fun peek(app: AppEntry, px: Int): ImageBitmap? {

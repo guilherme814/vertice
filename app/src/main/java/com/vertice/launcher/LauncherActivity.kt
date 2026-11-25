@@ -58,6 +58,15 @@ class LauncherActivity : ComponentActivity() {
         setContent {
             val ui by vm.ui.collectAsStateWithLifecycle()
             val view = LocalView.current
+            // Papel de parede próprio cobre tudo: a janela deixa de pedir o papel de parede do sistema por trás
+            // (menos uma camada para o compositor misturar a cada quadro — ajuda em aparelhos fracos).
+            val ownWallpaper = !ui.wallpaper.isSystem
+            LaunchedEffect(ownWallpaper) {
+                if (ownWallpaper) window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+                else window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+                VLog.d("Home", "Janela ${if (ownWallpaper) "opaca (papel de parede próprio)" else "translúcida (papel do sistema)"}")
+            }
+
             // Quem decide qual tela está à frente é a máquina de estados do domínio (Nav).
             var nav by remember { mutableStateOf(NavState()) }
             val dispatch: (NavEvent) -> Unit = { nav = Nav.reduce(nav, it) }
