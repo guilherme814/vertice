@@ -84,7 +84,7 @@ class LauncherActivity : ComponentActivity() {
                         moving = ui.apps.firstOrNull { it.key == nav.moving },
                         onMoveStart = { dispatch(NavEvent.StartMove(it.key)) },
                         onMoveEnd = { dispatch(NavEvent.EndMove) },
-                        onOpenDrawer = { dispatch(NavEvent.OpenDrawer) }, onOpenSheet = { dispatch(NavEvent.OpenSheet) }
+                        onOpenDrawer = { dispatch(NavEvent.OpenDrawer) }, onOpenSearch = { dispatch(NavEvent.OpenSearch) }, onOpenSheet = { dispatch(NavEvent.OpenSheet) }
                     )
 
                     // Perfil Ultra Lite: sem animação nenhuma (sem custo de GPU em aparelho fraco).
@@ -94,7 +94,7 @@ class LauncherActivity : ComponentActivity() {
                         enter = if (animate) slideInVertically { it / 6 } + fadeIn() else EnterTransition.None,
                         exit = if (animate) slideOutVertically { it / 6 } + fadeOut() else ExitTransition.None
                     ) {
-                        AppDrawer(vm = vm, ui = ui, onLaunch = launch, onClose = { dispatch(NavEvent.Back) })
+                        AppDrawer(vm = vm, ui = ui, focusSearch = nav.focusSearch, onLaunch = launch, onClose = { dispatch(NavEvent.Back) })
                     }
 
                     AnimatedVisibility(

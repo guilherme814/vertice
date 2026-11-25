@@ -4,11 +4,18 @@ package com.vertice.launcher.core
 enum class Screen { Home, Drawer, Sheet }
 
 /** Estado de navegação da launcher: a tela da frente e, se houver, o app que está sendo movido. */
-data class NavState(val screen: Screen = Screen.Home, val moving: String? = null)
+data class NavState(
+    val screen: Screen = Screen.Home,
+    val moving: String? = null,
+    /** A gaveta abriu para buscar: o campo de busca já nasce focado. */
+    val focusSearch: Boolean = false
+)
 
 sealed interface NavEvent {
     data object OpenDrawer : NavEvent
     data object OpenSheet : NavEvent
+    /** Deslizar para baixo na Home: abre a gaveta já com a busca focada. */
+    data object OpenSearch : NavEvent
     /** Botão Home com a launcher já aberta. */
     data object HomePressed : NavEvent
     data object Back : NavEvent
@@ -26,12 +33,13 @@ sealed interface NavEvent {
 object Nav {
 
     fun reduce(s: NavState, e: NavEvent): NavState = when (e) {
-        NavEvent.OpenDrawer -> if (s.screen == Screen.Home && s.moving == null) s.copy(screen = Screen.Drawer) else s
+        NavEvent.OpenDrawer -> if (s.screen == Screen.Home && s.moving == null) s.copy(screen = Screen.Drawer, focusSearch = false) else s
+        NavEvent.OpenSearch -> if (s.screen == Screen.Home && s.moving == null) s.copy(screen = Screen.Drawer, focusSearch = true) else s
         NavEvent.OpenSheet -> if (s.screen == Screen.Home && s.moving == null) s.copy(screen = Screen.Sheet) else s
         NavEvent.HomePressed -> NavState()
         NavEvent.Back -> when {
             s.moving != null -> s.copy(moving = null)
-            s.screen != Screen.Home -> s.copy(screen = Screen.Home)
+            s.screen != Screen.Home -> s.copy(screen = Screen.Home, focusSearch = false)
             else -> s
         }
         NavEvent.AppLaunched -> NavState()

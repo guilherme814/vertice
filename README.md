@@ -25,7 +25,8 @@ Os itens "adiantados" compilam, mas **não contam para o aceite** até as fases 
 - Lista de apps via `LauncherApps` (inclui perfil de trabalho), atualizada sozinha ao instalar/remover — sem polling.
 - Tela inicial com relógio, data, bateria (por broadcast), **grade 4x5 paginada** e dock (até 5 apps); posições persistidas.
 - Segurar um app: Mover (toque na célula de destino), colocar/tirar da tela inicial ou do dock.
-- Gaveta (deslizar para cima ou botão) com busca por nome ou pacote, sem diferenciar acentos.
+- Gaveta (deslizar para cima ou botão) com busca por nome ou pacote, sem diferenciar acentos; deslizar para baixo na Home abre a busca já focada.
+- Personalizar: grade (colunas 3–6, linhas 4–7), tamanho dos ícones, nomes on/off, relógio, papéis de parede, backup e diagnóstico.
 - Segurar um app: informações, dock, categoria, desinstalar.
 - Perfis de desempenho (Ultra Lite / Equilibrado / Premium): hoje controlam animações e o teto do cache de ícones; o inicial vem do hardware.
 - Adiantados: categorias na gaveta; relógio (4 estilos) e papéis de parede próprios, pela folha "Personalizar".

@@ -48,4 +48,19 @@ class NavigationTest {
     @Test fun `EndMove limpa o app em movimento`() {
         assertEquals(NavState(), run(NavEvent.StartMove("a"), NavEvent.EndMove))
     }
+
+    @Test fun `deslizar para baixo abre a gaveta com busca focada e Voltar limpa o foco`() {
+        val s = run(NavEvent.OpenSearch)
+        assertEquals(Screen.Drawer, s.screen)
+        assertTrue(s.focusSearch)
+        assertEquals(NavState(), Nav.reduce(s, NavEvent.Back))
+        assertFalse(run(NavEvent.OpenDrawer).focusSearch)
+    }
+
+    @Test fun `busca nao abre durante o mover nem por cima de outra tela`() {
+        val moving = run(NavEvent.StartMove("a"))
+        assertEquals(moving, Nav.reduce(moving, NavEvent.OpenSearch))
+        val sheet = run(NavEvent.OpenSheet)
+        assertEquals(sheet, Nav.reduce(sheet, NavEvent.OpenSearch))
+    }
 }

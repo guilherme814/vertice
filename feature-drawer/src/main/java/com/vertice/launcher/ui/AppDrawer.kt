@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
@@ -57,9 +58,15 @@ private fun String.fold(): String =
 fun AppDrawer(
     vm: HomeActions,
     ui: HomeUi,
+    focusSearch: Boolean = false,
     onLaunch: (AppEntry, Rect?) -> Unit,
     onClose: () -> Unit
 ) {
+    val searchFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    // Aberta por "deslizar para baixo": o teclado já sobe com o cursor no campo de busca.
+    androidx.compose.runtime.LaunchedEffect(focusSearch) {
+        if (focusSearch) try { searchFocus.requestFocus() } catch (_: Exception) {}
+    }
     var query by remember { mutableStateOf("") }
     // null = "Todos". Guardado por nome para sobreviver a rotação/recriação.
     var selectedName by rememberSaveable { mutableStateOf<String?>(null) }
@@ -105,7 +112,7 @@ fun AppDrawer(
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().focusRequester(searchFocus),
             singleLine = true,
             shape = RoundedCornerShape(18.dp),
             placeholder = { Text("Buscar por nome ou pacote", color = Muted) },

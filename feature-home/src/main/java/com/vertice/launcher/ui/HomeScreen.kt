@@ -61,6 +61,7 @@ fun HomeScreen(
     onMoveStart: (AppEntry) -> Unit,
     onMoveEnd: () -> Unit,
     onOpenDrawer: () -> Unit,
+    onOpenSearch: () -> Unit,
     onOpenSheet: () -> Unit
 ) {
     val now by rememberNow()
@@ -84,7 +85,7 @@ fun HomeScreen(
                 detectVerticalDragGestures(
                     onDragStart = { total = 0f },
                     onVerticalDrag = { change, dy -> change.consume(); total += dy },
-                    onDragEnd = { if (total < -120f) onOpenDrawer() }
+                    onDragEnd = { if (total < -120f) onOpenDrawer() else if (total > 120f) onOpenSearch() }
                 )
             }
     ) {
