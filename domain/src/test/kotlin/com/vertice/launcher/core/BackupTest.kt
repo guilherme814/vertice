@@ -21,7 +21,9 @@ class BackupTest {
         iconSize = IconSize.Large,
         showLabels = false,
         accent = Accent.Violet,
-        glass = GlassLevel.Strong
+        glass = GlassLevel.Strong,
+        iconShape = IconShape.Squircle,
+        iconShadow = true
     )
 
     @Test fun `ida e volta preserva tudo`() {

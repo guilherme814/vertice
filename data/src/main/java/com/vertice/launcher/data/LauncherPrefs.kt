@@ -16,6 +16,7 @@ import com.vertice.launcher.core.Accent
 import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.GridConfig
 import com.vertice.launcher.core.GridSpec
+import com.vertice.launcher.core.IconShape
 import com.vertice.launcher.core.IconSize
 import com.vertice.launcher.core.LayoutCodec
 import com.vertice.launcher.core.LayoutItem
@@ -49,6 +50,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
         val showLabels = booleanPreferencesKey("show_labels")
         val accent = stringPreferencesKey("accent")
         val glass = stringPreferencesKey("glass")
+        val iconShape = stringPreferencesKey("icon_shape")
+        val iconShadow = booleanPreferencesKey("icon_shadow")
         val seeded = booleanPreferencesKey("seeded")
         val categories = stringSetPreferencesKey("category_overrides")
         val clockStyle = stringPreferencesKey("clock_style")
@@ -80,7 +83,9 @@ class LauncherPrefs(context: Context) : SettingsStore {
             iconSize = IconSize.fromName(p[K.iconSize]),
             showLabels = p[K.showLabels] ?: true,
             accent = Accent.fromName(p[K.accent]),
-            glass = GlassLevel.fromName(p[K.glass])
+            glass = GlassLevel.fromName(p[K.glass]),
+            iconShape = IconShape.fromName(p[K.iconShape]),
+            iconShadow = p[K.iconShadow] ?: false
         )
     }.distinctUntilChanged()
 
@@ -136,6 +141,10 @@ class LauncherPrefs(context: Context) : SettingsStore {
 
     override suspend fun setGlass(glass: GlassLevel) { store.edit { it[K.glass] = glass.name } }
 
+    override suspend fun setIconShape(shape: IconShape) { store.edit { it[K.iconShape] = shape.name } }
+
+    override suspend fun setIconShadow(on: Boolean) { store.edit { it[K.iconShadow] = on } }
+
     override suspend fun restore(prefs: Prefs) {
         store.edit {
             prefs.profile?.let { p -> it[K.profile] = p.name } ?: it.remove(K.profile)
@@ -151,6 +160,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
             it[K.showLabels] = prefs.showLabels
             it[K.accent] = prefs.accent.name
             it[K.glass] = prefs.glass.name
+            it[K.iconShape] = prefs.iconShape.name
+            it[K.iconShadow] = prefs.iconShadow
             it[K.schemaVersion] = SettingsSchema.CURRENT
             it[K.seeded] = true
         }

@@ -3,6 +3,10 @@ package com.vertice.launcher.data
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.drawable.AdaptiveIconDrawable
+import android.graphics.drawable.Drawable
+import android.os.Build
+import kotlin.math.roundToInt
 import android.util.LruCache
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -46,28 +50,34 @@ class IconCache(context: Context, profile: PerformanceProfile) {
             "falhas=${failures.get()} cache=${cache.size() / 1024}KB/${cache.maxSize() / 1024}KB"
     }
 
-    private fun keyOf(app: AppEntry, px: Int) = "${app.key}@$px"
+    private fun keyOf(app: AppEntry, px: Int, fullBleed: Boolean) = "${app.key}@$px${if (fullBleed) "f" else "m"}"
 
     /** Tamanhos agrupados de 8 em 8 px: tamanhos quase iguais (grades diferentes) reaproveitam o mesmo bitmap. */
     private fun target(px: Int) = (((px.coerceIn(16, maxPx)) + 7) / 8 * 8).coerceAtMost(maxPx)
 
     /** Resposta imediata se já estiver pronto (evita piscar ao rolar a gaveta). */
-    fun peek(app: AppEntry, px: Int): ImageBitmap? {
-        val b = cache.get(keyOf(app, target(px)))
+    fun peek(app: AppEntry, px: Int, fullBleed: Boolean = false): ImageBitmap? {
+        val b = cache.get(keyOf(app, target(px), fullBleed))
         if (b != null) hits.incrementAndGet() else misses.incrementAndGet()
         return b?.asImageBitmap()
     }
 
-    suspend fun load(app: AppEntry, px: Int): ImageBitmap = withContext(Dispatchers.Default) {
+    /**
+     * [fullBleed] = ícone sem a máscara do sistema (a forma é aplicada depois, na tela):
+     * ícones adaptativos têm suas camadas desenhadas inteiras; ícones antigos ganham uma placa escura atrás.
+     */
+    suspend fun load(app: AppEntry, px: Int, fullBleed: Boolean = false): ImageBitmap = withContext(Dispatchers.Default) {
         val size = target(px)
-        val key = keyOf(app, size)
+        val key = keyOf(app, size, fullBleed)
         cache.get(key)?.let { return@withContext it.asImageBitmap() }
         val t0 = System.nanoTime()
         val bitmap = try {
             val b = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
             val drawable = app.info.getBadgedIcon(densityDpi)
-            drawable.setBounds(0, 0, size, size)
-            drawable.draw(Canvas(b))
+            if (fullBleed) drawFullBleed(drawable, Canvas(b), size) else {
+                drawable.setBounds(0, 0, size, size)
+                drawable.draw(Canvas(b))
+            }
             b
         } catch (e: Exception) {
             // Ícone quebrado de um app não pode derrubar a launcher: mostra espaço vazio e registra.
@@ -89,5 +99,24 @@ class IconCache(context: Context, profile: PerformanceProfile) {
         bitmap.asImageBitmap()
     }
 
+    private fun drawFullBleed(drawable: Drawable, canvas: Canvas, size: Int) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && drawable is AdaptiveIconDrawable) {
+            // As camadas medem 108dp e só 72dp aparecem: ampliar 1,5x e centralizar enche o quadrado.
+            val layer = (size * 1.5f).roundToInt()
+            val off = -((layer - size) / 2)
+            drawable.background?.let { it.setBounds(off, off, off + layer, off + layer); it.draw(canvas) }
+            drawable.foreground?.let { it.setBounds(off, off, off + layer, off + layer); it.draw(canvas) }
+        } else {
+            canvas.drawColor(PLATE)
+            val pad = (size * 0.11f).roundToInt()
+            drawable.setBounds(pad, pad, size - pad, size - pad)
+            drawable.draw(canvas)
+        }
+    }
+
     fun clear() = cache.evictAll()
+
+    private companion object {
+        const val PLATE = 0xFF1B2636.toInt()
+    }
 }

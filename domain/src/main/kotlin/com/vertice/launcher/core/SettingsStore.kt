@@ -20,7 +20,9 @@ data class Prefs(
     val iconSize: IconSize = IconSize.Medium,
     val showLabels: Boolean = true,
     val accent: Accent = Accent.Mint,
-    val glass: GlassLevel = GlassLevel.Medium
+    val glass: GlassLevel = GlassLevel.Medium,
+    val iconShape: IconShape = IconShape.Original,
+    val iconShadow: Boolean = false
 )
 
 /**
@@ -46,6 +48,8 @@ interface SettingsStore : LayoutStore {
     suspend fun setShowLabels(show: Boolean)
     suspend fun setAccent(accent: Accent)
     suspend fun setGlass(glass: GlassLevel)
+    suspend fun setIconShape(shape: IconShape)
+    suspend fun setIconShadow(on: Boolean)
 
     /** Substitui todas as preferências (restauração de backup). Grava o formato atual. */
     suspend fun restore(prefs: Prefs)

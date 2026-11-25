@@ -46,6 +46,7 @@ import com.vertice.launcher.core.Accent
 import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.GridSpec
+import com.vertice.launcher.core.IconShape
 import com.vertice.launcher.core.IconSize
 import com.vertice.launcher.core.Wallpaper
 
@@ -172,6 +173,25 @@ private fun GridTab(vm: HomeActions, ui: HomeUi) {
         (GridSpec.MIN_ROWS..GridSpec.MAX_ROWS).forEach { r ->
             CategoryChip("$r", ui.grid.rows == r) { vm.setGrid(ui.grid.columns, r) }
         }
+    }
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Forma dos ícones")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        IconShape.entries.forEach { s -> CategoryChip(s.label, ui.iconStyle.shape == s) { vm.setIconShape(s) } }
+    }
+    if (ui.iconStyle.shape != IconShape.Original) {
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Sombra nos ícones", color = Snow, fontSize = 15.sp)
+            Switch(
+                checked = ui.iconStyle.shadow,
+                onCheckedChange = { vm.setIconShadow(it) },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Ink, checkedTrackColor = Mint,
+                    uncheckedThumbColor = Muted, uncheckedTrackColor = PanelSoft
+                )
+            )
+        }
+        Text("Na economia máxima (Ultra Lite) a sombra fica desligada.", color = Muted, fontSize = 11.sp)
     }
     Spacer(Modifier.height(14.dp))
     SectionLabel("Tamanho dos ícones")

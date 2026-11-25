@@ -49,6 +49,8 @@ object BackupCodec {
         appendLine("showLabels=${p.showLabels}")
         appendLine("accent=${p.accent.name}")
         appendLine("glass=${p.glass.name}")
+        appendLine("iconShape=${p.iconShape.name}")
+        appendLine("iconShadow=${p.iconShadow}")
         p.categoryOverrides.toSortedMap().forEach { (k, v) -> appendLine("category=${enc(k)}=$v") }
         p.layout.forEach { appendLine("layout=${LayoutCodec.encode(it)}") }
     }
@@ -81,6 +83,8 @@ object BackupCodec {
                 "showLabels" -> prefs = prefs.copy(showLabels = value != "false")
                 "accent" -> prefs = prefs.copy(accent = Accent.fromName(value))
                 "glass" -> prefs = prefs.copy(glass = GlassLevel.fromName(value))
+                "iconShape" -> prefs = prefs.copy(iconShape = IconShape.fromName(value))
+                "iconShadow" -> prefs = prefs.copy(iconShadow = value == "true")
                 "category" -> {
                     val j = value.lastIndexOf('=')
                     if (j <= 0) ignored++ else try { categories[dec(value.substring(0, j))] = value.substring(j + 1) } catch (_: IllegalArgumentException) { ignored++ }

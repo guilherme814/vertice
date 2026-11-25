@@ -183,6 +183,7 @@ fun HomeScreen(
                             app = app, vm = vm, animateLaunch = ui.profile.animations,
                             showLabel = false, onLaunch = onLaunch,
                             iconSize = (52.dp * ui.iconSize.scale).coerceAtMost(60.dp),
+                            iconStyle = ui.iconStyle,
                             onMove = { onMoveStart(app) }
                         )
                     }
@@ -247,7 +248,7 @@ private fun HomeGridPage(
                             if (moving != null) {
                                 // No modo mover o ícone não abre o app: o toque vai para a célula.
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    AppIcon(placed.app, vm.icons, iconSize)
+                                    AppIcon(placed.app, vm.icons, iconSize, style = ui.iconStyle)
                                     Text(
                                         placed.app.label, color = Snow, fontSize = 11.sp, maxLines = 1,
                                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
@@ -257,7 +258,7 @@ private fun HomeGridPage(
                                 AppTile(
                                     app = placed.app, vm = vm, animateLaunch = ui.profile.animations,
                                     showLabel = ui.showLabels, onLaunch = onLaunch,
-                                    iconSize = iconSize, labelLines = 1,
+                                    iconSize = iconSize, labelLines = 1, iconStyle = ui.iconStyle,
                                     onMove = { onMoveStart(placed.app) }
                                 )
                             }

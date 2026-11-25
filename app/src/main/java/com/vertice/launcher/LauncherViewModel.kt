@@ -15,7 +15,9 @@ import com.vertice.launcher.core.Container
 import com.vertice.launcher.core.HomeState
 import com.vertice.launcher.core.GridConfig
 import com.vertice.launcher.core.GridSpec
+import com.vertice.launcher.core.IconShape
 import com.vertice.launcher.core.IconSize
+import com.vertice.launcher.core.IconStyle
 import com.vertice.launcher.core.LayoutItem
 import com.vertice.launcher.core.LayoutOps
 import com.vertice.launcher.core.Placement
@@ -81,7 +83,9 @@ class LauncherViewModel(
             iconSize = p.iconSize,
             showLabels = p.showLabels,
             accent = p.accent,
-            glass = p.glass
+            glass = p.glass,
+            // Sombra custa desenho: o Ultra Lite nunca a usa.
+            iconStyle = IconStyle(p.iconShape, p.iconShadow && (p.profile ?: recommended) != PerformanceProfile.UltraLite)
         )
     }
         .distinctUntilChanged()          // recarga sem mudança real não redesenha a Home
@@ -179,6 +183,10 @@ class LauncherViewModel(
     override fun setAccent(accent: Accent) { viewModelScope.launch { prefs.setAccent(accent) } }
 
     override fun setGlass(glass: GlassLevel) { viewModelScope.launch { prefs.setGlass(glass) } }
+
+    override fun setIconShape(shape: IconShape) { viewModelScope.launch { prefs.setIconShape(shape) } }
+
+    override fun setIconShadow(on: Boolean) { viewModelScope.launch { prefs.setIconShadow(on) } }
 
     override fun openClock() = launcher.openClockApp()
 

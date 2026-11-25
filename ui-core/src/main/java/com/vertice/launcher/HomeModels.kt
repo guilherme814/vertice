@@ -7,7 +7,9 @@ import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.GridConfig
+import com.vertice.launcher.core.IconShape
 import com.vertice.launcher.core.IconSize
+import com.vertice.launcher.core.IconStyle
 import com.vertice.launcher.core.LayoutItem
 import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.core.Placement
@@ -44,7 +46,8 @@ data class HomeUi(
     val iconSize: IconSize = IconSize.Medium,
     val showLabels: Boolean = true,
     val accent: Accent = Accent.Mint,
-    val glass: GlassLevel = GlassLevel.Medium
+    val glass: GlassLevel = GlassLevel.Medium,
+    val iconStyle: IconStyle = IconStyle()
 ) {
     fun categoryOf(app: AppEntry): AppCategory = categories[app.key] ?: AppCategory.default
 }
@@ -81,6 +84,8 @@ interface AppearanceActions {
     fun setShowLabels(show: Boolean)
     fun setAccent(accent: Accent)
     fun setGlass(glass: GlassLevel)
+    fun setIconShape(shape: IconShape)
+    fun setIconShadow(on: Boolean)
 }
 
 /** Backup e restauração das preferências. */

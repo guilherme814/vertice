@@ -16,6 +16,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.RectangleShape
+import com.vertice.launcher.core.IconStyle
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -28,14 +31,29 @@ import kotlin.math.roundToInt
 
 /** Ícone assíncrono: usa o cache e só decodifica se faltar. */
 @Composable
-fun AppIcon(app: AppEntry, icons: IconCache, size: Dp, modifier: Modifier = Modifier) {
+fun AppIcon(
+    app: AppEntry,
+    icons: IconCache,
+    size: Dp,
+    modifier: Modifier = Modifier,
+    style: IconStyle = IconStyle()
+) {
     val px = with(LocalDensity.current) { size.toPx() }.roundToInt()
-    var bitmap: ImageBitmap? by remember(app.key, px) { mutableStateOf(icons.peek(app, px)) }
-    LaunchedEffect(app.key, px) {
-        if (bitmap == null) bitmap = icons.load(app, px)
+    val full = style.shape.needsFullBleed
+    var bitmap: ImageBitmap? by remember(app.key, px, full) { mutableStateOf(icons.peek(app, px, full)) }
+    LaunchedEffect(app.key, px, full) {
+        if (bitmap == null) bitmap = icons.load(app, px, full)
     }
+    val shape = remember(style.shape) { style.shape.percent?.let { RoundedCornerShape(it) } ?: RectangleShape }
     Box(modifier.size(size)) {
-        bitmap?.let { Image(bitmap = it, contentDescription = app.label, modifier = Modifier.size(size)) }
+        bitmap?.let {
+            Image(
+                bitmap = it, contentDescription = app.label,
+                modifier = Modifier.size(size)
+                    .then(if (full && style.shadow) Modifier.shadow(3.dp, shape) else Modifier)
+                    .then(if (full) Modifier.clip(shape) else Modifier)
+            )
+        }
     }
 }
 

@@ -157,7 +157,8 @@ fun AppDrawer(
                     AppTile(
                         app = app, vm = vm, animateLaunch = ui.profile.animations,
                         showLabel = true, onLaunch = onLaunch,
-                        iconSize = 52.dp * ui.iconSize.scale
+                        iconSize = 52.dp * ui.iconSize.scale,
+                        iconStyle = ui.iconStyle
                     )
                 }
             }

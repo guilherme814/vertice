@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vertice.launcher.HomeActions
 import com.vertice.launcher.core.AppCategory
+import com.vertice.launcher.core.IconStyle
 import com.vertice.launcher.core.Placement
 import com.vertice.launcher.data.AppEntry
 import kotlin.math.roundToInt
@@ -65,6 +66,7 @@ fun AppTile(
     modifier: Modifier = Modifier,
     iconSize: Dp = 52.dp,
     labelLines: Int = 2,
+    iconStyle: IconStyle = IconStyle(),
     /** Se informado, o menu oferece "Mover" (entra no modo de mover da Home). */
     onMove: (() -> Unit)? = null
 ) {
@@ -113,7 +115,7 @@ fun AppTile(
             Modifier.padding(vertical = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            AppIcon(app, vm.icons, iconSize, Modifier.alpha(if (app.model.suspended) 0.4f else 1f))
+            AppIcon(app, vm.icons, iconSize, Modifier.alpha(if (app.model.suspended) 0.4f else 1f), iconStyle)
             if (showLabel) {
                 Spacer(Modifier.height(6.dp))
                 Text(
