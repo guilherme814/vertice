@@ -53,6 +53,7 @@ class LauncherActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        lastLocales = resources.configuration.locales.toLanguageTags()
 
         setContent {
             val ui by vm.ui.collectAsStateWithLifecycle()
@@ -113,6 +114,19 @@ class LauncherActivity : ComponentActivity() {
         val home = intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)
         VLog.i("Home", "onNewIntent action=${intent.action} home=$home")
         if (home) homeSignal++
+    }
+
+    private var lastLocales: String? = null
+
+    /** Idioma trocado com a launcher aberta (a Activity trata `locale` sozinha): os nomes dos apps precisam ser relidos. */
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        val now = newConfig.locales.toLanguageTags()
+        if (lastLocales != null && lastLocales != now) {
+            VLog.i("Apps", "Idioma mudou ($lastLocales -> $now): recarregando nomes dos apps")
+            vm.refreshApps()
+        }
+        lastLocales = now
     }
 
     override fun onPause() {

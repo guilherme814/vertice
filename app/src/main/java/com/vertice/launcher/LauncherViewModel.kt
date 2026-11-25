@@ -174,6 +174,8 @@ class LauncherViewModel(
         }
     }
 
+    fun refreshApps() = catalog.refresh(immediate = true)
+
     /** Resumo de uso do cache de ícones, pedido pela Activity ao sair da tela. */
     fun logIconStats() = VLog.i("Ícones", icons.stats())
 

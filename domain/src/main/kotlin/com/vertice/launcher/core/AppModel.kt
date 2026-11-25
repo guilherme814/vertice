@@ -10,7 +10,9 @@ data class AppModel(
     val label: String,
     val installTime: Long,
     /** Categoria declarada pelo app (ApplicationInfo.category) ou -1. */
-    val declaredCategory: Int
+    val declaredCategory: Int,
+    /** App suspenso pelo sistema (controle parental etc.): aparece apagado. */
+    val suspended: Boolean = false
 ) {
     /** Categoria automática (declarada pelo app ou deduzida do pacote). */
     val autoCategory: AppCategory get() = AppCategory.detect(declaredCategory, packageName)

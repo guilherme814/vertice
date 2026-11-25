@@ -1,7 +1,11 @@
 package com.vertice.launcher.data
 
 import android.content.Context
+import android.content.BroadcastReceiver
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.ApplicationInfo
+import android.os.Build
 import android.content.pm.LauncherApps
 import android.net.Uri
 import android.os.Bundle
@@ -51,10 +55,38 @@ class AppRepository(context: Context) : AppCatalog, AppLauncher {
             event("disponível", packageNames?.joinToString())
         override fun onPackagesUnavailable(packageNames: Array<out String>?, user: UserHandle?, replacing: Boolean) =
             event("indisponível", packageNames?.joinToString())
+        // App suspenso (controle parental, bem-estar digital): precisa aparecer apagado, e voltar ao normal depois.
+        override fun onPackagesSuspended(packageNames: Array<out String>?, user: UserHandle?) =
+            event("suspenso", packageNames?.joinToString())
+        override fun onPackagesUnsuspended(packageNames: Array<out String>?, user: UserHandle?) =
+            event("reativado", packageNames?.joinToString())
+    }
+
+    // Perfil de trabalho ligando/desligando/desbloqueando muda quais apps existem: recarrega.
+    private val profileReceiver = object : BroadcastReceiver() {
+        override fun onReceive(c: Context?, intent: Intent?) {
+            VLog.d("Apps", "Perfil de usuário mudou: ${intent?.action}")
+            refresh()
+        }
     }
 
     init {
         launcherApps.registerCallback(callback, Handler(Looper.getMainLooper()))
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_MANAGED_PROFILE_AVAILABLE)
+            addAction(Intent.ACTION_MANAGED_PROFILE_UNAVAILABLE)
+            addAction(Intent.ACTION_MANAGED_PROFILE_UNLOCKED)
+            addAction(Intent.ACTION_USER_UNLOCKED)
+        }
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                appContext.registerReceiver(profileReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                appContext.registerReceiver(profileReceiver, filter)
+            }
+        } catch (e: Exception) {
+            VLog.w("Apps", "Não foi possível observar mudanças de perfil", e)
+        }
         refresh(immediate = true)
     }
 
@@ -90,7 +122,8 @@ class AppRepository(context: Context) : AppCatalog, AppLauncher {
                         packageName = component.packageName,
                         label = info.label?.toString() ?: component.packageName,
                         installTime = info.firstInstallTime,
-                        declaredCategory = info.applicationInfo.category
+                        declaredCategory = info.applicationInfo.category,
+                        suspended = (info.applicationInfo.flags and ApplicationInfo.FLAG_SUSPENDED) != 0
                     ),
                     component = component,
                     user = user,
@@ -162,6 +195,7 @@ class AppRepository(context: Context) : AppCatalog, AppLauncher {
 
     fun close() {
         launcherApps.unregisterCallback(callback)
+        try { appContext.unregisterReceiver(profileReceiver) } catch (_: IllegalArgumentException) {}
         scope.cancel()
     }
 }
