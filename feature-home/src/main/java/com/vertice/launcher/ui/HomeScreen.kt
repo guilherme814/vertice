@@ -169,9 +169,9 @@ fun HomeScreen(
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Row(
                     Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(30.dp))
+                        .clip(RoundedCornerShape(Radius.dock))
                         .background(PanelSoft.copy(alpha = 0.55f))
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                        .padding(horizontal = Space.s, vertical = Space.xs + 2.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {

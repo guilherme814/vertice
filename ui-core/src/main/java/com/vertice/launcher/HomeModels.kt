@@ -45,42 +45,55 @@ data class HomeUi(
     fun categoryOf(app: AppEntry): AppCategory = categories[app.key] ?: AppCategory.default
 }
 
-/**
- * O que as telas podem pedir. As telas conhecem só este contrato (não o ViewModel),
- * então vivem em módulos próprios e podem ser testadas com uma versão falsa.
- */
-interface HomeActions {
-    val ui: StateFlow<HomeUi>
-    val icons: IconCache
-
-    /** Bateria em %, null se desconhecida. */
-    val batteryPercent: Flow<Int?>
-
+/** Abrir apps e telas do sistema. */
+interface AppActions {
     fun openApp(app: AppEntry, options: Bundle?)
     fun openAppInfo(app: AppEntry)
     fun uninstall(app: AppEntry)
     fun openClock()
     fun openCalendar()
+}
 
+/** Organização: onde cada app fica (Home, dock, grade) e a categoria de cada um. */
+interface OrganizeActions {
     fun placementOf(app: AppEntry): Placement
     fun toggleDock(app: AppEntry)
     fun addToHome(app: AppEntry)
     fun removeFromHome(app: AppEntry)
     fun moveToCell(app: AppEntry, page: Int, x: Int, y: Int)
+    fun setGrid(columns: Int, rows: Int)
 
     /** `category = null` volta a classificação automática do app. */
     fun setCategory(app: AppEntry, category: AppCategory?)
+}
+
+/** Aparência: relógio, papel de parede, ícones. */
+interface AppearanceActions {
     fun setClockStyle(style: ClockStyle)
     fun setClockFormat(format: ClockFormat)
     fun setShowDate(show: Boolean)
     fun setWallpaper(w: Wallpaper)
-    fun setGrid(columns: Int, rows: Int)
     fun setIconSize(size: IconSize)
     fun setShowLabels(show: Boolean)
+}
 
+/** Backup e restauração das preferências. */
+interface BackupActions {
     /** Texto do backup das preferências atuais. */
     suspend fun backupText(): String
 
     /** Restaura de um backup; devolve a mensagem para mostrar ao usuário. */
     suspend fun restoreBackup(text: String): String
+}
+
+/**
+ * O que as telas enxergam: estado pronto + contratos pequenos por assunto.
+ * As telas conhecem só isto (não o ViewModel), então vivem em módulos próprios e testam com versão falsa.
+ */
+interface HomeActions : AppActions, OrganizeActions, AppearanceActions, BackupActions {
+    val ui: StateFlow<HomeUi>
+    val icons: IconCache
+
+    /** Bateria em %, null se desconhecida. */
+    val batteryPercent: Flow<Int?>
 }
