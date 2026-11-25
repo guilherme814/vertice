@@ -12,7 +12,7 @@ Ordem de prioridade: **base Android funcional → recursos → acabamento premiu
 |------|------|--------|
 | 0 | Auditoria e estabilização | feita — ver [`docs/FASE-0-INVENTARIO.md`](docs/FASE-0-INVENTARIO.md) |
 | 1 | Launcher mínima funcional (Home, apps, dock, grade básica, persistência) | implementada — aceite em [`docs/FASE-1-ACEITE.md`](docs/FASE-1-ACEITE.md) (falta confirmar reinício no aparelho) |
-| 2 | Arquitetura modular (domínio, dados, módulos) | em andamento, 10 passos — ver [`docs/ARQUITETURA-10-FASES.md`](docs/ARQUITETURA-10-FASES.md) (passo 1 feito) |
+| 2 | Arquitetura modular (domínio, dados, módulos) | feita em 10 passos — ver [`docs/ARQUITETURA-10-FASES.md`](docs/ARQUITETURA-10-FASES.md) |
 | 3 | Experiência de uso (busca, gestos, categorias, páginas, acessibilidade) | adiantada em parte: categorias |
 | 4 | Personalização premium (tema, wallpapers, ícones, widgets) | adiantada em parte: relógio, papéis de parede |
 | 5 | Otimização e compatibilidade (Redmi A1 e Xiaomi 12) | — |

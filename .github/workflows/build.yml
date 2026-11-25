@@ -28,6 +28,10 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      # Regras de arquitetura (dependências entre módulos, imports proibidos).
+      - name: Architecture rules
+        run: ./gradlew checkArchitecture
+
       # Testes de JVM (lógica pura: layout da Home). Falhou = nada de APK.
       - name: Unit tests
         run: ./gradlew :domain:test :app:testDebugUnitTest --stacktrace
@@ -55,6 +59,31 @@ jobs:
       - name: Build release APK
         continue-on-error: true
         run: ./gradlew assembleRelease --stacktrace
+
+      # Trava de tamanho: a launcher precisa continuar leve. Ajuste MAX_MB conscientemente se crescer.
+      - name: APK size gate
+        run: |
+          MAX_MB=30
+          f=app/build/outputs/apk/release/app-release.apk
+          if [ -f "$f" ]; then
+            bytes=$(stat -c%s "$f"); mb=$(( (bytes + 1048575) / 1048576 ))
+            echo "### Tamanho do APK release: ${mb} MB (limite ${MAX_MB} MB)" >> "$GITHUB_STEP_SUMMARY"
+            echo "APK release: ${bytes} bytes (~${mb} MB), limite ${MAX_MB} MB"
+            [ "$mb" -le "$MAX_MB" ] || { echo "APK acima do limite"; exit 1; }
+          fi
+
+      # Lint do Android: informativo por enquanto (não bloqueia); o relatório sobe como artefato.
+      - name: Android lint
+        continue-on-error: true
+        run: ./gradlew :app:lintDebug --stacktrace
+
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: app/build/reports/lint-results-debug.html
+          if-no-files-found: ignore
 
       - name: Upload release APK
         if: always()

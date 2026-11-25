@@ -37,7 +37,7 @@ log/diagnóstico (`docs/DIAGNOSTICO.md`).
 | 9 | **Preferências versionadas:** esquema com número de versão, migrações testadas, backup/restauração | atualizar o app nunca perde posições |
 | 10 | **Guardas automáticas:** verificação de dependências entre módulos no CI, lint, limite de tamanho do APK, ADRs curtos | a arquitetura se protege sozinha |
 
-## 4. Andamento
+## 4. Andamento (os 10 passos estão concluídos)
 | # | Estado |
 |---|---|
 | 1 | **feito** — ver abaixo |
@@ -49,7 +49,7 @@ log/diagnóstico (`docs/DIAGNOSTICO.md`).
 | 7 | **feito** — `:feature-home`, `:feature-drawer`, `:feature-settings`; telas falam com `HomeActions`, não com o ViewModel |
 | 8 | **feito** — `AppCatalog`, `AppLauncher`, `BatteryStatus` (pacote `platform` em `:data`); a bateria virou `Flow` em vez de receptor dentro da tela |
 | 9 | **feito** — `SettingsSchema` (versão 2, migração do dock antigo testada), `BackupCodec` (texto, tolerante, recusa versão futura), `restore` no `SettingsStore`, aba Backup (exportar/restaurar) |
-| 10 | pendente |
+| 10 | **feito** — `checkArchitecture` (dependências + imports proibidos), trava de tamanho do APK, lint informativo, ADRs em `docs/adr/` |
 
 ### Passo 1 — o que mudou
 - `:domain` agora contém `PerformanceProfile`, `AppCategory` (com as constantes de `ApplicationInfo` copiadas e travadas por teste), `Prefs`, `SettingsStore`.
