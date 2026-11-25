@@ -147,9 +147,12 @@ fun HomeScreen(
                 if (pages > 1) {
                     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.Center) {
                         repeat(pages) { i ->
+                            val active = i == pager.currentPage
                             Box(
-                                Modifier.padding(horizontal = 3.dp).size(6.dp).clip(CircleShape)
-                                    .background(if (i == pager.currentPage) Mint else Muted.copy(alpha = 0.5f))
+                                Modifier.padding(horizontal = 3.dp)
+                                    .size(width = if (active) 16.dp else 6.dp, height = 6.dp)
+                                    .clip(CircleShape)
+                                    .background(if (active) Mint else Muted.copy(alpha = 0.5f))
                             )
                         }
                     }
@@ -164,7 +167,10 @@ fun HomeScreen(
 
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Row(
-                    Modifier.fillMaxWidth(),
+                    Modifier.fillMaxWidth()
+                        .clip(RoundedCornerShape(30.dp))
+                        .background(PanelSoft.copy(alpha = 0.55f))
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -180,12 +186,13 @@ fun HomeScreen(
                     }
                 }
                 Surface(
-                    color = PanelSoft.copy(alpha = 0.88f),
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier.fillMaxWidth().clickable { onOpenDrawer() }
+                    color = PanelSoft.copy(alpha = 0.7f),
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(50))
+                        .clickable(onClickLabel = "Abrir todos os aplicativos") { onOpenDrawer() }
                 ) {
                     Row(
-                        Modifier.padding(horizontal = 18.dp, vertical = 15.dp),
+                        Modifier.padding(horizontal = 22.dp, vertical = 13.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {

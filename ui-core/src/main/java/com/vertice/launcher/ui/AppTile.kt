@@ -74,11 +74,27 @@ fun AppTile(
     var boxSize by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
     val haptic = LocalHapticFeedback.current
 
+    // Retorno ao toque: o ícone "afunda" um pouco (só se o perfil de desempenho permitir animação).
+    var pressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(if (pressed && animateLaunch) 0.9f else 1f, tween(90), label = "press")
+
     Box(
         modifier
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            // Acessibilidade (TalkBack): um único alvo com rótulo, ação de abrir e "mais opções".
+            .semantics(mergeDescendants = true) {
+                onClick(label = "Abrir ${app.label}") { onLaunch(app, null); true }
+                onLongClick(label = "Mais opções") { menu = true; true }
+                customActions = listOf(CustomAccessibilityAction("Mais opções") { menu = true; true })
+            }
             .onGloballyPositioned { rootPos = it.positionInRoot(); boxSize = it.size }
             .pointerInput(app.key, animateLaunch) {
                 detectTapGestures(
+                    onPress = {
+                        pressed = true
+                        tryAwaitRelease()
+                        pressed = false
+                    },
                     onTap = {
                         val rect = if (animateLaunch)
                             Rect(rootPos, Size(boxSize.width.toFloat(), boxSize.height.toFloat()))
@@ -97,7 +113,7 @@ fun AppTile(
             Modifier.padding(vertical = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            AppIcon(app, vm.icons, iconSize)
+            AppIcon(app, vm.icons, iconSize, Modifier.alpha(if (app.model.suspended) 0.4f else 1f))
             if (showLabel) {
                 Spacer(Modifier.height(6.dp))
                 Text(
