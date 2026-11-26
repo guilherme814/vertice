@@ -221,7 +221,12 @@ class LauncherViewModel(
     fun refreshApps() = catalog.refresh(immediate = true)
 
     /** Resumo de uso do cache de ícones, pedido pela Activity ao sair da tela. */
-    fun logIconStats() = VLog.i("Ícones", icons.stats())
+    fun logIconStats() {
+        VLog.i("Ícones", icons.stats())
+        val u = ui.value
+        VLog.i("Estado", "perfil=${u.profile} papel=${u.wallpaper.name}${if (u.wallpaper.isSystem) " (janela translúcida)" else ""} " +
+            "grade=${u.grid.columns}x${u.grid.rows} ícones=${u.iconStyle.shape}${if (u.iconStyle.shadow) "+sombra" else ""} apps=${u.apps.size} ocultos=${u.hidden.size}")
+    }
 
     override fun onCleared() {
         VLog.i("App", "ViewModel destruído (os dados continuam no processo)")

@@ -47,6 +47,7 @@ import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.GridSpec
 import com.vertice.launcher.core.IconShape
+import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.core.IconSize
 import com.vertice.launcher.core.Wallpaper
 
@@ -252,6 +253,10 @@ private fun ClockTab(vm: HomeActions, ui: HomeUi) {
 @Composable
 private fun WallpaperTab(vm: HomeActions, ui: HomeUi) {
     SectionLabel("Escolha um papel de parede")
+    if (ui.wallpaper.isSystem && ui.profile == PerformanceProfile.UltraLite) {
+        // Com o papel do sistema a janela fica translúcida e o aparelho compõe uma camada a mais por quadro.
+        Text("Neste aparelho, um papel da Vértice costuma rodar mais fluido que o papel do sistema.", color = Muted, fontSize = 11.sp, modifier = Modifier.padding(bottom = 8.dp))
+    }
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Wallpaper.entries.forEach { w ->
             val selected = ui.wallpaper == w

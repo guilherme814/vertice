@@ -52,7 +52,7 @@ jobs:
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: vertice-launcher-debug-apk
+          name: vertice-debug-SO-PARA-TESTE-lento
           path: app/build/outputs/apk/debug/app-debug.apk
 
       # Versão otimizada (R8) para medir o tamanho/peso real.
@@ -89,6 +89,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: vertice-launcher-release-apk
+          name: vertice-RELEASE-INSTALE-ESTE
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: ignore
