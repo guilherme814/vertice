@@ -70,7 +70,7 @@ data class HomeUi(
 
     /** O que a gaveta esconde agora: ocultos pelo usuário + bloqueados (se o Foco estiver ligado). */
     val drawerHidden: Set<String> get() = if (focusOn) hidden + focusBlocked else hidden
-} {
+
     fun categoryOf(app: AppEntry): AppCategory = categories[app.key] ?: AppCategory.default
 }
 
