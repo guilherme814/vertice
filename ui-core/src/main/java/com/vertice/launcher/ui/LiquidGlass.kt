@@ -6,8 +6,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.drawOutline
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.DrawStyle
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.unit.dp
 
 /**
@@ -37,9 +43,21 @@ fun Modifier.liquidGlass(shape: Shape, alpha: Float = Glass.panel, rich: Boolean
         ) else null
         val stroke = Stroke(width = 1.dp.toPx())
         onDrawBehind {
-            drawOutline(outline, body)
-            drawOutline(outline, sheen)
-            glow?.let { drawOutline(outline, it) }
-            drawOutline(outline, rim, style = stroke)
+            fillOutline(outline, SolidColor(body))
+            fillOutline(outline, sheen)
+            glow?.let { fillOutline(outline, it) }
+            fillOutline(outline, rim, stroke)
         }
     }
+
+/** Desenha o contorno (retângulo, retângulo arredondado ou caminho) com um pincel. */
+private fun DrawScope.fillOutline(outline: Outline, brush: Brush, style: DrawStyle = Fill) {
+    when (outline) {
+        is Outline.Rectangle -> drawRect(brush, outline.rect.topLeft, Size(outline.rect.width, outline.rect.height), style = style)
+        is Outline.Rounded -> {
+            val r = outline.roundRect
+            drawRoundRect(brush, r.topLeft, Size(r.width, r.height), CornerRadius(r.topLeftCornerRadius.x, r.topLeftCornerRadius.y), style = style)
+        }
+        is Outline.Generic -> drawPath(outline.path, brush, style = style)
+    }
+}
