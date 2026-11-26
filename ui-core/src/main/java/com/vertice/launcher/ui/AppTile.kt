@@ -146,6 +146,9 @@ fun AppTile(
             if (placement == Placement.Home && onMove != null) {
                 DropdownMenuItem(text = { Text("Mover") }, onClick = { closeMenu(); onMove() })
             }
+            if (placement == Placement.Folder) {
+                DropdownMenuItem(text = { Text("Tirar da pasta") }, onClick = { closeMenu(); vm.removeFromFolder(app) })
+            }
             if (placement == Placement.Home) {
                 DropdownMenuItem(text = { Text("Tirar da tela inicial") }, onClick = { closeMenu(); vm.removeFromHome(app) })
             } else {

@@ -66,6 +66,7 @@ import com.vertice.launcher.core.DragGeometry
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 import com.vertice.launcher.HomeUi
+import com.vertice.launcher.PlacedFolder
 import com.vertice.launcher.HomeActions
 import com.vertice.launcher.data.AppEntry
 
@@ -86,6 +87,7 @@ fun HomeScreen(
     val battery by vm.batteryPercent.collectAsState(initial = null)
     var drag by remember { mutableStateOf<DragState?>(null) }
     var menuKey by remember { mutableStateOf<String?>(null) }
+    var openFolder by remember { mutableStateOf<String?>(null) }
     var origin by remember { mutableStateOf(Offset.Zero) }
     var pagerRect by remember { mutableStateOf(Rect.Zero) }
     var dockRect by remember { mutableStateOf(Rect.Zero) }
@@ -103,14 +105,22 @@ fun HomeScreen(
         val d = drag
         drag = null
         if (d != null) when {
-            !d.moved -> menuKey = d.app.key // só segurou: abre o menu como antes
-            dockRect.contains(d.pos) -> {
+            // Só segurou: app abre o menu; pasta abre a edição.
+            !d.moved -> if (d.app != null) menuKey = d.app.key else openFolder = d.folder?.folder?.id
+            dockRect.contains(d.pos) -> if (d.app != null) {
                 val centers = dockCenters.filterKeys { it != d.app.key }.values.sorted()
                 vm.moveToDock(d.app, DragGeometry.dockIndex(centers, d.pos.x))
             }
-            pagerRect.contains(d.pos) -> DragGeometry.cellAt(
-                d.pos.x - pagerRect.left, d.pos.y - pagerRect.top, pagerRect.width, pagerRect.height, ui.grid
-            )?.let { vm.moveToCell(d.app, pager.currentPage, it.x, it.y) }
+            pagerRect.contains(d.pos) -> {
+                val px = d.pos.x - pagerRect.left
+                val py = d.pos.y - pagerRect.top
+                DragGeometry.cellAt(px, py, pagerRect.width, pagerRect.height, ui.grid)?.let { c ->
+                    if (d.app != null) {
+                        val merge = DragGeometry.inCenter(px, py, pagerRect.width, pagerRect.height, ui.grid)
+                        vm.dropOnCell(d.app, pager.currentPage, c.x, c.y, merge)
+                    } else if (d.folder != null) vm.moveFolder(d.folder.folder.id, pager.currentPage, c.x, c.y)
+                }
+            }
         }
     }
 
@@ -219,6 +229,14 @@ fun HomeScreen(
                     if (!pagerRect.contains(d.pos)) null
                     else DragGeometry.cellAt(d.pos.x - pagerRect.left, d.pos.y - pagerRect.top, pagerRect.width, pagerRect.height, ui.grid)
                 }
+                // Solto no miolo de outro item: junta numa pasta (destaque mais forte que o de mover).
+                val hoverMerge = drag?.takeIf { it.moved && it.app != null }?.let { d ->
+                    val px = d.pos.x - pagerRect.left
+                    val py = d.pos.y - pagerRect.top
+                    hover != null && DragGeometry.inCenter(px, py, pagerRect.width, pagerRect.height, ui.grid) &&
+                        (ui.placed.any { it.item.page == pager.currentPage && it.item.x == hover.x && it.item.y == hover.y && it.app.key != d.key } ||
+                            ui.placedFolders.any { it.item.page == pager.currentPage && it.item.x == hover.x && it.item.y == hover.y })
+                } ?: false
                 HorizontalPager(
                     state = pager, userScrollEnabled = drag == null,
                     modifier = Modifier.weight(1f).fillMaxWidth().onGloballyPositioned { pagerRect = it.boundsInRoot() }
@@ -226,9 +244,12 @@ fun HomeScreen(
                     HomeGridPage(
                         page = page, ui = ui, vm = vm, moving = moving,
                         hoverCell = if (page == pager.currentPage) hover else null,
-                        dragKey = drag?.takeIf { it.moved }?.app?.key,
+                        hoverMerge = hoverMerge,
+                        dragKey = drag?.takeIf { it.moved }?.key,
                         menuKey = menuKey, onMenuClosed = { menuKey = null },
-                        onDragStart = { app, at -> drag = DragState(app, at, at, false) },
+                        onDragStart = { app, at -> drag = DragState(app.key, app, null, at, at, false) },
+                        onFolderDragStart = { pf, at -> drag = DragState(pf.folder.itemKey, null, pf, at, at, false) },
+                        onOpenFolder = { openFolder = it },
                         onMoveStart = onMoveStart,
                         onDrop = { x, y -> moving?.let { vm.moveToCell(it, page, x, y) }; onMoveEnd() },
                         onLaunch = onLaunch
@@ -277,13 +298,13 @@ fun HomeScreen(
                             iconSize = (52.dp * ui.iconSize.scale).coerceAtMost(60.dp),
                             iconStyle = ui.iconStyle,
                             modifier = Modifier
-                                .alpha(if (drag?.takeIf { it.moved }?.app?.key == app.key) 0.25f else 1f)
+                                .alpha(if (drag?.takeIf { it.moved }?.key == app.key) 0.25f else 1f)
                                 .onGloballyPositioned { c ->
                                     val x = c.boundsInRoot().center.x
                                     if (dockCenters[app.key] != x) dockCenters = dockCenters + (app.key to x)
                                 },
                             onMove = { onMoveStart(app) },
-                            onDragStart = { at -> drag = DragState(app, at, at, false) },
+                            onDragStart = { at -> drag = DragState(app.key, app, null, at, at, false) },
                             menuOpen = menuKey == app.key, onMenuClosed = { menuKey = null }
                         )
                     }
@@ -314,13 +335,28 @@ fun HomeScreen(
                 Modifier
                     .offset { IntOffset((d.pos.x - origin.x - half).roundToInt(), (d.pos.y - origin.y - half).roundToInt()) }
                     .graphicsLayer { scaleX = 1.15f; scaleY = 1.15f; alpha = 0.95f }
-            ) { AppIcon(d.app, vm.icons, size, style = ui.iconStyle.copy(shadow = true)) }
+            ) {
+                if (d.app != null) AppIcon(d.app, vm.icons, size, style = ui.iconStyle.copy(shadow = true))
+                else if (d.folder != null) FolderIcon(d.folder.folder, d.folder.apps, vm.icons, size, ui.iconStyle)
+            }
         }
+
+        // Pasta aberta: painel de liquid glass por cima da Home.
+        val openPlaced = ui.placedFolders.firstOrNull { it.folder.id == openFolder }
+        LaunchedEffect(openPlaced == null) { if (openPlaced == null) openFolder = null }
+        if (openPlaced != null) FolderSheet(openPlaced, ui, vm, onClose = { openFolder = null }, onLaunch = onLaunch)
     }
 }
 
 /** Arrasto em andamento: o app, onde o dedo começou, onde está (coordenadas da raiz) e se já se moveu além da folga. */
-private data class DragState(val app: AppEntry, val start: Offset, val pos: Offset, val moved: Boolean)
+private data class DragState(
+    val key: String,
+    val app: AppEntry?,
+    val folder: PlacedFolder?,
+    val start: Offset,
+    val pos: Offset,
+    val moved: Boolean
+)
 
 /** Uma página da grade: COLUMNS x ROWS células iguais; célula vazia é só espaço (ou alvo, no modo mover). */
 @Composable
@@ -330,16 +366,22 @@ private fun HomeGridPage(
     vm: HomeActions,
     moving: AppEntry?,
     hoverCell: DragGeometry.Cell?,
+    hoverMerge: Boolean,
     dragKey: String?,
     menuKey: String?,
     onMenuClosed: () -> Unit,
     onDragStart: (AppEntry, Offset) -> Unit,
+    onFolderDragStart: (PlacedFolder, Offset) -> Unit,
+    onOpenFolder: (String) -> Unit,
     onMoveStart: (AppEntry) -> Unit,
     onDrop: (x: Int, y: Int) -> Unit,
     onLaunch: (AppEntry, Rect?) -> Unit
 ) {
     val byCell = remember(ui.placed, page) {
         ui.placed.filter { it.item.page == page }.associateBy { it.item.x to it.item.y }
+    }
+    val foldersByCell = remember(ui.placedFolders, page) {
+        ui.placedFolders.filter { it.item.page == page }.associateBy { it.item.x to it.item.y }
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
     val grid = ui.grid
@@ -355,11 +397,13 @@ private fun HomeGridPage(
             Row(Modifier.weight(1f).fillMaxWidth()) {
                 repeat(grid.columns) { x ->
                     val placed = byCell[x to y]
+                    val folder = foldersByCell[x to y]
                     Box(
                         Modifier.weight(1f).fillMaxSize()
                             .then(
                                 if (hoverCell?.x == x && hoverCell.y == y)
-                                    Modifier.padding(3.dp).clip(RoundedCornerShape(16.dp)).background(Mint.copy(alpha = 0.18f))
+                                    Modifier.padding(3.dp).clip(RoundedCornerShape(if (hoverMerge) 24.dp else 16.dp))
+                                        .background(Mint.copy(alpha = if (hoverMerge) 0.32f else 0.18f))
                                 else Modifier
                             )
                             .then(
@@ -368,7 +412,19 @@ private fun HomeGridPage(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (placed != null) {
+                        if (folder != null) {
+                            if (moving != null) {
+                                FolderIcon(folder.folder, folder.apps, vm.icons, iconSize, ui.iconStyle)
+                            } else {
+                                FolderTile(
+                                    placed = folder, vm = vm, iconSize = iconSize, showLabel = ui.showLabels,
+                                    iconStyle = ui.iconStyle,
+                                    modifier = Modifier.alpha(if (dragKey == folder.folder.itemKey) 0.25f else 1f),
+                                    onOpen = { onOpenFolder(folder.folder.id) },
+                                    onDragStart = { at -> onFolderDragStart(folder, at) }
+                                )
+                            }
+                        } else if (placed != null) {
                             if (moving != null) {
                                 // No modo mover o ícone não abre o app: o toque vai para a célula.
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {

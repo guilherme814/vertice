@@ -3,6 +3,9 @@ package com.vertice.launcher
 import android.os.Bundle
 import com.vertice.launcher.core.Accent
 import com.vertice.launcher.core.AppCategory
+import com.vertice.launcher.core.Folder
+import com.vertice.launcher.core.FolderCover
+import com.vertice.launcher.core.FolderTint
 import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
@@ -23,6 +26,9 @@ import kotlinx.coroutines.flow.StateFlow
 /** App + onde ele está na grade da Home. */
 data class PlacedApp(val app: AppEntry, val item: LayoutItem)
 
+/** Pasta já resolvida: seus apps reais e a célula que ocupa na grade. */
+data class PlacedFolder(val folder: Folder, val apps: List<AppEntry>, val item: LayoutItem)
+
 /** Estado já resolvido para a interface: chaves salvas viram apps reais. */
 data class HomeUi(
     val loading: Boolean = true,
@@ -32,6 +38,7 @@ data class HomeUi(
     val dock: List<AppEntry> = emptyList(),
     /** Apps na grade da Home. */
     val placed: List<PlacedApp> = emptyList(),
+    val placedFolders: List<PlacedFolder> = emptyList(),
     /** Quantas páginas a Home tem (no mínimo 1). */
     val pageCount: Int = 1,
     val placement: Map<String, Placement> = emptyMap(),
@@ -93,6 +100,18 @@ interface AppearanceActions {
     fun setIconShadow(on: Boolean)
 }
 
+/** Pastas da Home. */
+interface FolderActions {
+    /** Soltar [app] numa célula: no miolo de outro app cria pasta; no miolo de uma pasta entra nela; senão só move. */
+    fun dropOnCell(app: AppEntry, page: Int, x: Int, y: Int, merge: Boolean)
+    fun moveFolder(folderId: String, page: Int, x: Int, y: Int)
+    fun removeFromFolder(app: AppEntry)
+    fun renameFolder(folderId: String, name: String)
+    fun setFolderTint(folderId: String, tint: FolderTint)
+    fun setFolderCover(folderId: String, cover: FolderCover)
+    fun dissolveFolder(folderId: String)
+}
+
 /** Gaveta: ordem e apps ocultos. */
 interface DrawerActions {
     fun setDrawerSort(sort: DrawerSort)
@@ -112,7 +131,7 @@ interface BackupActions {
  * O que as telas enxergam: estado pronto + contratos pequenos por assunto.
  * As telas conhecem só isto (não o ViewModel), então vivem em módulos próprios e testam com versão falsa.
  */
-interface HomeActions : AppActions, OrganizeActions, AppearanceActions, BackupActions, DrawerActions {
+interface HomeActions : AppActions, OrganizeActions, AppearanceActions, BackupActions, DrawerActions, FolderActions {
     val ui: StateFlow<HomeUi>
     val icons: IconCache
 

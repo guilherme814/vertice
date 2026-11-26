@@ -18,6 +18,14 @@ class DragTest {
         assertNull(DragGeometry.cellAt(10f, 10f, 0f, 500f, grid))
     }
 
+    @Test fun `miolo da celula e a metade central`() {
+        // grade 4x5 em 400x500: células de 100x100
+        assertEquals(true, DragGeometry.inCenter(150f, 150f, 400f, 500f, grid))
+        assertEquals(false, DragGeometry.inCenter(110f, 150f, 400f, 500f, grid))
+        assertEquals(false, DragGeometry.inCenter(150f, 190f, 400f, 500f, grid))
+        assertEquals(false, DragGeometry.inCenter(-5f, 150f, 400f, 500f, grid))
+    }
+
     @Test fun `indice do dock conta os centros a esquerda`() {
         val c = listOf(50f, 150f, 250f)
         assertEquals(0, DragGeometry.dockIndex(c, 10f))

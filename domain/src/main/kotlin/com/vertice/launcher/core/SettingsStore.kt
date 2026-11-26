@@ -9,6 +9,8 @@ data class Prefs(
     val profile: PerformanceProfile? = null,
     /** Posição de cada app na Home e no dock (contêiner + página + célula). */
     val layout: List<LayoutItem> = emptyList(),
+    /** Pastas da Home (os apps de cada uma ficam só dentro dela). */
+    val folders: List<Folder> = emptyList(),
     val seeded: Boolean = false,
     /** Correções manuais: chave do app -> nome da categoria. Vencem a classificação automática. */
     val categoryOverrides: Map<String, String> = emptyMap(),

@@ -3,8 +3,8 @@ package com.vertice.launcher.core
 import java.net.URLDecoder
 import java.net.URLEncoder
 
-/** Onde um app está: na grade da Home, no dock, ou só na gaveta. */
-enum class Placement { None, Home, Dock }
+/** Onde um app está: na grade da Home, no dock, dentro de uma pasta, ou só na gaveta. */
+enum class Placement { None, Home, Dock, Folder }
 
 enum class Container(val code: String) {
     Home("H"), Dock("D");

@@ -11,6 +11,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.vertice.launcher.core.ClockFormat
+import com.vertice.launcher.core.FolderCodec
+import com.vertice.launcher.core.HomeData
 import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.Accent
 import com.vertice.launcher.core.GlassLevel
@@ -44,6 +46,7 @@ class LauncherPrefs(context: Context) : SettingsStore {
         val profile = stringPreferencesKey("profile")
         val dock = stringPreferencesKey("dock") // legado (antes da grade); só lido para migrar
         val layout = stringSetPreferencesKey("layout_v2")
+        val folders = stringSetPreferencesKey("folders_v1")
         val schemaVersion = intPreferencesKey("schema_version")
         val gridColumns = intPreferencesKey("grid_columns")
         val gridRows = intPreferencesKey("grid_rows")
@@ -73,6 +76,7 @@ class LauncherPrefs(context: Context) : SettingsStore {
         Prefs(
             profile = PerformanceProfile.fromName(p[K.profile]),
             layout = readLayout(p),
+            folders = FolderCodec.decodeAll(p[K.folders] ?: emptySet()),
             seeded = p[K.seeded] ?: false,
             categoryOverrides = (p[K.categories] ?: emptySet()).mapNotNull { entry ->
                 val i = entry.lastIndexOf('=')
@@ -102,9 +106,11 @@ class LauncherPrefs(context: Context) : SettingsStore {
      * Leitura + transformação + escrita numa única transação do DataStore: duas edições seguidas
      * (ex.: dois toques rápidos) nunca se sobrescrevem, ao contrário de ler o estado na UI e gravar depois.
      */
-    override suspend fun editLayout(transform: (List<LayoutItem>) -> List<LayoutItem>) {
+    override suspend fun editHome(transform: (HomeData) -> HomeData) {
         store.edit { p ->
-            p[K.layout] = LayoutCodec.encodeAll(transform(readLayout(p)))
+            val next = transform(HomeData(readLayout(p), FolderCodec.decodeAll(p[K.folders] ?: emptySet())))
+            p[K.layout] = LayoutCodec.encodeAll(next.items)
+            p[K.folders] = FolderCodec.encodeAll(next.folders)
             p[K.schemaVersion] = SettingsSchema.CURRENT
         }
     }
@@ -163,6 +169,7 @@ class LauncherPrefs(context: Context) : SettingsStore {
         store.edit {
             prefs.profile?.let { p -> it[K.profile] = p.name } ?: it.remove(K.profile)
             it[K.layout] = LayoutCodec.encodeAll(prefs.layout)
+            it[K.folders] = FolderCodec.encodeAll(prefs.folders)
             it[K.categories] = prefs.categoryOverrides.map { (k, v) -> "${Uri.encode(k)}=$v" }.toSet()
             it[K.clockStyle] = prefs.clockStyle.name
             it[K.clockFormat] = prefs.clockFormat.name

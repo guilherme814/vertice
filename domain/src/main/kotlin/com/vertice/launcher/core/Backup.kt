@@ -55,6 +55,7 @@ object BackupCodec {
         p.hiddenApps.toSortedSet().forEach { appendLine("hidden=${enc(it)}") }
         p.categoryOverrides.toSortedMap().forEach { (k, v) -> appendLine("category=${enc(k)}=$v") }
         p.layout.forEach { appendLine("layout=${LayoutCodec.encode(it)}") }
+        p.folders.forEach { appendLine("folder=${FolderCodec.encode(it)}") }
     }
 
     fun decode(text: String): Result {
@@ -68,6 +69,7 @@ object BackupCodec {
         val layout = ArrayList<LayoutItem>()
         val categories = LinkedHashMap<String, String>()
         val hidden = LinkedHashSet<String>()
+        val folders = ArrayList<Folder>()
         var ignored = 0
         for (line in lines.drop(1)) {
             val i = line.indexOf('=')
@@ -95,9 +97,10 @@ object BackupCodec {
                     if (j <= 0) ignored++ else try { categories[dec(value.substring(0, j))] = value.substring(j + 1) } catch (_: IllegalArgumentException) { ignored++ }
                 }
                 "layout" -> LayoutCodec.decode(value)?.let { layout += it } ?: ignored++
+                "folder" -> FolderCodec.decode(value)?.let { folders += it } ?: ignored++
                 else -> ignored++
             }
         }
-        return Result.Ok(prefs.copy(layout = layout, categoryOverrides = categories, hiddenApps = hidden), ignored)
+        return Result.Ok(prefs.copy(layout = layout, categoryOverrides = categories, hiddenApps = hidden, folders = folders), ignored)
     }
 }

@@ -34,4 +34,5 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
+    implementation(libs.activity.compose)
 }

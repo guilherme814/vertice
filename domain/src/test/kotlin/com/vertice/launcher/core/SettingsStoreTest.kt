@@ -12,8 +12,9 @@ class InMemorySettings : SettingsStore {
     private val state = MutableStateFlow(Prefs())
     override val prefs = state.map { it }
 
-    override suspend fun editLayout(transform: (List<LayoutItem>) -> List<LayoutItem>) {
-        state.value = state.value.copy(layout = transform(state.value.layout))
+    override suspend fun editHome(transform: (HomeData) -> HomeData) {
+        val next = transform(HomeData(state.value.layout, state.value.folders))
+        state.value = state.value.copy(layout = next.items, folders = next.folders)
     }
     override suspend fun setProfile(profile: PerformanceProfile) { state.value = state.value.copy(profile = profile) }
     override suspend fun setCategory(key: String, category: String?) {

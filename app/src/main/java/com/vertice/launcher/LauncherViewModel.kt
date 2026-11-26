@@ -13,6 +13,11 @@ import com.vertice.launcher.core.BackupCodec
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.Container
+import com.vertice.launcher.core.Folder
+import com.vertice.launcher.core.FolderCover
+import com.vertice.launcher.core.FolderOps
+import com.vertice.launcher.core.FolderTint
+import com.vertice.launcher.core.HomeData
 import com.vertice.launcher.core.HomeState
 import com.vertice.launcher.core.GridConfig
 import com.vertice.launcher.core.GridSpec
@@ -73,6 +78,10 @@ class LauncherViewModel(
             apps = apps,
             dock = state.dock.mapNotNull { byKey[it] },
             placed = state.grid.mapNotNull { item -> byKey[item.key]?.let { PlacedApp(it, item) } },
+            placedFolders = state.grid.mapNotNull { item ->
+                state.folders.firstOrNull { it.itemKey == item.key }
+                    ?.let { f -> PlacedFolder(f, f.keys.mapNotNull { byKey[it] }, item) }
+            },
             pageCount = state.pageCount,
             placement = state.placement,
             categories = state.categories,
@@ -129,16 +138,16 @@ class LauncherViewModel(
 
     override fun placementOf(app: AppEntry): Placement = ui.value.placement[app.key] ?: Placement.None
 
-    /** Toda edição passa por aqui: transação única no DataStore, sempre normalizada. */
-    private fun edit(name: String, grid: GridConfig = ui.value.grid, op: (List<LayoutItem>) -> List<LayoutItem>) {
+    /** Toda edição passa por aqui: transação única no DataStore (posições + pastas), sempre normalizada. */
+    private fun editData(name: String, grid: GridConfig = ui.value.grid, op: (HomeData) -> HomeData) {
         viewModelScope.launch {
             val present = catalog.apps.value.map { it.key }.toSet()
             try {
-                prefs.editLayout { current ->
+                prefs.editHome { current ->
                     val next = op(current)
                     // Com a lista de apps ainda vazia, não apaga nada do que foi salvo.
-                    val result = if (present.isEmpty()) next else LayoutOps.sanitize(next, present, grid)
-                    VLog.d("Layout", "$name: ${current.size} -> ${result.size} itens${if (result == current) " (sem mudança)" else ""}")
+                    val result = if (present.isEmpty()) next else FolderOps.sanitize(next, present, grid)
+                    VLog.d("Layout", "$name: ${current.items.size} -> ${result.items.size} itens, ${result.folders.size} pastas${if (result == current) " (sem mudança)" else ""}")
                     result
                 }
             } catch (e: Exception) {
@@ -147,16 +156,56 @@ class LauncherViewModel(
         }
     }
 
-    override fun toggleDock(app: AppEntry) = edit("dock ${app.packageName}") {
-        if (it.any { i -> i.key == app.key && i.container == Container.Dock }) LayoutOps.removeFromDock(it, app.key)
-        else LayoutOps.addToDock(it, app.key) // dock cheio: nada muda
+    private fun edit(name: String, grid: GridConfig = ui.value.grid, op: (List<LayoutItem>) -> List<LayoutItem>) =
+        editData(name, grid) { it.copy(items = op(it.items)) }
+
+    override fun toggleDock(app: AppEntry) = editData("dock ${app.packageName}") { d ->
+        if (d.items.any { it.key == app.key && it.container == Container.Dock }) d.copy(items = LayoutOps.removeFromDock(d.items, app.key))
+        else {
+            // Vindo de uma pasta: só sai dela se o dock tiver vaga (dock cheio: nada muda).
+            val base = FolderOps.detach(d, app.key)
+            val items = LayoutOps.addToDock(base.items, app.key)
+            if (items.none { it.key == app.key }) d else base.copy(items = items)
+        }
     }
 
-    override fun addToHome(app: AppEntry) = edit("colocar ${app.packageName}") { LayoutOps.addToHome(it, app.key, ui.value.grid) }
+    override fun addToHome(app: AppEntry) = editData("colocar ${app.packageName}") { d ->
+        val base = FolderOps.detach(d, app.key)
+        base.copy(items = LayoutOps.addToHome(base.items, app.key, ui.value.grid))
+    }
 
     override fun removeFromHome(app: AppEntry) = edit("tirar ${app.packageName}") { LayoutOps.removeFromHome(it, app.key) }
 
     override fun moveToCell(app: AppEntry, page: Int, x: Int, y: Int) = edit("mover ${app.packageName} p$page ($x,$y)") { LayoutOps.moveHome(it, app.key, page, x, y, ui.value.grid) }
+
+    override fun dropOnCell(app: AppEntry, page: Int, x: Int, y: Int, merge: Boolean) =
+        editData("soltar ${app.packageName} p$page ($x,$y) merge=$merge") { d ->
+            val occupant = d.items.firstOrNull { it.container == Container.Home && it.page == page && it.x == x && it.y == y }
+            when {
+                merge && occupant != null && occupant.key != app.key && FolderOps.isFolderKey(occupant.key) ->
+                    FolderOps.addToFolder(d, occupant.key.removePrefix(Folder.KEY_PREFIX), app.key)
+                merge && occupant != null && occupant.key != app.key ->
+                    FolderOps.createFromDrop(d, app.key, occupant.key)
+                else -> d.copy(items = LayoutOps.moveHome(d.items, app.key, page, x, y, ui.value.grid))
+            }
+        }
+
+    override fun moveFolder(folderId: String, page: Int, x: Int, y: Int) = edit("mover pasta $folderId p$page ($x,$y)") {
+        LayoutOps.moveHome(it, Folder.KEY_PREFIX + folderId, page, x, y, ui.value.grid)
+    }
+
+    override fun removeFromFolder(app: AppEntry) = editData("tirar da pasta ${app.packageName}") { d ->
+        val id = d.folders.firstOrNull { app.key in it.keys }?.id ?: return@editData d
+        FolderOps.removeFromFolder(d, id, app.key, ui.value.grid)
+    }
+
+    override fun renameFolder(folderId: String, name: String) = editData("renomear pasta $folderId") { FolderOps.rename(it, folderId, name) }
+
+    override fun setFolderTint(folderId: String, tint: FolderTint) = editData("cor da pasta $folderId") { FolderOps.setTint(it, folderId, tint) }
+
+    override fun setFolderCover(folderId: String, cover: FolderCover) = editData("capa da pasta $folderId") { FolderOps.setCover(it, folderId, cover) }
+
+    override fun dissolveFolder(folderId: String) = editData("desfazer pasta $folderId") { FolderOps.dissolve(it, folderId, ui.value.grid) }
 
     override fun moveToDock(app: AppEntry, index: Int) = edit("dock ${app.packageName} #$index") { LayoutOps.moveToDock(it, app.key, index) }
 

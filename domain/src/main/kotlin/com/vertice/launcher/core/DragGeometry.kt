@@ -13,6 +13,14 @@ object DragGeometry {
         )
     }
 
+    /** O ponto está no miolo da célula (metade central em cada eixo)? Soltar ali junta apps numa pasta. */
+    fun inCenter(px: Float, py: Float, width: Float, height: Float, grid: GridConfig): Boolean {
+        if (cellAt(px, py, width, height, grid) == null) return false
+        val fx = (px / width * grid.columns) % 1f
+        val fy = (py / height * grid.rows) % 1f
+        return fx in 0.25f..0.75f && fy in 0.25f..0.75f
+    }
+
     /** Posição de inserção no dock: quantos ícones (pelos centros) estão à esquerda do ponto. */
     fun dockIndex(centers: List<Float>, px: Float): Int = centers.count { it < px }
 
