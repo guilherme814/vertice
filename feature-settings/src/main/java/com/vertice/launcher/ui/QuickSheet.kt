@@ -56,6 +56,7 @@ enum class SheetTab(val label: String) {
     Theme("Tema"),
     Grid("Grade e ícones"),
     Clock("Relógio"),
+    Focus("Foco"),
     Backup("Backup"),
     Diagnostics("Diagnóstico")
 }
@@ -114,6 +115,7 @@ fun QuickSheet(
                     SheetTab.Theme -> ThemeTab(vm, ui)
                     SheetTab.Grid -> GridTab(vm, ui)
                     SheetTab.Clock -> ClockTab(vm, ui)
+                    SheetTab.Focus -> FocusTab(vm, ui)
                     SheetTab.Backup -> BackupTab(vm)
                     SheetTab.Diagnostics -> DiagnosticsTab()
                 }
@@ -248,6 +250,44 @@ private fun ClockTab(vm: HomeActions, ui: HomeUi) {
         "Toque no relógio para abrir os alarmes e na data para abrir a agenda.",
         color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp)
     )
+}
+
+@Composable
+private fun FocusTab(vm: HomeActions, ui: HomeUi) {
+    SectionLabel("Modo Foco")
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(if (ui.focusOn) "Ligado" else "Desligado", color = Snow, fontSize = 15.sp)
+        Switch(
+            checked = ui.focusOn,
+            onCheckedChange = { vm.setFocus(it) },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Ink, checkedTrackColor = Mint,
+                uncheckedThumbColor = Muted, uncheckedTrackColor = PanelSoft
+            )
+        )
+    }
+    Text(
+        "Com o Foco ligado, os apps bloqueados somem da gaveta, ficam apagados na Home e não abrem. " +
+            "Tudo local: nada sai do aparelho.",
+        color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp, bottom = 12.dp)
+    )
+    SectionLabel("Bloquear por categoria")
+    val cats = remember(ui.categories) { ui.categories.values.distinct().sortedBy { it.label } }
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        cats.forEach { c ->
+            val keys = ui.categories.filterValues { it == c }.keys
+            CategoryChip(c.label, keys.isNotEmpty() && ui.focusBlocked.containsAll(keys)) { vm.toggleBlockCategory(c) }
+        }
+    }
+    Spacer(Modifier.height(12.dp))
+    Text(
+        "${ui.focusBlocked.size} apps bloqueados. Para um app só: segure o ícone e escolha \"Bloquear no Modo Foco\".",
+        color = Muted, fontSize = 12.sp
+    )
+    if (ui.focusBlocked.isNotEmpty()) {
+        Spacer(Modifier.height(8.dp))
+        CategoryChip("Limpar bloqueios", false) { vm.clearFocusBlocked() }
+    }
 }
 
 @Composable

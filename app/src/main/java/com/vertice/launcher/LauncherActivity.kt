@@ -76,7 +76,7 @@ class LauncherActivity : ComponentActivity() {
                 kotlinx.coroutines.delay(400)
                 val px = with(density) { (52.dp * ui.iconSize.scale).toPx() }.roundToInt()
                 val byKey = ui.apps.associateBy { it.key }
-                val first = com.vertice.launcher.core.DrawerList.sorted(ui.apps.map { it.model }, ui.drawerSort, ui.hidden)
+                val first = com.vertice.launcher.core.DrawerList.sorted(ui.apps.map { it.model }, ui.drawerSort, ui.drawerHidden, ui.usage)
                     .mapNotNull { byKey[it.key] }
                 vm.icons.prewarm(first, px, ui.iconStyle.shape.needsFullBleed)
             }

@@ -24,7 +24,9 @@ class BackupTest {
         glass = GlassLevel.Strong,
         iconShape = IconShape.Squircle,
         iconShadow = true,
-        drawerSort = DrawerSort.Newest,
+        drawerSort = DrawerSort.Recent,
+        focusOn = true,
+        focusBlocked = setOf("com.game/.Main", "a&b c"),
         hiddenApps = setOf("com.a/.Main", "x=y&z ç")
     )
 

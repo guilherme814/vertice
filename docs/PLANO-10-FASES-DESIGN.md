@@ -11,8 +11,8 @@ Uma fase por vez; cada uma só fecha com CI verde (testes + regras de arquitetur
 | 4 | **Gaveta nova** | ordenar (A–Z, Novos), seções por letra com índice lateral, ocultar apps (modo "Ocultos" para reexibir) | **feita** |
 | 5 | **Arrastar e soltar** | mover na grade e no dock arrastando, com sombra e destino destacado (substitui o "toque na célula") | **feita** |
 | 6a | **Liquid glass** | vidro leitoso com brilho, borda de luz e reflexo (rico no Premium/Equilibrado, simples no Ultra Lite), sem desfoque em tempo real; papel de parede pintado uma vez em textura | **feita** |
-| 6b | **Pastas** | modelo no domínio, criar/renomear/abrir, na grade e no dock; liquid glass, cor (6) e capa (grade/pilha); criar soltando um app no miolo de outro | **feita** |
-| 7 | **Exclusivo I — Foco e sugestões** | Modo Foco (esconde apps escolhidos com um toque), "mais usados" e "recentes" calculados só no aparelho | — |
+| 6b | **Pastas** | modelo no domínio, criar/renomear/abrir, na grade (não no dock); liquid glass, cor (6) e capa (grade/pilha); criar soltando um app no miolo de outro | **feita** |
+| 7 | **Exclusivo I — Foco e sugestões** | Modo Foco (esconde apps escolhidos com um toque), "mais usados" e "recentes" calculados só no aparelho; bloqueio por app ou categoria, chip na Home, "Mais usados" na gaveta, ordem "Usados"; uso só no aparelho | **feita** |
 | 8 | **Exclusivo II — Gestos e atalhos** | gestos configuráveis (duplo toque, deslizar), notificações, atalhos de app no menu de segurar | — |
 | 9 | **Widgets** | relógio próprio + widgets do sistema (AppWidgetHost) na grade | — |
 | 10 | **Acabamento** | transições, paralaxe do papel de parede, primeira execução guiada, documentação final | — |

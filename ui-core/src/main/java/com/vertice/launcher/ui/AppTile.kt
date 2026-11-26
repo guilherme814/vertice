@@ -69,6 +69,8 @@ fun AppTile(
     iconSize: Dp = 52.dp,
     labelLines: Int = 2,
     iconStyle: IconStyle = IconStyle(),
+    /** Bloqueado pelo Modo Foco: apagado e não abre. */
+    locked: Boolean = false,
     /** Se informado, o menu oferece "Mover" (entra no modo de mover da Home). */
     onMove: (() -> Unit)? = null,
     /** Se informado, segurar começa um arrasto (posição do dedo na raiz); soltar sem mover abre o menu. */
@@ -92,12 +94,12 @@ fun AppTile(
             .graphicsLayer { scaleX = scale; scaleY = scale }
             // Acessibilidade (TalkBack): um único alvo com rótulo, ação de abrir e "mais opções".
             .semantics(mergeDescendants = true) {
-                onClick(label = "Abrir ${app.label}") { onLaunch(app, null); true }
+                onClick(label = if (locked) "${app.label} bloqueado pelo Modo Foco" else "Abrir ${app.label}") { if (!locked) onLaunch(app, null); true }
                 onLongClick(label = "Mais opções") { menu = true; true }
                 customActions = listOf(CustomAccessibilityAction("Mais opções") { menu = true; true })
             }
             .onGloballyPositioned { where.pos = it.positionInRoot(); where.w = it.size.width; where.h = it.size.height }
-            .pointerInput(app.key, animateLaunch) {
+            .pointerInput(app.key, animateLaunch, locked) {
                 detectTapGestures(
                     onPress = {
                         pressed = true
@@ -105,10 +107,14 @@ fun AppTile(
                         pressed = false
                     },
                     onTap = {
-                        val rect = if (animateLaunch)
-                            Rect(where.pos, Size(where.w.toFloat(), where.h.toFloat()))
-                        else null
-                        onLaunch(app, rect)
+                        if (locked) {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        } else {
+                            val rect = if (animateLaunch)
+                                Rect(where.pos, Size(where.w.toFloat(), where.h.toFloat()))
+                            else null
+                            onLaunch(app, rect)
+                        }
                     },
                     onLongPress = { at ->
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -122,7 +128,7 @@ fun AppTile(
             Modifier.padding(vertical = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            AppIcon(app, vm.icons, iconSize, Modifier.alpha(if (app.model.suspended) 0.4f else 1f), iconStyle)
+            AppIcon(app, vm.icons, iconSize, Modifier.alpha(if (locked) 0.28f else if (app.model.suspended) 0.4f else 1f), iconStyle)
             if (showLabel) {
                 Spacer(Modifier.height(6.dp))
                 Text(
@@ -161,6 +167,11 @@ fun AppTile(
             DropdownMenuItem(
                 text = { Text("Mudar categoria") },
                 onClick = { closeMenu(); picking = true }
+            )
+            val focusBlocked = app.key in vm.ui.value.focusBlocked
+            DropdownMenuItem(
+                text = { Text(if (focusBlocked) "Liberar no Modo Foco" else "Bloquear no Modo Foco") },
+                onClick = { closeMenu(); vm.toggleFocusBlocked(app) }
             )
             val isHidden = app.key in vm.ui.value.hidden
             DropdownMenuItem(

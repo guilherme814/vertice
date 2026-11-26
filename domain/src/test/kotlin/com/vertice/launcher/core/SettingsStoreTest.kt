@@ -38,6 +38,9 @@ class InMemorySettings : SettingsStore {
         val h = state.value.hiddenApps
         state.value = state.value.copy(hiddenApps = if (hidden) h + key else h - key)
     }
+    override suspend fun recordUse(key: String, nowMs: Long) { state.value = state.value.copy(usage = UsageOps.record(state.value.usage, key, nowMs)) }
+    override suspend fun setFocus(on: Boolean) { state.value = state.value.copy(focusOn = on) }
+    override suspend fun setFocusBlocked(keys: Set<String>) { state.value = state.value.copy(focusBlocked = keys) }
     override suspend fun restore(prefs: Prefs) { state.value = prefs.copy(seeded = true) }
     override suspend fun seed(profile: PerformanceProfile, layout: List<LayoutItem>) {
         state.value = state.value.copy(profile = profile, layout = layout, seeded = true)

@@ -12,6 +12,8 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.FolderCodec
+import com.vertice.launcher.core.UsageCodec
+import com.vertice.launcher.core.UsageOps
 import com.vertice.launcher.core.HomeData
 import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.Accent
@@ -58,6 +60,9 @@ class LauncherPrefs(context: Context) : SettingsStore {
         val iconShadow = booleanPreferencesKey("icon_shadow")
         val drawerSort = stringPreferencesKey("drawer_sort")
         val hidden = stringSetPreferencesKey("hidden_apps")
+        val usage = stringSetPreferencesKey("usage_v1")
+        val focusOn = booleanPreferencesKey("focus_on")
+        val focusBlocked = stringSetPreferencesKey("focus_blocked")
         val seeded = booleanPreferencesKey("seeded")
         val categories = stringSetPreferencesKey("category_overrides")
         val clockStyle = stringPreferencesKey("clock_style")
@@ -94,7 +99,10 @@ class LauncherPrefs(context: Context) : SettingsStore {
             iconShape = IconShape.fromName(p[K.iconShape]),
             iconShadow = p[K.iconShadow] ?: false,
             drawerSort = DrawerSort.fromName(p[K.drawerSort]),
-            hiddenApps = p[K.hidden] ?: emptySet()
+            hiddenApps = p[K.hidden] ?: emptySet(),
+            usage = UsageCodec.decodeAll(p[K.usage] ?: emptySet()),
+            focusOn = p[K.focusOn] ?: false,
+            focusBlocked = p[K.focusBlocked] ?: emptySet()
         )
     }.distinctUntilChanged()
 
@@ -156,6 +164,17 @@ class LauncherPrefs(context: Context) : SettingsStore {
 
     override suspend fun setIconShadow(on: Boolean) { store.edit { it[K.iconShadow] = on } }
 
+    override suspend fun recordUse(key: String, nowMs: Long) {
+        store.edit { p ->
+            val cur = UsageCodec.decodeAll(p[K.usage] ?: emptySet())
+            p[K.usage] = UsageCodec.encodeAll(UsageOps.record(cur, key, nowMs))
+        }
+    }
+
+    override suspend fun setFocus(on: Boolean) { store.edit { it[K.focusOn] = on } }
+
+    override suspend fun setFocusBlocked(keys: Set<String>) { store.edit { it[K.focusBlocked] = keys } }
+
     override suspend fun setDrawerSort(sort: DrawerSort) { store.edit { it[K.drawerSort] = sort.name } }
 
     override suspend fun setHidden(key: String, hidden: Boolean) {
@@ -185,6 +204,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
             it[K.iconShadow] = prefs.iconShadow
             it[K.drawerSort] = prefs.drawerSort.name
             it[K.hidden] = prefs.hiddenApps
+            it[K.focusOn] = prefs.focusOn
+            it[K.focusBlocked] = prefs.focusBlocked
             it[K.schemaVersion] = SettingsSchema.CURRENT
             it[K.seeded] = true
         }

@@ -27,7 +27,12 @@ data class Prefs(
     val iconShadow: Boolean = false,
     val drawerSort: DrawerSort = DrawerSort.AZ,
     /** Chaves dos apps escondidos da gaveta. */
-    val hiddenApps: Set<String> = emptySet()
+    val hiddenApps: Set<String> = emptySet(),
+    /** Uso local de cada app (não entra no backup). */
+    val usage: Map<String, Usage> = emptyMap(),
+    /** Modo Foco: com ele ligado, os apps de [focusBlocked] somem da gaveta, ficam apagados e não abrem. */
+    val focusOn: Boolean = false,
+    val focusBlocked: Set<String> = emptySet()
 )
 
 /**
@@ -57,6 +62,9 @@ interface SettingsStore : LayoutStore {
     suspend fun setIconShadow(on: Boolean)
     suspend fun setDrawerSort(sort: DrawerSort)
     suspend fun setHidden(key: String, hidden: Boolean)
+    suspend fun recordUse(key: String, nowMs: Long)
+    suspend fun setFocus(on: Boolean)
+    suspend fun setFocusBlocked(keys: Set<String>)
 
     /** Substitui todas as preferências (restauração de backup). Grava o formato atual. */
     suspend fun restore(prefs: Prefs)

@@ -158,7 +158,8 @@ fun FolderSheet(
                     AppTile(
                         app = app, vm = vm, animateLaunch = ui.profile.animations, showLabel = true,
                         onLaunch = { a, r -> onClose(); onLaunch(a, r) },
-                        iconSize = 48.dp * ui.iconSize.scale, iconStyle = ui.iconStyle
+                        iconSize = 48.dp * ui.iconSize.scale, iconStyle = ui.iconStyle,
+                        locked = ui.isLocked(app.key)
                     )
                 }
             }

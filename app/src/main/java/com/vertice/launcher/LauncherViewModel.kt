@@ -28,6 +28,7 @@ import com.vertice.launcher.core.LayoutItem
 import com.vertice.launcher.core.LayoutOps
 import com.vertice.launcher.core.Placement
 import com.vertice.launcher.core.SettingsStore
+import com.vertice.launcher.core.UsageOps
 import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.core.Wallpaper
 import com.vertice.launcher.data.AppEntry
@@ -98,6 +99,14 @@ class LauncherViewModel(
             // Sombra custa desenho: o Ultra Lite nunca a usa.
             drawerSort = p.drawerSort,
             hidden = p.hiddenApps,
+            usage = p.usage,
+            mostUsed = UsageOps.mostUsed(
+                p.usage,
+                apps.map { it.key }.toSet() - p.hiddenApps - (if (p.focusOn) p.focusBlocked else emptySet()),
+                5
+            ).mapNotNull { byKey[it] },
+            focusOn = p.focusOn,
+            focusBlocked = p.focusBlocked,
             iconStyle = IconStyle(p.iconShape, p.iconShadow && (p.profile ?: recommended) != PerformanceProfile.UltraLite)
         )
     }
@@ -130,7 +139,11 @@ class LauncherViewModel(
         }
     }
 
-    override fun openApp(app: AppEntry, options: Bundle?) = launcher.launch(app, options)
+    override fun openApp(app: AppEntry, options: Bundle?) {
+        if (ui.value.isLocked(app.key)) { VLog.i("Foco", "Abertura bloqueada: ${app.packageName}"); return }
+        launcher.launch(app, options)
+        viewModelScope.launch { prefs.recordUse(app.key, System.currentTimeMillis()) }
+    }
 
     override fun openAppInfo(app: AppEntry) = launcher.openAppInfo(app)
 
@@ -246,6 +259,26 @@ class LauncherViewModel(
     override fun setDrawerSort(sort: DrawerSort) { viewModelScope.launch { prefs.setDrawerSort(sort) } }
 
     override fun setHidden(app: AppEntry, hidden: Boolean) { viewModelScope.launch { prefs.setHidden(app.key, hidden) } }
+
+    override fun setFocus(on: Boolean) {
+        VLog.i("Foco", if (on) "Modo Foco ligado (${ui.value.focusBlocked.size} apps bloqueados)" else "Modo Foco desligado")
+        viewModelScope.launch { prefs.setFocus(on) }
+    }
+
+    override fun toggleFocusBlocked(app: AppEntry) {
+        val cur = ui.value.focusBlocked
+        viewModelScope.launch { prefs.setFocusBlocked(if (app.key in cur) cur - app.key else cur + app.key) }
+    }
+
+    override fun toggleBlockCategory(category: AppCategory) {
+        val u = ui.value
+        val keys = u.categories.filterValues { it == category }.keys
+        if (keys.isEmpty()) return
+        val next = if (u.focusBlocked.containsAll(keys)) u.focusBlocked - keys else u.focusBlocked + keys
+        viewModelScope.launch { prefs.setFocusBlocked(next) }
+    }
+
+    override fun clearFocusBlocked() { viewModelScope.launch { prefs.setFocusBlocked(emptySet()) } }
 
     override fun openClock() = launcher.openClockApp()
 

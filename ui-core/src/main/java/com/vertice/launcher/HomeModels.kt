@@ -17,6 +17,7 @@ import com.vertice.launcher.core.IconStyle
 import com.vertice.launcher.core.LayoutItem
 import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.core.Placement
+import com.vertice.launcher.core.Usage
 import com.vertice.launcher.core.Wallpaper
 import com.vertice.launcher.data.AppEntry
 import com.vertice.launcher.data.IconCache
@@ -57,8 +58,19 @@ data class HomeUi(
     val glass: GlassLevel = GlassLevel.Medium,
     val iconStyle: IconStyle = IconStyle(),
     val drawerSort: DrawerSort = DrawerSort.AZ,
-    val hidden: Set<String> = emptySet()
+    val hidden: Set<String> = emptySet(),
+    val usage: Map<String, Usage> = emptyMap(),
+    /** Os 5 apps mais abertos (sem ocultos nem bloqueados pelo Foco). */
+    val mostUsed: List<AppEntry> = emptyList(),
+    val focusOn: Boolean = false,
+    val focusBlocked: Set<String> = emptySet()
 ) {
+    /** Com o Foco ligado, app bloqueado não abre e aparece apagado. */
+    fun isLocked(key: String) = focusOn && key in focusBlocked
+
+    /** O que a gaveta esconde agora: ocultos pelo usuário + bloqueados (se o Foco estiver ligado). */
+    val drawerHidden: Set<String> get() = if (focusOn) hidden + focusBlocked else hidden
+} {
     fun categoryOf(app: AppEntry): AppCategory = categories[app.key] ?: AppCategory.default
 }
 
@@ -100,6 +112,15 @@ interface AppearanceActions {
     fun setIconShadow(on: Boolean)
 }
 
+/** Modo Foco: bloqueia apps que distraem enquanto estiver ligado. */
+interface FocusActions {
+    fun setFocus(on: Boolean)
+    fun toggleFocusBlocked(app: AppEntry)
+    /** Bloqueia todos os apps da categoria (ou libera, se já estavam todos bloqueados). */
+    fun toggleBlockCategory(category: AppCategory)
+    fun clearFocusBlocked()
+}
+
 /** Pastas da Home. */
 interface FolderActions {
     /** Soltar [app] numa célula: no miolo de outro app cria pasta; no miolo de uma pasta entra nela; senão só move. */
@@ -131,7 +152,7 @@ interface BackupActions {
  * O que as telas enxergam: estado pronto + contratos pequenos por assunto.
  * As telas conhecem só isto (não o ViewModel), então vivem em módulos próprios e testam com versão falsa.
  */
-interface HomeActions : AppActions, OrganizeActions, AppearanceActions, BackupActions, DrawerActions, FolderActions {
+interface HomeActions : AppActions, OrganizeActions, AppearanceActions, BackupActions, DrawerActions, FolderActions, FocusActions {
     val ui: StateFlow<HomeUi>
     val icons: IconCache
 

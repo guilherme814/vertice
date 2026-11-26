@@ -5,7 +5,8 @@ import java.text.Normalizer
 /** Ordem da gaveta. "Novos" = instalados mais recentemente primeiro. */
 enum class DrawerSort(val label: String) {
     AZ("A–Z"),
-    Newest("Novos");
+    Newest("Novos"),
+    Recent("Usados");
 
     companion object {
         fun fromName(name: String?): DrawerSort = entries.firstOrNull { it.name == name } ?: AZ
@@ -29,12 +30,14 @@ object DrawerList {
     }
 
     /** Apps visíveis (ocultos fora) na ordem pedida. Desempate estável pelo nome. */
-    fun sorted(apps: List<AppModel>, sort: DrawerSort, hidden: Set<String>): List<AppModel> {
+    fun sorted(apps: List<AppModel>, sort: DrawerSort, hidden: Set<String>, usage: Map<String, Usage> = emptyMap()): List<AppModel> {
         val visible = apps.filter { it.key !in hidden }
         val byName = compareBy<AppModel>({ letterOf(it.label) == OTHER }, { it.label.foldForSearch() }, { it.key })
         return when (sort) {
             DrawerSort.AZ -> visible.sortedWith(byName)
             DrawerSort.Newest -> visible.sortedWith(compareByDescending<AppModel> { it.installTime }.then(byName))
+            // Último uso primeiro; quem nunca foi aberto vem depois, em ordem alfabética.
+            DrawerSort.Recent -> visible.sortedWith(compareByDescending<AppModel> { usage[it.key]?.lastMs ?: 0L }.then(byName))
         }
     }
 

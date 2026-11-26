@@ -185,7 +185,7 @@ fun HomeScreen(
             Column {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("VÉRTICE", color = Mint, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Surface(
                         color = Color.Transparent, shape = CircleShape,
                         modifier = Modifier.liquidGlass(CircleShape, alpha = Glass.pill).clip(CircleShape).clickable { onOpenSheet() }
@@ -199,6 +199,16 @@ fun HomeScreen(
                         Text(
                             "◉  " + (battery?.let { "$it%" } ?: "—"),
                             color = Snow, fontSize = 12.sp,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                        )
+                    }
+                    Surface(
+                        color = Color.Transparent, shape = CircleShape,
+                        modifier = Modifier.liquidGlass(CircleShape, alpha = Glass.pill).clip(CircleShape).clickable { vm.setFocus(!ui.focusOn) }
+                    ) {
+                        Text(
+                            "◐  Foco", color = if (ui.focusOn) Mint else Snow, fontSize = 12.sp,
+                            fontWeight = if (ui.focusOn) FontWeight.Bold else FontWeight.Normal,
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                         )
                     }
@@ -303,6 +313,7 @@ fun HomeScreen(
                                     val x = c.boundsInRoot().center.x
                                     if (dockCenters[app.key] != x) dockCenters = dockCenters + (app.key to x)
                                 },
+                            locked = ui.isLocked(app.key),
                             onMove = { onMoveStart(app) },
                             onDragStart = { at -> drag = DragState(app.key, app, null, at, at, false) },
                             menuOpen = menuKey == app.key, onMenuClosed = { menuKey = null }
@@ -438,7 +449,7 @@ private fun HomeGridPage(
                                 AppTile(
                                     app = placed.app, vm = vm, animateLaunch = ui.profile.animations,
                                     showLabel = ui.showLabels, onLaunch = onLaunch,
-                                    iconSize = iconSize, labelLines = 1, iconStyle = ui.iconStyle,
+                                    iconSize = iconSize, labelLines = 1, iconStyle = ui.iconStyle, locked = ui.isLocked(placed.app.key),
                                     modifier = Modifier.alpha(if (dragKey == placed.app.key) 0.25f else 1f),
                                     onMove = { onMoveStart(placed.app) },
                                     onDragStart = { at -> onDragStart(placed.app, at) },

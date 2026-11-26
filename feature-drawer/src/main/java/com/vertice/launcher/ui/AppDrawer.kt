@@ -83,10 +83,11 @@ fun AppDrawer(
     // Sem nenhum oculto, o modo "Ocultos" não faz sentido: volta ao normal.
     val hiddenMode = showHidden && hiddenCount > 0
     // Base da gaveta: sempre sem os ocultos (a menos que o modo "Ocultos" esteja ligado).
-    val base = remember(ui.apps, ui.hidden, ui.drawerSort, hiddenMode) {
+    val drawerHidden = ui.drawerHidden
+    val base = remember(ui.apps, ui.hidden, drawerHidden, ui.drawerSort, ui.usage, hiddenMode) {
         val models = ui.apps.associateBy { it.key }
         val sorted = if (hiddenMode) ui.apps.filter { it.key in ui.hidden }.sortedBy { it.label.foldForSearch() }
-        else DrawerList.sorted(ui.apps.map { it.model }, ui.drawerSort, ui.hidden).mapNotNull { models[it.key] }
+        else DrawerList.sorted(ui.apps.map { it.model }, ui.drawerSort, drawerHidden, ui.usage).mapNotNull { models[it.key] }
         sorted
     }
     val counts = remember(base, ui.categories) {
@@ -160,6 +161,14 @@ fun AppDrawer(
             }
             if (hiddenCount > 0) CategoryChip("Ocultos  $hiddenCount", hiddenMode) { showHidden = !hiddenMode }
         }
+        if (!searching && !hiddenMode && selected == null && ui.mostUsed.isNotEmpty()) {
+            Text("Mais usados", color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 12.dp, start = 4.dp))
+            Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                ui.mostUsed.forEach { app -> Box(Modifier.weight(1f)) { DrawerTile(app, vm, ui, onLaunch) } }
+                // Mantém as colunas alinhadas quando há menos de 5.
+                repeat(5 - ui.mostUsed.size) { Spacer(Modifier.weight(1f)) }
+            }
+        }
         if (!searching && counts.isNotEmpty()) {
             LazyRow(
                 modifier = Modifier.padding(top = 12.dp),
@@ -229,7 +238,8 @@ private fun DrawerTile(app: AppEntry, vm: HomeActions, ui: HomeUi, onLaunch: (Ap
         app = app, vm = vm, animateLaunch = ui.profile.animations,
         showLabel = true, onLaunch = onLaunch,
         iconSize = 52.dp * ui.iconSize.scale,
-        iconStyle = ui.iconStyle
+        iconStyle = ui.iconStyle,
+        locked = ui.isLocked(app.key)
     )
 }
 
