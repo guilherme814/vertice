@@ -10,7 +10,8 @@ Uma fase por vez; cada uma só fecha com CI verde (testes + regras de arquitetur
 | 3 | **Estilo de ícones** | forma (círculo, squircle, arredondado, quadrado), sombra; ícone adaptativo desenhado sem máscara e recortado na forma escolhida; aplica em Home, dock e gaveta | **feita** |
 | 4 | **Gaveta nova** | ordenar (A–Z, Novos), seções por letra com índice lateral, ocultar apps (modo "Ocultos" para reexibir) | **feita** |
 | 5 | **Arrastar e soltar** | mover na grade e no dock arrastando, com sombra e destino destacado (substitui o "toque na célula") | **feita** |
-| 6 | **Pastas** | modelo no domínio, criar/renomear/abrir, na grade e no dock | — |
+| 6a | **Liquid glass** | vidro leitoso com brilho, borda de luz e reflexo (rico no Premium/Equilibrado, simples no Ultra Lite), sem desfoque em tempo real; papel de parede pintado uma vez em textura | **feita** |
+| 6b | **Pastas** | modelo no domínio, criar/renomear/abrir, na grade e no dock | — |
 | 7 | **Exclusivo I — Foco e sugestões** | Modo Foco (esconde apps escolhidos com um toque), "mais usados" e "recentes" calculados só no aparelho | — |
 | 8 | **Exclusivo II — Gestos e atalhos** | gestos configuráveis (duplo toque, deslizar), notificações, atalhos de app no menu de segurar | — |
 | 9 | **Widgets** | relógio próprio + widgets do sistema (AppWidgetHost) na grade | — |

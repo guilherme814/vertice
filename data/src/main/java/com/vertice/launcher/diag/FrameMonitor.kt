@@ -57,6 +57,8 @@ object FrameMonitor {
         flushSummary()
     }
 
+    private val RESUME_ARTIFACT_MS = 3_000L
+
     @Synchronized
     private fun flushSummary() {
         val s = stats.summary()
@@ -67,6 +69,11 @@ object FrameMonitor {
     @Synchronized
     private fun onFrame(fm: FrameMetrics, dropped: Int) {
         val total = fm.getMetric(FrameMetrics.TOTAL_DURATION) / 1_000_000
+        // Quadro de vários segundos com todas as fases ~0 = a janela voltou de segundo plano, não é travamento.
+        if (total > RESUME_ARTIFACT_MS) {
+            VLog.d("Quadros", "Retorno ao primeiro plano: quadro de ${total}ms (ignorado nas estatísticas)")
+            return
+        }
         stats.add(total)
         val now = SystemClock.elapsedRealtime()
 

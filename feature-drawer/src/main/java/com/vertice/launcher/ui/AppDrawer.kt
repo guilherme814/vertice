@@ -246,8 +246,7 @@ private fun LetterIndex(letters: List<Char>, modifier: Modifier = Modifier, onPi
     Column(
         modifier
             .width(22.dp)
-            .clip(RoundedCornerShape(11.dp))
-            .background(Panel.copy(alpha = Glass.pill))
+            .liquidGlass(RoundedCornerShape(11.dp), alpha = Glass.pill)
             .onSizeChanged { size = it }
             .pointerInput(letters) {
                 detectTapGestures { pick(it.y) }

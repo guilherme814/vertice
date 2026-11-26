@@ -177,15 +177,15 @@ fun HomeScreen(
                     Text("VÉRTICE", color = Mint, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Surface(
-                        color = PanelSoft, shape = CircleShape,
-                        modifier = Modifier.clip(CircleShape).clickable { onOpenSheet() }
+                        color = Color.Transparent, shape = CircleShape,
+                        modifier = Modifier.liquidGlass(CircleShape, alpha = Glass.pill).clip(CircleShape).clickable { onOpenSheet() }
                     ) {
                         Text(
                             "✦  Personalizar", color = Snow, fontSize = 12.sp,
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                         )
                     }
-                    Surface(color = PanelSoft, shape = CircleShape) {
+                    Surface(color = Color.Transparent, shape = CircleShape, modifier = Modifier.liquidGlass(CircleShape, alpha = Glass.pill)) {
                         Text(
                             "◉  " + (battery?.let { "$it%" } ?: "—"),
                             color = Snow, fontSize = 12.sp,
@@ -259,11 +259,9 @@ fun HomeScreen(
                 Row(
                     Modifier.fillMaxWidth()
                         .onGloballyPositioned { dockRect = it.boundsInRoot() }
-                        .clip(RoundedCornerShape(Radius.dock))
-                        .background(
-                            PanelSoft.copy(
-                                alpha = if (drag?.moved == true && dockRect.contains(drag!!.pos)) 0.9f else Glass.panel
-                            )
+                        .liquidGlass(
+                            RoundedCornerShape(Radius.dock),
+                            alpha = if (drag?.moved == true && dockRect.contains(drag!!.pos)) 0.9f else Glass.panel
                         )
                         .padding(horizontal = Space.s, vertical = Space.xs + 2.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
@@ -291,9 +289,9 @@ fun HomeScreen(
                     }
                 }
                 Surface(
-                    color = PanelSoft.copy(alpha = Glass.pill),
+                    color = Color.Transparent,
                     shape = RoundedCornerShape(50),
-                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(50))
+                    modifier = Modifier.fillMaxWidth().liquidGlass(RoundedCornerShape(50), alpha = Glass.pill).clip(RoundedCornerShape(50))
                         .clickable(onClickLabel = "Abrir todos os aplicativos") { onOpenDrawer() }
                 ) {
                     Row(

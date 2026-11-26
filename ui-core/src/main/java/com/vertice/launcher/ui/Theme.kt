@@ -27,6 +27,7 @@ val Snow = Color(0xFFF3F6FA)
 private var accentState by mutableStateOf(Color(Accent.Mint.argb.toInt()))
 private var glassPanelState by mutableFloatStateOf(GlassLevel.Medium.panelAlpha)
 private var glassPillState by mutableFloatStateOf(GlassLevel.Medium.pillAlpha)
+private var glassRichState by mutableStateOf(true)
 
 /** Cor de destaque atual (o nome "Mint" é histórico). */
 val Mint: Color get() = accentState
@@ -36,12 +37,15 @@ object Glass {
     val panel: Float get() = glassPanelState
     /** Opacidade de botões em pílula. */
     val pill: Float get() = glassPillState
+    /** Vidro com reflexos (falso no Ultra Lite: só corpo e borda). */
+    val rich: Boolean get() = glassRichState
 }
 
 @Composable
 fun VerticeTheme(
     accent: Accent = Accent.Mint,
     glass: GlassLevel = GlassLevel.Medium,
+    richGlass: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
@@ -52,6 +56,7 @@ fun VerticeTheme(
         accentState = color
         glassPanelState = glass.panelAlpha
         glassPillState = glass.pillAlpha
+        glassRichState = richGlass
     }
 
     MaterialTheme(
