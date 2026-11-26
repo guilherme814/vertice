@@ -56,7 +56,7 @@ private fun DrawScope.fillOutline(outline: Outline, brush: Brush, style: DrawSty
         is Outline.Rectangle -> drawRect(brush, outline.rect.topLeft, Size(outline.rect.width, outline.rect.height), style = style)
         is Outline.Rounded -> {
             val r = outline.roundRect
-            drawRoundRect(brush, r.topLeft, Size(r.width, r.height), CornerRadius(r.topLeftCornerRadius.x, r.topLeftCornerRadius.y), style = style)
+            drawRoundRect(brush, Offset(r.left, r.top), Size(r.width, r.height), CornerRadius(r.topLeftCornerRadius.x, r.topLeftCornerRadius.y), style = style)
         }
         is Outline.Generic -> drawPath(outline.path, brush, style = style)
     }
