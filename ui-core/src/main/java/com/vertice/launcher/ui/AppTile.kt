@@ -68,7 +68,12 @@ fun AppTile(
     labelLines: Int = 2,
     iconStyle: IconStyle = IconStyle(),
     /** Se informado, o menu oferece "Mover" (entra no modo de mover da Home). */
-    onMove: (() -> Unit)? = null
+    onMove: (() -> Unit)? = null,
+    /** Se informado, segurar começa um arrasto (posição do dedo na raiz); soltar sem mover abre o menu. */
+    onDragStart: ((androidx.compose.ui.geometry.Offset) -> Unit)? = null,
+    /** O pai pede o menu (soltou sem arrastar). */
+    menuOpen: Boolean = false,
+    onMenuClosed: () -> Unit = {}
 ) {
     var menu by remember { mutableStateOf(false) }
     var picking by remember { mutableStateOf(false) }
@@ -103,9 +108,9 @@ fun AppTile(
                         else null
                         onLaunch(app, rect)
                     },
-                    onLongPress = {
+                    onLongPress = { at ->
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        menu = true
+                        if (onDragStart != null) onDragStart(rootPos + at) else menu = true
                     }
                 )
             },
@@ -128,36 +133,37 @@ fun AppTile(
 
         if (picking) CategoryDialog(app, vm) { picking = false }
 
-        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+        val closeMenu = { menu = false; onMenuClosed() }
+        DropdownMenu(expanded = menu || menuOpen, onDismissRequest = closeMenu) {
             DropdownMenuItem(
                 text = { Text("Informações do app") },
-                onClick = { menu = false; vm.openAppInfo(app) }
+                onClick = { closeMenu(); vm.openAppInfo(app) }
             )
             val placement = vm.placementOf(app)
             if (placement == Placement.Home && onMove != null) {
-                DropdownMenuItem(text = { Text("Mover") }, onClick = { menu = false; onMove() })
+                DropdownMenuItem(text = { Text("Mover") }, onClick = { closeMenu(); onMove() })
             }
             if (placement == Placement.Home) {
-                DropdownMenuItem(text = { Text("Tirar da tela inicial") }, onClick = { menu = false; vm.removeFromHome(app) })
+                DropdownMenuItem(text = { Text("Tirar da tela inicial") }, onClick = { closeMenu(); vm.removeFromHome(app) })
             } else {
-                DropdownMenuItem(text = { Text("Colocar na tela inicial") }, onClick = { menu = false; vm.addToHome(app) })
+                DropdownMenuItem(text = { Text("Colocar na tela inicial") }, onClick = { closeMenu(); vm.addToHome(app) })
             }
             DropdownMenuItem(
                 text = { Text(if (placement == Placement.Dock) "Tirar do dock" else "Colocar no dock") },
-                onClick = { menu = false; vm.toggleDock(app) }
+                onClick = { closeMenu(); vm.toggleDock(app) }
             )
             DropdownMenuItem(
                 text = { Text("Mudar categoria") },
-                onClick = { menu = false; picking = true }
+                onClick = { closeMenu(); picking = true }
             )
             val isHidden = app.key in vm.ui.value.hidden
             DropdownMenuItem(
                 text = { Text(if (isHidden) "Mostrar na gaveta" else "Ocultar da gaveta") },
-                onClick = { menu = false; vm.setHidden(app, !isHidden) }
+                onClick = { closeMenu(); vm.setHidden(app, !isHidden) }
             )
             DropdownMenuItem(
                 text = { Text("Desinstalar") },
-                onClick = { menu = false; vm.uninstall(app) }
+                onClick = { closeMenu(); vm.uninstall(app) }
             )
         }
     }

@@ -71,6 +71,8 @@ interface OrganizeActions {
     fun addToHome(app: AppEntry)
     fun removeFromHome(app: AppEntry)
     fun moveToCell(app: AppEntry, page: Int, x: Int, y: Int)
+    /** Põe o app no dock na posição [index] (arrastar e soltar). */
+    fun moveToDock(app: AppEntry, index: Int)
     fun setGrid(columns: Int, rows: Int)
 
     /** `category = null` volta a classificação automática do app. */

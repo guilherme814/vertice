@@ -129,6 +129,19 @@ object LayoutOps {
         items.filterNot { it.key == key && it.container == Container.Dock }
 
     /**
+     * Põe o app no dock na posição [index] (0 = primeiro), empurrando os demais; o dock fica sempre compacto.
+     * Se o app vem de fora e o dock está cheio, devolve o layout igual.
+     */
+    fun moveToDock(items: List<LayoutItem>, key: String, index: Int): List<LayoutItem> {
+        val dock = items.filter { it.container == Container.Dock && it.key != key }.sortedBy { it.x }
+        val alreadyIn = items.any { it.key == key && it.container == Container.Dock }
+        if (!alreadyIn && dock.size >= GridSpec.DOCK_SLOTS) return items
+        val order = dock.map { it.key }.toMutableList().also { it.add(index.coerceIn(0, dock.size), key) }
+        val others = items.filter { it.container != Container.Dock && it.key != key }
+        return order.mapIndexed { i, k -> LayoutItem(k, Container.Dock, 0, i, 0) } + others
+    }
+
+    /**
      * Move para a célula indicada. Se estiver ocupada por outro app da Home: os dois trocam de lugar.
      * Se o app vinha do dock ou da gaveta, o ocupante vai para a primeira célula livre.
      * Posição fora da grade: não faz nada.

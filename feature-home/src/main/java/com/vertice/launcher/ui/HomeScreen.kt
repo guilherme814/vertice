@@ -47,6 +47,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.unit.IntOffset
+import com.vertice.launcher.core.DragGeometry
+import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
 import com.vertice.launcher.HomeUi
 import com.vertice.launcher.HomeActions
 import com.vertice.launcher.data.AppEntry
@@ -66,8 +84,51 @@ fun HomeScreen(
 ) {
     val now by rememberNow()
     val battery by vm.batteryPercent.collectAsState(initial = null)
-    val pages = ui.pageCount + if (moving != null) 1 else 0 // página extra vazia só durante o movimento
+    var drag by remember { mutableStateOf<DragState?>(null) }
+    var menuKey by remember { mutableStateOf<String?>(null) }
+    var origin by remember { mutableStateOf(Offset.Zero) }
+    var pagerRect by remember { mutableStateOf(Rect.Zero) }
+    var dockRect by remember { mutableStateOf(Rect.Zero) }
+    var dockCenters by remember { mutableStateOf<Map<String, Float>>(emptyMap()) }
+    val slop = LocalViewConfiguration.current.touchSlop
+    val density = LocalDensity.current
+    // Página extra vazia só durante o movimento/arrasto: dá onde soltar para criar uma página nova.
+    val pages = ui.pageCount + if (moving != null || drag != null) 1 else 0
     val pager = rememberPagerState(pageCount = { pages })
+
+    val onDragMove by rememberUpdatedState<(Offset) -> Unit> { p ->
+        drag = drag?.let { it.copy(pos = p, moved = it.moved || (p - it.start).getDistance() > slop) }
+    }
+    val onDragFinish by rememberUpdatedState<() -> Unit> {
+        val d = drag
+        drag = null
+        if (d != null) when {
+            !d.moved -> menuKey = d.app.key // só segurou: abre o menu como antes
+            dockRect.contains(d.pos) -> {
+                val centers = dockCenters.filterKeys { it != d.app.key }.values.sorted()
+                vm.moveToDock(d.app, DragGeometry.dockIndex(centers, d.pos.x))
+            }
+            pagerRect.contains(d.pos) -> DragGeometry.cellAt(
+                d.pos.x - pagerRect.left, d.pos.y - pagerRect.top, pagerRect.width, pagerRect.height, ui.grid
+            )?.let { vm.moveToCell(d.app, pager.currentPage, it.x, it.y) }
+        }
+    }
+
+    // Segurar perto da borda vira a página (e cria uma nova ao passar da última).
+    val edgeMarginPx = with(density) { 40.dp.toPx() }
+    val edge = drag?.takeIf { it.moved && it.pos.y in pagerRect.top..pagerRect.bottom }
+        ?.let { DragGeometry.edgeAt(it.pos.x - pagerRect.left, pagerRect.width, edgeMarginPx) } ?: 0
+    LaunchedEffect(edge) {
+        if (edge != 0) {
+            delay(450)
+            while (true) {
+                val t = pager.currentPage + edge
+                if (t !in 0 until pager.pageCount) break
+                pager.animateScrollToPage(t)
+                delay(650)
+            }
+        }
+    }
 
     Box(
         Modifier
@@ -79,6 +140,23 @@ fun HomeScreen(
                     Modifier.background(Brush.verticalGradient(listOf(Color(0x66090D14), Color(0x99090D14))))
                 else Modifier
             )
+            .onGloballyPositioned { origin = it.positionInRoot() }
+            // Observa o dedo (sem consumir) para seguir o arrasto mesmo quando a página de origem sai da tela.
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                    while (true) {
+                        val ev = awaitPointerEvent(PointerEventPass.Initial)
+                        val ch = ev.changes.firstOrNull { it.id == down.id } ?: break
+                        if (drag != null) {
+                            onDragMove(ch.position + origin)
+                            ev.changes.forEach { it.consume() } // a página não rola sozinha durante o arrasto
+                            if (!ch.pressed) break
+                        } else if (!ch.pressed) break
+                    }
+                    if (drag != null) onDragFinish()
+                }
+            }
             .pointerInput(Unit) { detectTapGestures(onLongPress = { onOpenSheet() }) }
             .pointerInput(Unit) {
                 var total = 0f
@@ -137,9 +215,20 @@ fun HomeScreen(
                         )
                     }
                 }
-                HorizontalPager(state = pager, modifier = Modifier.weight(1f).fillMaxWidth()) { page ->
+                val hover = drag?.takeIf { it.moved }?.let { d ->
+                    if (!pagerRect.contains(d.pos)) null
+                    else DragGeometry.cellAt(d.pos.x - pagerRect.left, d.pos.y - pagerRect.top, pagerRect.width, pagerRect.height, ui.grid)
+                }
+                HorizontalPager(
+                    state = pager, userScrollEnabled = drag == null,
+                    modifier = Modifier.weight(1f).fillMaxWidth().onGloballyPositioned { pagerRect = it.boundsInRoot() }
+                ) { page ->
                     HomeGridPage(
                         page = page, ui = ui, vm = vm, moving = moving,
+                        hoverCell = if (page == pager.currentPage) hover else null,
+                        dragKey = drag?.takeIf { it.moved }?.app?.key,
+                        menuKey = menuKey, onMenuClosed = { menuKey = null },
+                        onDragStart = { app, at -> drag = DragState(app, at, at, false) },
                         onMoveStart = onMoveStart,
                         onDrop = { x, y -> moving?.let { vm.moveToCell(it, page, x, y) }; onMoveEnd() },
                         onLaunch = onLaunch
@@ -169,8 +258,13 @@ fun HomeScreen(
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Row(
                     Modifier.fillMaxWidth()
+                        .onGloballyPositioned { dockRect = it.boundsInRoot() }
                         .clip(RoundedCornerShape(Radius.dock))
-                        .background(PanelSoft.copy(alpha = Glass.panel))
+                        .background(
+                            PanelSoft.copy(
+                                alpha = if (drag?.moved == true && dockRect.contains(drag!!.pos)) 0.9f else Glass.panel
+                            )
+                        )
                         .padding(horizontal = Space.s, vertical = Space.xs + 2.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
@@ -184,7 +278,15 @@ fun HomeScreen(
                             showLabel = false, onLaunch = onLaunch,
                             iconSize = (52.dp * ui.iconSize.scale).coerceAtMost(60.dp),
                             iconStyle = ui.iconStyle,
-                            onMove = { onMoveStart(app) }
+                            modifier = Modifier
+                                .alpha(if (drag?.takeIf { it.moved }?.app?.key == app.key) 0.25f else 1f)
+                                .onGloballyPositioned { c ->
+                                    val x = c.boundsInRoot().center.x
+                                    if (dockCenters[app.key] != x) dockCenters = dockCenters + (app.key to x)
+                                },
+                            onMove = { onMoveStart(app) },
+                            onDragStart = { at -> drag = DragState(app, at, at, false) },
+                            menuOpen = menuKey == app.key, onMenuClosed = { menuKey = null }
                         )
                     }
                 }
@@ -205,8 +307,22 @@ fun HomeScreen(
                 }
             }
         }
+
+        // Ícone que acompanha o dedo.
+        drag?.takeIf { it.moved }?.let { d ->
+            val size = 52.dp * ui.iconSize.scale
+            val half = with(density) { size.toPx() / 2 }
+            Box(
+                Modifier
+                    .offset { IntOffset((d.pos.x - origin.x - half).roundToInt(), (d.pos.y - origin.y - half).roundToInt()) }
+                    .graphicsLayer { scaleX = 1.15f; scaleY = 1.15f; alpha = 0.95f }
+            ) { AppIcon(d.app, vm.icons, size, style = ui.iconStyle.copy(shadow = true)) }
+        }
     }
 }
+
+/** Arrasto em andamento: o app, onde o dedo começou, onde está (coordenadas da raiz) e se já se moveu além da folga. */
+private data class DragState(val app: AppEntry, val start: Offset, val pos: Offset, val moved: Boolean)
 
 /** Uma página da grade: COLUMNS x ROWS células iguais; célula vazia é só espaço (ou alvo, no modo mover). */
 @Composable
@@ -215,6 +331,11 @@ private fun HomeGridPage(
     ui: HomeUi,
     vm: HomeActions,
     moving: AppEntry?,
+    hoverCell: DragGeometry.Cell?,
+    dragKey: String?,
+    menuKey: String?,
+    onMenuClosed: () -> Unit,
+    onDragStart: (AppEntry, Offset) -> Unit,
     onMoveStart: (AppEntry) -> Unit,
     onDrop: (x: Int, y: Int) -> Unit,
     onLaunch: (AppEntry, Rect?) -> Unit
@@ -239,6 +360,11 @@ private fun HomeGridPage(
                     Box(
                         Modifier.weight(1f).fillMaxSize()
                             .then(
+                                if (hoverCell?.x == x && hoverCell.y == y)
+                                    Modifier.padding(3.dp).clip(RoundedCornerShape(16.dp)).background(Mint.copy(alpha = 0.18f))
+                                else Modifier
+                            )
+                            .then(
                                 if (moving != null) Modifier.clickable { onDrop(x, y) }
                                 else Modifier
                             ),
@@ -259,7 +385,10 @@ private fun HomeGridPage(
                                     app = placed.app, vm = vm, animateLaunch = ui.profile.animations,
                                     showLabel = ui.showLabels, onLaunch = onLaunch,
                                     iconSize = iconSize, labelLines = 1, iconStyle = ui.iconStyle,
-                                    onMove = { onMoveStart(placed.app) }
+                                    modifier = Modifier.alpha(if (dragKey == placed.app.key) 0.25f else 1f),
+                                    onMove = { onMoveStart(placed.app) },
+                                    onDragStart = { at -> onDragStart(placed.app, at) },
+                                    menuOpen = menuKey == placed.app.key, onMenuClosed = onMenuClosed
                                 )
                             }
                         } else if (moving != null) {

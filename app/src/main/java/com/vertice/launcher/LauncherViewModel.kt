@@ -157,6 +157,8 @@ class LauncherViewModel(
 
     override fun moveToCell(app: AppEntry, page: Int, x: Int, y: Int) = edit("mover ${app.packageName} p$page ($x,$y)") { LayoutOps.moveHome(it, app.key, page, x, y, ui.value.grid) }
 
+    override fun moveToDock(app: AppEntry, index: Int) = edit("dock ${app.packageName} #$index") { LayoutOps.moveToDock(it, app.key, index) }
+
     /** `category = null` volta a classificação automática do app. */
     override fun setCategory(app: AppEntry, category: AppCategory?) {
         viewModelScope.launch { prefs.setCategory(app.key, category?.name) }
