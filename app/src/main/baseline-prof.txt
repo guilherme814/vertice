@@ -1,0 +1,12 @@
+# Perfil de linha de base escrito à mão: o que a launcher usa já na primeira tela.
+# O ART compila isso antes do primeiro uso (menos layout/composição lenta na abertura).
+HSPLcom/vertice/launcher/**;->**(**)**
+Lcom/vertice/launcher/**;
+HSPLandroidx/compose/runtime/**;->**(**)**
+HSPLandroidx/compose/ui/**;->**(**)**
+HSPLandroidx/compose/foundation/**;->**(**)**
+HSPLandroidx/compose/material3/**;->**(**)**
+HSPLandroidx/compose/animation/**;->**(**)**
+HSPLandroidx/lifecycle/**;->**(**)**
+HSPLandroidx/activity/**;->**(**)**
+HSPLandroidx/datastore/**;->**(**)**

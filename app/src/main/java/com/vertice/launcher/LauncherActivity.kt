@@ -8,6 +8,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.ui.unit.dp
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -67,6 +68,19 @@ class LauncherActivity : ComponentActivity() {
                 VLog.d("Home", "Janela ${if (ownWallpaper) "opaca (papel de parede próprio)" else "translúcida (papel do sistema)"}")
             }
 
+            // Depois do primeiro quadro, aquece os primeiros ícones da gaveta (mesmo tamanho que ela usa).
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            val warmKey = Triple(ui.apps.size, ui.iconStyle.shape, ui.iconSize)
+            LaunchedEffect(warmKey, ui.loading) {
+                if (ui.loading) return@LaunchedEffect
+                kotlinx.coroutines.delay(400)
+                val px = with(density) { (52.dp * ui.iconSize.scale).toPx() }.roundToInt()
+                val byKey = ui.apps.associateBy { it.key }
+                val first = com.vertice.launcher.core.DrawerList.sorted(ui.apps.map { it.model }, ui.drawerSort, ui.hidden)
+                    .mapNotNull { byKey[it.key] }
+                vm.icons.prewarm(first, px, ui.iconStyle.shape.needsFullBleed)
+            }
+
             // Quem decide qual tela está à frente é a máquina de estados do domínio (Nav).
             var nav by remember { mutableStateOf(NavState()) }
             val dispatch: (NavEvent) -> Unit = { nav = Nav.reduce(nav, it) }
@@ -118,11 +132,17 @@ class LauncherActivity : ComponentActivity() {
         }
     }
 
+    private var lastHomeIntentAt = 0L
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         val home = intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_HOME)
-        VLog.i("Home", "onNewIntent action=${intent.action} home=$home")
-        if (home) homeSignal++
+        // O MIUI/HyperOS entrega o mesmo "Home" duas vezes no mesmo instante: conta uma só.
+        val now = android.os.SystemClock.uptimeMillis()
+        val duplicate = home && now - lastHomeIntentAt < 150
+        VLog.i("Home", "onNewIntent action=${intent.action} home=$home${if (duplicate) " (duplicado, ignorado)" else ""}")
+        if (home) lastHomeIntentAt = now
+        if (home && !duplicate) homeSignal++
     }
 
     private var lastLocales: String? = null

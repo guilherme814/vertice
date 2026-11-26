@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -48,7 +49,8 @@ fun DiagnosticsTab() {
 
     // `refresh` força reler memória e últimas linhas depois de uma ação.
     val memory = remember(refresh) { SystemSnapshot.memoryLine(context) }
-    val sizeKb = remember(refresh) { VLog.totalBytes() / 1024 }
+    // Listar/medir arquivos é disco: fora da thread principal (o StrictMode do log acusou isso aqui).
+    val sizeKb by produceState(initialValue = 0L, refresh) { value = withContext(Dispatchers.IO) { VLog.totalBytes() / 1024 } }
     val lines = remember(refresh) { VLog.recent(14) }
 
     Text("Memória agora", color = Muted, fontSize = 12.sp)

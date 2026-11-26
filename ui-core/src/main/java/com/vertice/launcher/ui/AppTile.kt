@@ -52,6 +52,8 @@ import com.vertice.launcher.core.Placement
 import com.vertice.launcher.data.AppEntry
 import kotlin.math.roundToInt
 
+private class Where { var pos = androidx.compose.ui.geometry.Offset.Zero; var w = 0; var h = 0 }
+
 /**
  * App tocável: toque abre (com animação de zoom a partir do ícone, se o perfil permitir);
  * segurar abre o menu. Arrastar para reorganizar entra numa fase futura.
@@ -77,8 +79,8 @@ fun AppTile(
 ) {
     var menu by remember { mutableStateOf(false) }
     var picking by remember { mutableStateOf(false) }
-    var rootPos by remember { mutableStateOf(androidx.compose.ui.geometry.Offset.Zero) }
-    var boxSize by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
+    // Posição só é lida ao tocar: guardada fora do estado, senão cada rolagem da gaveta recomporia todos os ícones.
+    val where = remember { Where() }
     val haptic = LocalHapticFeedback.current
 
     // Retorno ao toque: o ícone "afunda" um pouco (só se o perfil de desempenho permitir animação).
@@ -94,7 +96,7 @@ fun AppTile(
                 onLongClick(label = "Mais opções") { menu = true; true }
                 customActions = listOf(CustomAccessibilityAction("Mais opções") { menu = true; true })
             }
-            .onGloballyPositioned { rootPos = it.positionInRoot(); boxSize = it.size }
+            .onGloballyPositioned { where.pos = it.positionInRoot(); where.w = it.size.width; where.h = it.size.height }
             .pointerInput(app.key, animateLaunch) {
                 detectTapGestures(
                     onPress = {
@@ -104,13 +106,13 @@ fun AppTile(
                     },
                     onTap = {
                         val rect = if (animateLaunch)
-                            Rect(rootPos, Size(boxSize.width.toFloat(), boxSize.height.toFloat()))
+                            Rect(where.pos, Size(where.w.toFloat(), where.h.toFloat()))
                         else null
                         onLaunch(app, rect)
                     },
                     onLongPress = { at ->
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        if (onDragStart != null) onDragStart(rootPos + at) else menu = true
+                        if (onDragStart != null) onDragStart(where.pos + at) else menu = true
                     }
                 )
             },
@@ -134,7 +136,8 @@ fun AppTile(
         if (picking) CategoryDialog(app, vm) { picking = false }
 
         val closeMenu = { menu = false; onMenuClosed() }
-        DropdownMenu(expanded = menu || menuOpen, onDismissRequest = closeMenu) {
+        // Menu só existe enquanto aberto: 90 menus fechados custavam composição à toa na gaveta.
+        if (menu || menuOpen) DropdownMenu(expanded = menu || menuOpen, onDismissRequest = closeMenu) {
             DropdownMenuItem(
                 text = { Text("Informações do app") },
                 onClick = { closeMenu(); vm.openAppInfo(app) }

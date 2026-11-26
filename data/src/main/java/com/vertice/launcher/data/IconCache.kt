@@ -7,6 +7,8 @@ import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withPermit
 import android.util.LruCache
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -97,6 +99,19 @@ class IconCache(context: Context, profile: PerformanceProfile) {
         if (ms >= 40) VLog.d("Ícones", "Ícone lento: ${app.packageName} ${ms}ms (${size}px)")
         cache.put(key, bitmap)
         bitmap.asImageBitmap()
+    }
+
+    /**
+     * Decodifica de antemão (2 de cada vez) os primeiros ícones da gaveta, para a primeira rolagem não decodificar sob o dedo.
+     * Chamada com a tela já desenhada; cancelável (a corrotina do chamador).
+     */
+    suspend fun prewarm(apps: List<AppEntry>, px: Int, fullBleed: Boolean, limit: Int = 24) {
+        val gate = kotlinx.coroutines.sync.Semaphore(2)
+        kotlinx.coroutines.coroutineScope {
+            apps.take(limit).filter { peek(it, px, fullBleed) == null }.forEach { app ->
+                launch { gate.withPermit { load(app, px, fullBleed) } }
+            }
+        }
     }
 
     private fun drawFullBleed(drawable: Drawable, canvas: Canvas, size: Int) {

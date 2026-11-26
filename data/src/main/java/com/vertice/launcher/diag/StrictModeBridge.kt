@@ -34,6 +34,8 @@ object StrictModeBridge {
 
     private fun report(kind: String, v: Throwable) {
         val frames = v.stackTrace
+        // Ruído do sistema (fontes do MIUI): nenhuma linha do app na pilha, nada que possamos corrigir.
+        if (frames.none { it.className.startsWith("com.vertice") } && frames.any { it.className.startsWith("miui.") }) return
         val key = frames.take(8).joinToString("|") { it.toString() }.hashCode()
         synchronized(seen) {
             if (seen.size > 200 || !seen.add(key)) return

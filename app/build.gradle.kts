@@ -72,5 +72,8 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.kotlinx.coroutines.android)
 
+    // Instala o perfil de linha de base (baseline-prof.txt) no primeiro uso: abertura e Compose mais rápidos no release.
+    implementation("androidx.profileinstaller:profileinstaller:1.4.1")
+
     debugImplementation(libs.compose.ui.tooling)
 }

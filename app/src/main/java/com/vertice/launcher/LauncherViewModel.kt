@@ -67,7 +67,8 @@ class LauncherViewModel(
             autoCategory.getOrPut(m.key) { m.autoCategory }
         }
         HomeUi(
-            loading = !p.seeded,
+            // Só "pronta" com preferências E lista de apps: evita piscar uma Home vazia depois que o sistema mata o processo.
+            loading = !p.seeded || apps.isEmpty(),
             profile = p.profile ?: recommended,
             apps = apps,
             dock = state.dock.mapNotNull { byKey[it] },
