@@ -1,0 +1,467 @@
+package com.vertice.launcher.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import kotlin.math.roundToInt
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.vertice.launcher.HomeUi
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import com.vertice.launcher.HomeActions
+import com.vertice.launcher.core.ClockFormat
+import com.vertice.launcher.core.Accent
+import com.vertice.launcher.core.ClockStyle
+import com.vertice.launcher.core.GlassLevel
+import com.vertice.launcher.core.GridSpec
+import com.vertice.launcher.core.DockOpacity
+import com.vertice.launcher.core.DockStyle
+import com.vertice.launcher.core.ClockAlign
+import com.vertice.launcher.core.ClockColor
+import com.vertice.launcher.core.ClockScale
+import com.vertice.launcher.core.CustomWallpaper
+import com.vertice.launcher.core.DrawerColumns
+import com.vertice.launcher.core.DrawerLayout
+import com.vertice.launcher.core.GridFine
+import com.vertice.launcher.core.IconShape
+import com.vertice.launcher.core.IndicatorStyle
+import com.vertice.launcher.core.LabelSize
+import com.vertice.launcher.core.PerformanceProfile
+import com.vertice.launcher.core.IconSize
+import com.vertice.launcher.core.Wallpaper
+
+enum class SheetTab(val label: String) {
+    Wallpaper("Papel de parede"),
+    Theme("Tema"),
+    Grid("Grade e ícones"),
+    Visual("Visual"),
+    Clock("Relógio"),
+    Focus("Foco"),
+    Backup("Backup"),
+    Diagnostics("Diagnóstico")
+}
+
+/**
+ * Folha de personalização: sobe da parte de baixo e deixa a tela inicial visível acima,
+ * então cada mudança aparece ao vivo. Começo da futura tela de ajustes completa.
+ */
+@Composable
+fun QuickSheet(
+    vm: HomeActions,
+    ui: HomeUi,
+    initialTab: SheetTab = SheetTab.Wallpaper,
+    onClose: () -> Unit
+) {
+    var tab by remember { mutableStateOf(initialTab) }
+
+    Box(
+        Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) { detectTapGestures { onClose() } }   // toque fora fecha
+    ) {
+        Column(
+            Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .fillMaxHeight(0.5f)
+                .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                .background(Panel.copy(alpha = 0.97f))
+                .pointerInput(Unit) { detectTapGestures { } }          // toque dentro não fecha
+                .navigationBarsPadding()
+                .padding(horizontal = 20.dp, vertical = 14.dp)
+        ) {
+            Box(
+                Modifier.align(Alignment.CenterHorizontally).padding(bottom = 10.dp)
+                    .clip(CircleShape).background(Muted.copy(alpha = 0.4f))
+                    .fillMaxWidth(0.12f).height(4.dp)
+            )
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Personalizar", color = Snow, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    "✕", color = Muted, fontSize = 20.sp,
+                    modifier = Modifier.clip(CircleShape).clickable { onClose() }.padding(10.dp)
+                )
+            }
+            Row(
+                Modifier.padding(top = 8.dp).horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SheetTab.entries.forEach { t -> CategoryChip(t.label, tab == t) { tab = t } }
+            }
+            Spacer(Modifier.height(14.dp))
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                when (tab) {
+                    SheetTab.Wallpaper -> WallpaperTab(vm, ui)
+                    SheetTab.Theme -> ThemeTab(vm, ui)
+                    SheetTab.Grid -> GridTab(vm, ui)
+                    SheetTab.Visual -> VisualTab(vm, ui)
+                    SheetTab.Clock -> ClockTab(vm, ui)
+                    SheetTab.Focus -> FocusTab(vm, ui)
+                    SheetTab.Backup -> BackupTab(vm)
+                    SheetTab.Diagnostics -> DiagnosticsTab()
+                }
+            }
+        }
+    }
+}
+
+/** Slider inteiro que só grava ao soltar o dedo (arrastar não escreve no disco a cada pixel). */
+@Composable
+private fun FineSlider(label: String, value: Int, min: Int, max: Int, onDone: (Int) -> Unit) {
+    var live by remember(value) { mutableStateOf(value.toFloat()) }
+    SectionLabel(label)
+    Slider(
+        value = live,
+        onValueChange = { live = it },
+        onValueChangeFinished = { onDone(live.roundToInt()) },
+        valueRange = min.toFloat()..max.toFloat(),
+        colors = SliderDefaults.colors(thumbColor = Mint, activeTrackColor = Mint, inactiveTrackColor = PanelSoft)
+    )
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+    Text(text, color = Muted, fontSize = 12.sp, modifier = Modifier.padding(bottom = 8.dp, top = 4.dp))
+}
+
+@Composable
+private fun ThemeTab(vm: HomeActions, ui: HomeUi) {
+    SectionLabel("Cor de destaque")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Accent.entries.forEach { a ->
+            val selected = ui.accent == a
+            Box(
+                Modifier.size(40.dp).clip(CircleShape)
+                    .background(androidx.compose.ui.graphics.Color(a.argb.toInt()))
+                    .then(if (selected) Modifier.border(3.dp, Snow, CircleShape) else Modifier)
+                    .clickable(onClickLabel = a.label) { vm.setAccent(a) }
+                    .semantics { contentDescription = a.label },
+                contentAlignment = Alignment.Center
+            ) {
+                if (a == Accent.System) Text("✦", color = Ink, fontSize = 16.sp)
+            }
+        }
+    }
+    Text(
+        ui.accent.label + if (ui.accent == Accent.System) " (usa as cores do papel de parede no Android 12+)" else "",
+        color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp)
+    )
+    Spacer(Modifier.height(16.dp))
+    SectionLabel("Intensidade do vidro (dock e botões)")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        GlassLevel.entries.forEach { g -> CategoryChip(g.label, ui.glass == g) { vm.setGlass(g) } }
+    }
+    Text(
+        "Mais forte = painéis mais opacos e texto mais legível sobre papéis de parede claros.",
+        color = Muted, fontSize = 11.sp, modifier = Modifier.padding(top = 8.dp)
+    )
+}
+
+@Composable
+private fun GridTab(vm: HomeActions, ui: HomeUi) {
+    SectionLabel("Colunas")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        (GridSpec.MIN_COLUMNS..GridSpec.MAX_COLUMNS).forEach { c ->
+            CategoryChip("$c", ui.grid.columns == c) { vm.setGrid(c, ui.grid.rows) }
+        }
+    }
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Linhas")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        (GridSpec.MIN_ROWS..GridSpec.MAX_ROWS).forEach { r ->
+            CategoryChip("$r", ui.grid.rows == r) { vm.setGrid(ui.grid.columns, r) }
+        }
+    }
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Forma dos ícones")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        IconShape.entries.forEach { s -> CategoryChip(s.label, ui.iconStyle.shape == s) { vm.setIconShape(s) } }
+    }
+    if (ui.iconStyle.shape != IconShape.Original) {
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Sombra nos ícones", color = Snow, fontSize = 15.sp)
+            Switch(
+                checked = ui.iconStyle.shadow,
+                onCheckedChange = { vm.setIconShadow(it) },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Ink, checkedTrackColor = Mint,
+                    uncheckedThumbColor = Muted, uncheckedTrackColor = PanelSoft
+                )
+            )
+        }
+        Text("Na economia máxima (Ultra Lite) a sombra fica desligada.", color = Muted, fontSize = 11.sp)
+    }
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Tamanho dos ícones")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        IconSize.entries.forEach { s -> CategoryChip(s.label, ui.iconSize == s) { vm.setIconSize(s) } }
+    }
+    Spacer(Modifier.height(10.dp))
+    FineSlider("Ajuste fino do ícone · ${ui.gridFine.iconPercent}%", ui.gridFine.iconPercent, GridFine.ICON_MIN, GridFine.ICON_MAX) {
+        vm.setGridFine(ui.gridFine.copy(iconPercent = it))
+    }
+    FineSlider("Margem lateral · ${ui.gridFine.marginH} dp", ui.gridFine.marginH, GridFine.MARGIN_H_MIN, GridFine.MARGIN_H_MAX) {
+        vm.setGridFine(ui.gridFine.copy(marginH = it))
+    }
+    FineSlider("Margem vertical · ${ui.gridFine.marginV} dp", ui.gridFine.marginV, GridFine.MARGIN_V_MIN, GridFine.MARGIN_V_MAX) {
+        vm.setGridFine(ui.gridFine.copy(marginV = it))
+    }
+    Spacer(Modifier.height(10.dp))
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        Text("Mostrar nomes dos apps", color = Snow, fontSize = 15.sp)
+        Switch(
+            checked = ui.showLabels,
+            onCheckedChange = { vm.setShowLabels(it) },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Ink, checkedTrackColor = Mint,
+                uncheckedThumbColor = Muted, uncheckedTrackColor = PanelSoft
+            )
+        )
+    }
+    Text(
+        "Ao diminuir a grade, os apps que não cabem vão para a próxima página; nada é perdido.",
+        color = Muted, fontSize = 11.sp, modifier = Modifier.padding(top = 8.dp)
+    )
+}
+
+@Composable
+private fun ClockTab(vm: HomeActions, ui: HomeUi) {
+    SectionLabel("Estilo")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        ClockStyle.entries.forEach { s ->
+            CategoryChip(s.label, ui.clockStyle == s) { vm.setClockStyle(s) }
+        }
+    }
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Formato da hora")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        ClockFormat.entries.forEach { f ->
+            CategoryChip(f.label, ui.clockFormat == f) { vm.setClockFormat(f) }
+        }
+    }
+    Spacer(Modifier.height(10.dp))
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        Text("Mostrar a data", color = Snow, fontSize = 15.sp)
+        Switch(
+            checked = ui.showDate,
+            onCheckedChange = { vm.setShowDate(it) },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Ink, checkedTrackColor = Mint,
+                uncheckedThumbColor = Muted, uncheckedTrackColor = PanelSoft
+            )
+        )
+    }
+    Text(
+        "Toque no relógio para abrir os alarmes e na data para abrir a agenda.",
+        color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp)
+    )
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Cor")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        ClockColor.entries.forEach { c -> CategoryChip(c.label, ui.clockColor == c) { vm.setClockLook(c, ui.clockScale, ui.clockAlign) } }
+    }
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Tamanho")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        ClockScale.entries.forEach { s -> CategoryChip(s.label, ui.clockScale == s) { vm.setClockLook(ui.clockColor, s, ui.clockAlign) } }
+    }
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Alinhamento")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        ClockAlign.entries.forEach { a -> CategoryChip(a.label, ui.clockAlign == a) { vm.setClockLook(ui.clockColor, ui.clockScale, a) } }
+    }
+}
+
+/** Visual da Home: dock (estilo e opacidade). Próximas fases acrescentam rótulos, indicador e gaveta. */
+@Composable
+private fun VisualTab(vm: HomeActions, ui: HomeUi) {
+    SectionLabel("Estilo do dock")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        DockStyle.entries.forEach { s -> CategoryChip(s.label, ui.dockStyle == s) { vm.setDockStyle(s) } }
+    }
+    if (ui.dockStyle != DockStyle.Flat) {
+        Spacer(Modifier.height(14.dp))
+        SectionLabel("Opacidade do dock · ${ui.dockOpacity}%")
+        // Só grava ao soltar o dedo: arrastar o controle não escreve no disco a cada pixel.
+        var live by remember(ui.dockOpacity) { mutableStateOf(ui.dockOpacity.toFloat()) }
+        Slider(
+            value = live,
+            onValueChange = { live = it },
+            onValueChangeFinished = { vm.setDockOpacity(live.roundToInt()) },
+            valueRange = DockOpacity.MIN.toFloat()..DockOpacity.MAX.toFloat(),
+            colors = SliderDefaults.colors(thumbColor = Mint, activeTrackColor = Mint, inactiveTrackColor = PanelSoft)
+        )
+    }
+    Spacer(Modifier.height(14.dp))
+    LabelsSection(vm, ui)
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Indicador de páginas")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        IndicatorStyle.entries.forEach { s -> CategoryChip(s.label, ui.indicator == s) { vm.setIndicator(s) } }
+    }
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Gaveta")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        DrawerLayout.entries.forEach { l -> CategoryChip(l.label, ui.drawerLayout == l) { vm.setDrawerLayout(l) } }
+    }
+    if (ui.drawerLayout == DrawerLayout.Grid) {
+        Spacer(Modifier.height(8.dp))
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            (DrawerColumns.MIN..DrawerColumns.MAX).forEach { n ->
+                CategoryChip("$n colunas", ui.drawerColumns == n) { vm.setDrawerColumns(n) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LabelsSection(vm: HomeActions, ui: HomeUi) {
+    SectionLabel("Rótulos dos apps")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        LabelSize.entries.forEach { s -> CategoryChip(s.label, ui.labelSize == s) { vm.setLabelSize(s) } }
+        CategoryChip("Negrito", ui.labelBold) { vm.setLabelBold(!ui.labelBold) }
+    }
+}
+
+@Composable
+private fun FocusTab(vm: HomeActions, ui: HomeUi) {
+    SectionLabel("Modo Foco")
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(if (ui.focusOn) "Ligado" else "Desligado", color = Snow, fontSize = 15.sp)
+        Switch(
+            checked = ui.focusOn,
+            onCheckedChange = { vm.setFocus(it) },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Ink, checkedTrackColor = Mint,
+                uncheckedThumbColor = Muted, uncheckedTrackColor = PanelSoft
+            )
+        )
+    }
+    Text(
+        "Com o Foco ligado, os apps bloqueados somem da gaveta, ficam apagados na Home e não abrem. " +
+            "Tudo local: nada sai do aparelho.",
+        color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp, bottom = 12.dp)
+    )
+    SectionLabel("Bloquear por categoria")
+    val cats = remember(ui.categories) { ui.categories.values.distinct().sortedBy { it.label } }
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        cats.forEach { c ->
+            val keys = ui.categories.filterValues { it == c }.keys
+            CategoryChip(c.label, keys.isNotEmpty() && ui.focusBlocked.containsAll(keys)) { vm.toggleBlockCategory(c) }
+        }
+    }
+    Spacer(Modifier.height(12.dp))
+    Text(
+        "${ui.focusBlocked.size} apps bloqueados. Para um app só: segure o ícone e escolha \"Bloquear no Modo Foco\".",
+        color = Muted, fontSize = 12.sp
+    )
+    if (ui.focusBlocked.isNotEmpty()) {
+        Spacer(Modifier.height(8.dp))
+        CategoryChip("Limpar bloqueios", false) { vm.clearFocusBlocked() }
+    }
+}
+
+@Composable
+private fun SwatchRow(selected: Long, onPick: (Long) -> Unit) {
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        CustomWallpaper.SWATCHES.forEach { c ->
+            Box(
+                Modifier.size(36.dp).clip(CircleShape)
+                    .background(androidx.compose.ui.graphics.Color(c.toInt()))
+                    .then(if (c == CustomWallpaper.sanitize(selected)) Modifier.border(3.dp, Snow, CircleShape) else Modifier)
+                    .clickable { onPick(c) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun WallpaperTab(vm: HomeActions, ui: HomeUi) {
+    SectionLabel("Escolha um papel de parede")
+    if (ui.wallpaper.isSystem && ui.profile == PerformanceProfile.UltraLite) {
+        // Com o papel do sistema a janela fica translúcida e o aparelho compõe uma camada a mais por quadro.
+        Text("Neste aparelho, um papel da Vértice costuma rodar mais fluido que o papel do sistema.", color = Muted, fontSize = 11.sp, modifier = Modifier.padding(bottom = 8.dp))
+    }
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Wallpaper.entries.forEach { w ->
+            val selected = ui.wallpaper == w
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.clip(RoundedCornerShape(18.dp)).clickable { vm.setWallpaper(w) }
+            ) {
+                Box(
+                    Modifier
+                        .size(width = 88.dp, height = 156.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .border(
+                            if (selected) 2.5.dp else 1.dp,
+                            if (selected) Mint else Muted.copy(alpha = 0.3f),
+                            RoundedCornerShape(18.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (w.isSystem) {
+                        Box(Modifier.fillMaxSize().background(PanelSoft), contentAlignment = Alignment.Center) {
+                            Text("▣", color = Muted, fontSize = 26.sp)
+                        }
+                    } else {
+                        WallpaperBackground(w, Modifier.fillMaxSize(), ui.customWallpaperA, ui.customWallpaperB)
+                    }
+                }
+                Text(
+                    w.label, color = if (selected) Mint else Snow, fontSize = 12.sp,
+                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                    modifier = Modifier.padding(top = 6.dp, bottom = 2.dp)
+                )
+            }
+        }
+    }
+    if (ui.wallpaper == Wallpaper.Custom) {
+        Spacer(Modifier.height(12.dp))
+        SectionLabel("Cor 1")
+        SwatchRow(ui.customWallpaperA) { vm.setCustomWallpaper(it, ui.customWallpaperB) }
+        Spacer(Modifier.height(8.dp))
+        SectionLabel("Cor 2")
+        SwatchRow(ui.customWallpaperB) { vm.setCustomWallpaper(ui.customWallpaperA, it) }
+    }
+    Text(
+        "Os papéis são desenhados pelo app (sem imagens), então não pesam. " +
+            "\"Do aparelho\" usa o papel de parede que você já tem no Android.",
+        color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 10.dp)
+    )
+}

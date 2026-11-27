@@ -1,0 +1,201 @@
+package com.vertice.launcher.data
+
+import android.content.Context
+import android.content.BroadcastReceiver
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.ApplicationInfo
+import android.os.Build
+import android.content.pm.LauncherApps
+import android.net.Uri
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Process
+import android.os.UserHandle
+import android.os.UserManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import com.vertice.launcher.core.AppModel
+import com.vertice.launcher.diag.VLog
+import com.vertice.launcher.platform.AppCatalog
+import com.vertice.launcher.platform.AppLauncher
+import java.text.Collator
+
+/**
+ * Lista os apps lançáveis (inclui perfil de trabalho) e se mantém atualizada quando
+ * algo é instalado, removido ou atualizado — sem polling.
+ */
+class AppRepository(context: Context) : AppCatalog, AppLauncher {
+
+    private val appContext = context.applicationContext
+    private val launcherApps = appContext.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
+    private val userManager = appContext.getSystemService(Context.USER_SERVICE) as UserManager
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    private val _apps = MutableStateFlow<List<AppEntry>>(emptyList())
+    override val apps: StateFlow<List<AppEntry>> = _apps.asStateFlow()
+
+    private var refreshJob: Job? = null
+
+    private val callback = object : LauncherApps.Callback() {
+        private fun event(what: String, pkg: String?) { VLog.d("Apps", "Evento do sistema: $what $pkg"); refresh() }
+        override fun onPackageRemoved(packageName: String?, user: UserHandle?) = event("removido", packageName)
+        override fun onPackageAdded(packageName: String?, user: UserHandle?) = event("instalado", packageName)
+        override fun onPackageChanged(packageName: String?, user: UserHandle?) = event("alterado", packageName)
+        override fun onPackagesAvailable(packageNames: Array<out String>?, user: UserHandle?, replacing: Boolean) =
+            event("disponível", packageNames?.joinToString())
+        override fun onPackagesUnavailable(packageNames: Array<out String>?, user: UserHandle?, replacing: Boolean) =
+            event("indisponível", packageNames?.joinToString())
+        // App suspenso (controle parental, bem-estar digital): precisa aparecer apagado, e voltar ao normal depois.
+        override fun onPackagesSuspended(packageNames: Array<out String>?, user: UserHandle?) =
+            event("suspenso", packageNames?.joinToString())
+        override fun onPackagesUnsuspended(packageNames: Array<out String>?, user: UserHandle?) =
+            event("reativado", packageNames?.joinToString())
+    }
+
+    // Perfil de trabalho ligando/desligando/desbloqueando muda quais apps existem: recarrega.
+    private val profileReceiver = object : BroadcastReceiver() {
+        override fun onReceive(c: Context?, intent: Intent?) {
+            VLog.d("Apps", "Perfil de usuário mudou: ${intent?.action}")
+            refresh()
+        }
+    }
+
+    init {
+        launcherApps.registerCallback(callback, Handler(Looper.getMainLooper()))
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_MANAGED_PROFILE_AVAILABLE)
+            addAction(Intent.ACTION_MANAGED_PROFILE_UNAVAILABLE)
+            addAction(Intent.ACTION_MANAGED_PROFILE_UNLOCKED)
+            addAction(Intent.ACTION_USER_UNLOCKED)
+        }
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                appContext.registerReceiver(profileReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                appContext.registerReceiver(profileReceiver, filter)
+            }
+        } catch (e: Exception) {
+            VLog.w("Apps", "Não foi possível observar mudanças de perfil", e)
+        }
+        refresh(immediate = true)
+    }
+
+    /** Recarrega (com debounce, porque instalar um app dispara vários eventos seguidos). */
+    override fun refresh(immediate: Boolean) {
+        refreshJob?.cancel()
+        refreshJob = scope.launch {
+            if (!immediate) delay(350)
+            val t0 = System.nanoTime()
+            try {
+                val list = load()
+                _apps.value = list
+                VLog.i("Apps", "Lista carregada: ${list.size} apps em ${(System.nanoTime() - t0) / 1_000_000}ms")
+            } catch (e: Exception) {
+                // Mantém a lista anterior: melhor desatualizada do que vazia ou crash.
+                VLog.e("Apps", "Falha ao carregar a lista de apps", e)
+            }
+        }
+    }
+
+    private fun load(): List<AppEntry> {
+        val result = ArrayList<AppEntry>()
+        val me = Process.myUserHandle()
+        for (user in userManager.userProfiles) {
+            val serial = userManager.getSerialNumberForUser(user)
+            val suffix = if (user == me) "" else "#$serial"
+            for (info in launcherApps.getActivityList(null, user)) {
+                val component = info.componentName
+                if (component.packageName == appContext.packageName) continue
+                result += AppEntry(
+                    model = AppModel(
+                        key = component.flattenToString() + suffix,
+                        packageName = component.packageName,
+                        label = info.label?.toString() ?: component.packageName,
+                        installTime = info.firstInstallTime,
+                        declaredCategory = info.applicationInfo.category,
+                        suspended = (info.applicationInfo.flags and ApplicationInfo.FLAG_SUSPENDED) != 0
+                    ),
+                    component = component,
+                    user = user,
+                    info = info
+                )
+            }
+        }
+        val collator = Collator.getInstance().apply { strength = Collator.PRIMARY }
+        return result.sortedWith(compareBy(collator) { it.label })
+    }
+
+    override fun launch(app: AppEntry, options: Bundle?) {
+        try {
+            VLog.d("Apps", "Abrindo ${app.component.flattenToShortString()}")
+            launcherApps.startMainActivity(app.component, app.user, null, options)
+        } catch (e: Exception) {
+            // App removido no meio do caminho ou perfil indisponível.
+            VLog.w("Apps", "Falha ao abrir ${app.component.flattenToShortString()}", e)
+            refresh(immediate = true)
+        }
+    }
+
+    override fun openAppInfo(app: AppEntry) {
+        try {
+            launcherApps.startAppDetailsActivity(app.component, app.user, null, null)
+        } catch (e: Exception) {
+            VLog.w("Apps", "Falha ao abrir informações de ${app.packageName}", e)
+        }
+    }
+
+    override fun uninstall(app: AppEntry) {
+        val intent = Intent(Intent.ACTION_DELETE, Uri.parse("package:${app.packageName}"))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        try {
+            appContext.startActivity(intent)
+        } catch (e: Exception) {
+            VLog.w("Apps", "Falha ao desinstalar ${app.packageName}", e)
+        }
+    }
+
+    /** Toque no relógio: abre o app de relógio/alarmes do aparelho (se houver). */
+    override fun openClockApp() = startSafely(Intent(android.provider.AlarmClock.ACTION_SHOW_ALARMS))
+
+    /** Toque na data: abre a agenda do aparelho (se houver). */
+    override fun openCalendarApp() =
+        startSafely(Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_CALENDAR))
+
+    private fun startSafely(intent: Intent) {
+        try {
+            appContext.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        } catch (e: Exception) {
+            VLog.w("Apps", "Nenhum app para ${intent.action}", e)
+        }
+    }
+
+    /** Apps padrão para preencher o dock na primeira execução (telefone, mensagens, navegador, câmera). */
+    override fun defaultDockPackages(): List<String> {
+        val pm = appContext.packageManager
+        val intents = listOf(
+            Intent(Intent.ACTION_DIAL),
+            Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_MESSAGING),
+            Intent(Intent.ACTION_VIEW, Uri.parse("https://example.com")).addCategory(Intent.CATEGORY_BROWSABLE),
+            Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
+        )
+        return intents.mapNotNull { pm.resolveActivity(it, 0)?.activityInfo?.packageName }
+            .filter { it != "android" }
+            .distinct()
+    }
+
+    fun close() {
+        launcherApps.unregisterCallback(callback)
+        try { appContext.unregisterReceiver(profileReceiver) } catch (_: IllegalArgumentException) {}
+        scope.cancel()
+    }
+}

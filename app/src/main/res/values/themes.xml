@@ -1,27 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <resources>
-
-    <style
-        name="Theme.Vertice"
-        parent="android:style/Theme.Material.NoActionBar">
-
-        <item name="android:fontFamily">
-            sans
-        </item>
-
-        <item name="android:windowLightStatusBar">
-            false
-        </item>
-
-        <item name="android:statusBarColor">
-            #0B0D10
-        </item>
-
-        <item name="android:navigationBarColor">
-            #0B0D10
-        </item>
-
+    <!-- Home: janela translúcida que mostra o papel de parede do sistema.
+         Isso também permite desfocar o fundo (blur de janela, API 31+). -->
+    <style name="Theme.Vertice.Home" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:windowShowWallpaper">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:colorBackground">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
 
 </resources>

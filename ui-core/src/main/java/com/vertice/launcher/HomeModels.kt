@@ -1,0 +1,198 @@
+package com.vertice.launcher
+
+import android.os.Bundle
+import com.vertice.launcher.core.Accent
+import com.vertice.launcher.core.AppCategory
+import com.vertice.launcher.core.Folder
+import com.vertice.launcher.core.FolderCover
+import com.vertice.launcher.core.FolderTint
+import com.vertice.launcher.core.GlassLevel
+import com.vertice.launcher.core.ClockFormat
+import com.vertice.launcher.core.ClockStyle
+import com.vertice.launcher.core.GridConfig
+import com.vertice.launcher.core.DockOpacity
+import com.vertice.launcher.core.DockStyle
+import com.vertice.launcher.core.DrawerSort
+import com.vertice.launcher.core.ClockAlign
+import com.vertice.launcher.core.ClockColor
+import com.vertice.launcher.core.ClockScale
+import com.vertice.launcher.core.CustomWallpaper
+import com.vertice.launcher.core.DrawerColumns
+import com.vertice.launcher.core.DrawerLayout
+import com.vertice.launcher.core.GridFine
+import com.vertice.launcher.core.IndicatorStyle
+import com.vertice.launcher.core.LabelSize
+import com.vertice.launcher.core.IconShape
+import com.vertice.launcher.core.IconSize
+import com.vertice.launcher.core.IconStyle
+import com.vertice.launcher.core.LayoutItem
+import com.vertice.launcher.core.PerformanceProfile
+import com.vertice.launcher.core.Placement
+import com.vertice.launcher.core.Usage
+import com.vertice.launcher.core.Wallpaper
+import com.vertice.launcher.data.AppEntry
+import com.vertice.launcher.data.IconCache
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+
+/** App + onde ele está na grade da Home. */
+data class PlacedApp(val app: AppEntry, val item: LayoutItem)
+
+/** Pasta já resolvida: seus apps reais e a célula que ocupa na grade. */
+data class PlacedFolder(val folder: Folder, val apps: List<AppEntry>, val item: LayoutItem)
+
+/** Estado já resolvido para a interface: chaves salvas viram apps reais. */
+data class HomeUi(
+    val loading: Boolean = true,
+    val profile: PerformanceProfile = PerformanceProfile.Balanced,
+    val apps: List<AppEntry> = emptyList(),
+    /** Dock, na ordem da esquerda para a direita. */
+    val dock: List<AppEntry> = emptyList(),
+    /** Apps na grade da Home. */
+    val placed: List<PlacedApp> = emptyList(),
+    val placedFolders: List<PlacedFolder> = emptyList(),
+    /** Quantas páginas a Home tem (no mínimo 1). */
+    val pageCount: Int = 1,
+    val placement: Map<String, Placement> = emptyMap(),
+    /** Categoria final de cada app (chave do app -> categoria). */
+    val categories: Map<String, AppCategory> = emptyMap(),
+    /** Chaves com categoria definida pelo usuário (para oferecer "voltar ao automático"). */
+    val manualCategories: Set<String> = emptySet(),
+    val clockStyle: ClockStyle = ClockStyle.Classic,
+    val clockFormat: ClockFormat = ClockFormat.System,
+    val showDate: Boolean = true,
+    val wallpaper: Wallpaper = Wallpaper.System,
+    val grid: GridConfig = GridConfig.Default,
+    val iconSize: IconSize = IconSize.Medium,
+    val showLabels: Boolean = true,
+    val accent: Accent = Accent.Mint,
+    val glass: GlassLevel = GlassLevel.Medium,
+    val iconStyle: IconStyle = IconStyle(),
+    val drawerSort: DrawerSort = DrawerSort.AZ,
+    val hidden: Set<String> = emptySet(),
+    val usage: Map<String, Usage> = emptyMap(),
+    /** Os 5 apps mais abertos (sem ocultos nem bloqueados pelo Foco). */
+    val mostUsed: List<AppEntry> = emptyList(),
+    val focusOn: Boolean = false,
+    val focusBlocked: Set<String> = emptySet(),
+    val dockStyle: DockStyle = DockStyle.Glass,
+    val dockOpacity: Int = DockOpacity.DEFAULT,
+    val labelSize: LabelSize = LabelSize.Medium,
+    val labelBold: Boolean = false,
+    val indicator: IndicatorStyle = IndicatorStyle.Pill,
+    val drawerLayout: DrawerLayout = DrawerLayout.Grid,
+    val drawerColumns: Int = DrawerColumns.DEFAULT,
+    val customWallpaperA: Long = CustomWallpaper.DEFAULT_A,
+    val customWallpaperB: Long = CustomWallpaper.DEFAULT_B,
+    val clockColor: ClockColor = ClockColor.White,
+    val clockScale: ClockScale = ClockScale.Medium,
+    val clockAlign: ClockAlign = ClockAlign.Start,
+    val gridFine: GridFine = GridFine()
+) {
+    /** Escala final dos ícones (nível × ajuste fino); use esta em vez de iconSize.scale. */
+    val iconScale: Float get() = gridFine.iconScale(iconSize)
+
+    /** Com o Foco ligado, app bloqueado não abre e aparece apagado. */
+    fun isLocked(key: String) = focusOn && key in focusBlocked
+
+    /** O que a gaveta esconde agora: ocultos pelo usuário + bloqueados (se o Foco estiver ligado). */
+    val drawerHidden: Set<String> get() = if (focusOn) hidden + focusBlocked else hidden
+
+    fun categoryOf(app: AppEntry): AppCategory = categories[app.key] ?: AppCategory.default
+}
+
+/** Abrir apps e telas do sistema. */
+interface AppActions {
+    fun openApp(app: AppEntry, options: Bundle?)
+    fun openAppInfo(app: AppEntry)
+    fun uninstall(app: AppEntry)
+    fun openClock()
+    fun openCalendar()
+}
+
+/** Organização: onde cada app fica (Home, dock, grade) e a categoria de cada um. */
+interface OrganizeActions {
+    fun placementOf(app: AppEntry): Placement
+    fun toggleDock(app: AppEntry)
+    fun addToHome(app: AppEntry)
+    fun removeFromHome(app: AppEntry)
+    fun moveToCell(app: AppEntry, page: Int, x: Int, y: Int)
+    /** Põe o app no dock na posição [index] (arrastar e soltar). */
+    fun moveToDock(app: AppEntry, index: Int)
+    fun setGrid(columns: Int, rows: Int)
+
+    /** `category = null` volta a classificação automática do app. */
+    fun setCategory(app: AppEntry, category: AppCategory?)
+}
+
+/** Aparência: relógio, papel de parede, ícones. */
+interface AppearanceActions {
+    fun setClockStyle(style: ClockStyle)
+    fun setClockFormat(format: ClockFormat)
+    fun setShowDate(show: Boolean)
+    fun setWallpaper(w: Wallpaper)
+    fun setIconSize(size: IconSize)
+    fun setShowLabels(show: Boolean)
+    fun setAccent(accent: Accent)
+    fun setGlass(glass: GlassLevel)
+    fun setIconShape(shape: IconShape)
+    fun setIconShadow(on: Boolean)
+    fun setDockStyle(style: DockStyle)
+    fun setLabelSize(size: LabelSize)
+    fun setLabelBold(on: Boolean)
+    fun setIndicator(style: IndicatorStyle)
+    fun setDrawerLayout(layout: DrawerLayout)
+    fun setCustomWallpaper(a: Long, b: Long)
+    fun setGridFine(fine: GridFine)
+    fun setClockLook(color: ClockColor, scale: ClockScale, align: ClockAlign)
+    fun setDrawerColumns(n: Int)
+    fun setDockOpacity(percent: Int)
+}
+
+/** Modo Foco: bloqueia apps que distraem enquanto estiver ligado. */
+interface FocusActions {
+    fun setFocus(on: Boolean)
+    fun toggleFocusBlocked(app: AppEntry)
+    /** Bloqueia todos os apps da categoria (ou libera, se já estavam todos bloqueados). */
+    fun toggleBlockCategory(category: AppCategory)
+    fun clearFocusBlocked()
+}
+
+/** Pastas da Home. */
+interface FolderActions {
+    /** Soltar [app] numa célula: no miolo de outro app cria pasta; no miolo de uma pasta entra nela; senão só move. */
+    fun dropOnCell(app: AppEntry, page: Int, x: Int, y: Int, merge: Boolean)
+    fun moveFolder(folderId: String, page: Int, x: Int, y: Int)
+    fun removeFromFolder(app: AppEntry)
+    fun renameFolder(folderId: String, name: String)
+    fun setFolderTint(folderId: String, tint: FolderTint)
+    fun setFolderCover(folderId: String, cover: FolderCover)
+    fun dissolveFolder(folderId: String)
+}
+
+/** Gaveta: ordem e apps ocultos. */
+interface DrawerActions {
+    fun setDrawerSort(sort: DrawerSort)
+    fun setHidden(app: AppEntry, hidden: Boolean)
+}
+
+/** Backup e restauração das preferências. */
+interface BackupActions {
+    /** Texto do backup das preferências atuais. */
+    suspend fun backupText(): String
+
+    /** Restaura de um backup; devolve a mensagem para mostrar ao usuário. */
+    suspend fun restoreBackup(text: String): String
+}
+
+/**
+ * O que as telas enxergam: estado pronto + contratos pequenos por assunto.
+ * As telas conhecem só isto (não o ViewModel), então vivem em módulos próprios e testam com versão falsa.
+ */
+interface HomeActions : AppActions, OrganizeActions, AppearanceActions, BackupActions, DrawerActions, FolderActions, FocusActions {
+    val ui: StateFlow<HomeUi>
+    val icons: IconCache
+
+    /** Bateria em %, null se desconhecida. */
+    val batteryPercent: Flow<Int?>
+}
