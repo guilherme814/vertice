@@ -52,6 +52,7 @@ import com.vertice.launcher.core.GridSpec
 import com.vertice.launcher.core.DockOpacity
 import com.vertice.launcher.core.DockStyle
 import com.vertice.launcher.core.IconShape
+import com.vertice.launcher.core.LabelSize
 import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.core.IconSize
 import com.vertice.launcher.core.Wallpaper
@@ -278,6 +279,17 @@ private fun VisualTab(vm: HomeActions, ui: HomeUi) {
             valueRange = DockOpacity.MIN.toFloat()..DockOpacity.MAX.toFloat(),
             colors = SliderDefaults.colors(thumbColor = Mint, activeTrackColor = Mint, inactiveTrackColor = PanelSoft)
         )
+    }
+    Spacer(Modifier.height(14.dp))
+    LabelsSection(vm, ui)
+}
+
+@Composable
+private fun LabelsSection(vm: HomeActions, ui: HomeUi) {
+    SectionLabel("Rótulos dos apps")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        LabelSize.entries.forEach { s -> CategoryChip(s.label, ui.labelSize == s) { vm.setLabelSize(s) } }
+        CategoryChip("Negrito", ui.labelBold) { vm.setLabelBold(!ui.labelBold) }
     }
 }
 

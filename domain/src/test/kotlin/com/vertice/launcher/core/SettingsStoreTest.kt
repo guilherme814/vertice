@@ -41,6 +41,8 @@ class InMemorySettings : SettingsStore {
     override suspend fun recordUse(key: String, nowMs: Long) { state.value = state.value.copy(usage = UsageOps.record(state.value.usage, key, nowMs)) }
     override suspend fun setDockStyle(style: DockStyle) { state.value = state.value.copy(dockStyle = style) }
     override suspend fun setDockOpacity(percent: Int) { state.value = state.value.copy(dockOpacity = DockOpacity.coerce(percent)) }
+    override suspend fun setLabelSize(size: LabelSize) { state.value = state.value.copy(labelSize = size) }
+    override suspend fun setLabelBold(on: Boolean) { state.value = state.value.copy(labelBold = on) }
     override suspend fun setFocus(on: Boolean) { state.value = state.value.copy(focusOn = on) }
     override suspend fun setFocusBlocked(keys: Set<String>) { state.value = state.value.copy(focusBlocked = keys) }
     override suspend fun restore(prefs: Prefs) { state.value = prefs.copy(seeded = true) }

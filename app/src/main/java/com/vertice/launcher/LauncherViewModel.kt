@@ -10,6 +10,7 @@ import com.vertice.launcher.core.AppCategory
 import com.vertice.launcher.core.DockOpacity
 import com.vertice.launcher.core.DockStyle
 import com.vertice.launcher.core.DrawerSort
+import com.vertice.launcher.core.LabelSize
 import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.BackupCodec
 import com.vertice.launcher.core.ClockFormat
@@ -108,6 +109,8 @@ class LauncherViewModel(
                 5
             ).mapNotNull { byKey[it] },
             dockStyle = p.dockStyle,
+            labelSize = p.labelSize,
+            labelBold = p.labelBold,
             dockOpacity = p.dockOpacity,
             focusOn = p.focusOn,
             focusBlocked = p.focusBlocked,
@@ -259,6 +262,10 @@ class LauncherViewModel(
     override fun setIconShape(shape: IconShape) { viewModelScope.launch { prefs.setIconShape(shape) } }
 
     override fun setIconShadow(on: Boolean) { viewModelScope.launch { prefs.setIconShadow(on) } }
+
+    override fun setLabelSize(size: LabelSize) { viewModelScope.launch { prefs.setLabelSize(size) } }
+
+    override fun setLabelBold(on: Boolean) { viewModelScope.launch { prefs.setLabelBold(on) } }
 
     override fun setDockStyle(style: DockStyle) { viewModelScope.launch { prefs.setDockStyle(style) } }
 

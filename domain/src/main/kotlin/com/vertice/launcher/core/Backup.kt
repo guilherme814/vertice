@@ -57,6 +57,8 @@ object BackupCodec {
         p.layout.forEach { appendLine("layout=${LayoutCodec.encode(it)}") }
         appendLine("focusOn=${p.focusOn}")
         appendLine("dockStyle=${p.dockStyle.name}")
+        appendLine("labelSize=${p.labelSize.name}")
+        appendLine("labelBold=${p.labelBold}")
         appendLine("dockOpacity=${p.dockOpacity}")
         p.focusBlocked.toSortedSet().forEach { appendLine("focusBlocked=${enc(it)}") }
         p.folders.forEach { appendLine("folder=${FolderCodec.encode(it)}") }
@@ -102,6 +104,8 @@ object BackupCodec {
                     if (j <= 0) ignored++ else try { categories[dec(value.substring(0, j))] = value.substring(j + 1) } catch (_: IllegalArgumentException) { ignored++ }
                 }
                 "layout" -> LayoutCodec.decode(value)?.let { layout += it } ?: ignored++
+                "labelSize" -> prefs = prefs.copy(labelSize = LabelSize.fromName(value))
+                "labelBold" -> prefs = prefs.copy(labelBold = value == "true")
                 "dockStyle" -> prefs = prefs.copy(dockStyle = DockStyle.fromName(value))
                 "dockOpacity" -> prefs = prefs.copy(dockOpacity = DockOpacity.coerce(value.toIntOrNull() ?: DockOpacity.DEFAULT))
                 "focusOn" -> prefs = prefs.copy(focusOn = value == "true")

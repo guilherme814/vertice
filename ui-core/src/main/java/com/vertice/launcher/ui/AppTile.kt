@@ -40,6 +40,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -131,8 +132,10 @@ fun AppTile(
             AppIcon(app, vm.icons, iconSize, Modifier.alpha(if (locked) 0.28f else if (app.model.suspended) 0.4f else 1f), iconStyle)
             if (showLabel) {
                 Spacer(Modifier.height(6.dp))
+                val ls = LocalLabelStyle.current
                 Text(
-                    app.label, color = Snow, fontSize = 11.sp, maxLines = labelLines, lineHeight = 13.sp,
+                    app.label, color = Snow, fontSize = ls.size.sp.sp, maxLines = labelLines, lineHeight = ls.size.lineSp.sp,
+                    fontWeight = if (ls.bold) FontWeight.SemiBold else FontWeight.Normal,
                     overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )

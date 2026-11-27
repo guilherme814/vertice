@@ -1,6 +1,7 @@
 package com.vertice.launcher.ui
 
 import android.os.Build
+import com.vertice.launcher.core.LabelSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -67,3 +68,8 @@ fun VerticeTheme(
         content = content
     )
 }
+
+/** Estilo dos rótulos dos apps, lido por Home, dock, pastas e gaveta. */
+data class LabelStyleSpec(val size: LabelSize = LabelSize.Medium, val bold: Boolean = false)
+
+val LocalLabelStyle = androidx.compose.runtime.staticCompositionLocalOf { LabelStyleSpec() }

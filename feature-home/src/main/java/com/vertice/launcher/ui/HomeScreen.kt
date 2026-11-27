@@ -408,7 +408,7 @@ private fun HomeGridPage(
     BoxWithConstraints(Modifier.fillMaxSize()) {
     val grid = ui.grid
     // O ícone nunca passa do que a célula comporta (grades densas ficam menores sozinhas).
-    val labelH = if (ui.showLabels) 16.dp else 0.dp
+    val labelH = if (ui.showLabels) (ui.labelSize.lineSp + 3).dp else 0.dp
     val iconSize = minOf(
         48.dp * ui.iconSize.scale,
         maxHeight / grid.rows - labelH - 8.dp,

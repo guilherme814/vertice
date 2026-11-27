@@ -52,3 +52,14 @@ object DockOpacity {
     /** Opacidade final do corpo do vidro dado o [base] do nível de vidro. */
     fun alpha(base: Float, percent: Int): Float = (base * coerce(percent) / 100f).coerceIn(0f, 1f)
 }
+
+/** Tamanho do texto dos rótulos de app. [sp] é o corpo; [lineSp] a altura da linha. */
+enum class LabelSize(val label: String, val sp: Int, val lineSp: Int) {
+    Small("Pequeno", 10, 12),
+    Medium("Médio", 11, 13),
+    Large("Grande", 13, 15);
+
+    companion object {
+        fun fromName(name: String?): LabelSize = entries.firstOrNull { it.name == name } ?: Medium
+    }
+}

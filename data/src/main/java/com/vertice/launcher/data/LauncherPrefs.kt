@@ -14,6 +14,7 @@ import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.DockOpacity
 import com.vertice.launcher.core.DockStyle
 import com.vertice.launcher.core.FolderCodec
+import com.vertice.launcher.core.LabelSize
 import com.vertice.launcher.core.UsageCodec
 import com.vertice.launcher.core.UsageOps
 import com.vertice.launcher.core.HomeData
@@ -65,6 +66,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
         val usage = stringSetPreferencesKey("usage_v1")
         val focusOn = booleanPreferencesKey("focus_on")
         val dockStyle = stringPreferencesKey("dock_style")
+        val labelSize = stringPreferencesKey("label_size")
+        val labelBold = booleanPreferencesKey("label_bold")
         val dockOpacity = intPreferencesKey("dock_opacity")
         val focusBlocked = stringSetPreferencesKey("focus_blocked")
         val seeded = booleanPreferencesKey("seeded")
@@ -107,6 +110,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
             usage = UsageCodec.decodeAll(p[K.usage] ?: emptySet()),
             focusOn = p[K.focusOn] ?: false,
             dockStyle = DockStyle.fromName(p[K.dockStyle]),
+            labelSize = LabelSize.fromName(p[K.labelSize]),
+            labelBold = p[K.labelBold] ?: false,
             dockOpacity = DockOpacity.coerce(p[K.dockOpacity] ?: DockOpacity.DEFAULT),
             focusBlocked = p[K.focusBlocked] ?: emptySet()
         )
@@ -177,6 +182,10 @@ class LauncherPrefs(context: Context) : SettingsStore {
         }
     }
 
+    override suspend fun setLabelSize(size: LabelSize) { store.edit { it[K.labelSize] = size.name } }
+
+    override suspend fun setLabelBold(on: Boolean) { store.edit { it[K.labelBold] = on } }
+
     override suspend fun setDockStyle(style: DockStyle) { store.edit { it[K.dockStyle] = style.name } }
 
     override suspend fun setDockOpacity(percent: Int) { store.edit { it[K.dockOpacity] = DockOpacity.coerce(percent) } }
@@ -216,6 +225,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
             it[K.hidden] = prefs.hiddenApps
             it[K.focusOn] = prefs.focusOn
             it[K.dockStyle] = prefs.dockStyle.name
+            it[K.labelSize] = prefs.labelSize.name
+            it[K.labelBold] = prefs.labelBold
             it[K.dockOpacity] = DockOpacity.coerce(prefs.dockOpacity)
             it[K.focusBlocked] = prefs.focusBlocked
             it[K.schemaVersion] = SettingsSchema.CURRENT
