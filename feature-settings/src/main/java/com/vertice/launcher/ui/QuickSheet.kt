@@ -51,6 +51,7 @@ import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.GridSpec
 import com.vertice.launcher.core.DockOpacity
 import com.vertice.launcher.core.DockStyle
+import com.vertice.launcher.core.CustomWallpaper
 import com.vertice.launcher.core.DrawerColumns
 import com.vertice.launcher.core.DrawerLayout
 import com.vertice.launcher.core.IconShape
@@ -353,6 +354,20 @@ private fun FocusTab(vm: HomeActions, ui: HomeUi) {
 }
 
 @Composable
+private fun SwatchRow(selected: Long, onPick: (Long) -> Unit) {
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        CustomWallpaper.SWATCHES.forEach { c ->
+            Box(
+                Modifier.size(36.dp).clip(CircleShape)
+                    .background(androidx.compose.ui.graphics.Color(c.toInt()))
+                    .then(if (c == CustomWallpaper.sanitize(selected)) Modifier.border(3.dp, Snow, CircleShape) else Modifier)
+                    .clickable { onPick(c) }
+            )
+        }
+    }
+}
+
+@Composable
 private fun WallpaperTab(vm: HomeActions, ui: HomeUi) {
     SectionLabel("Escolha um papel de parede")
     if (ui.wallpaper.isSystem && ui.profile == PerformanceProfile.UltraLite) {
@@ -382,7 +397,7 @@ private fun WallpaperTab(vm: HomeActions, ui: HomeUi) {
                             Text("▣", color = Muted, fontSize = 26.sp)
                         }
                     } else {
-                        WallpaperBackground(w, Modifier.fillMaxSize())
+                        WallpaperBackground(w, Modifier.fillMaxSize(), ui.customWallpaperA, ui.customWallpaperB)
                     }
                 }
                 Text(
@@ -392,6 +407,14 @@ private fun WallpaperTab(vm: HomeActions, ui: HomeUi) {
                 )
             }
         }
+    }
+    if (ui.wallpaper == Wallpaper.Custom) {
+        Spacer(Modifier.height(12.dp))
+        SectionLabel("Cor 1")
+        SwatchRow(ui.customWallpaperA) { vm.setCustomWallpaper(it, ui.customWallpaperB) }
+        Spacer(Modifier.height(8.dp))
+        SectionLabel("Cor 2")
+        SwatchRow(ui.customWallpaperB) { vm.setCustomWallpaper(ui.customWallpaperA, it) }
     }
     Text(
         "Os papéis são desenhados pelo app (sem imagens), então não pesam. " +

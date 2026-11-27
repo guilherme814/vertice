@@ -102,7 +102,7 @@ class LauncherActivity : ComponentActivity() {
             VerticeTheme(accent = ui.accent, glass = ui.glass, richGlass = ui.profile != com.vertice.launcher.core.PerformanceProfile.UltraLite) {
             androidx.compose.runtime.CompositionLocalProvider(com.vertice.launcher.ui.LocalLabelStyle provides com.vertice.launcher.ui.LabelStyleSpec(ui.labelSize, ui.labelBold)) {
                 Box(Modifier.fillMaxSize()) {
-                    if (!ui.wallpaper.isSystem) WallpaperBackground(ui.wallpaper, Modifier.fillMaxSize())
+                    if (!ui.wallpaper.isSystem) WallpaperBackground(ui.wallpaper, Modifier.fillMaxSize(), ui.customWallpaperA, ui.customWallpaperB)
                     HomeScreen(
                         vm = vm, ui = ui, onLaunch = launch,
                         moving = ui.apps.firstOrNull { it.key == nav.moving },

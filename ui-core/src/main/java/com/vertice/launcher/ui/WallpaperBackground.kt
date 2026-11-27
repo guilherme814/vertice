@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.unit.IntSize
+import com.vertice.launcher.core.CustomWallpaper
 import com.vertice.launcher.core.Wallpaper
 
 /**
@@ -20,7 +21,12 @@ import com.vertice.launcher.core.Wallpaper
  * como não há animação, a tela inicial não força nenhum redesenho aqui.
  */
 @Composable
-fun WallpaperBackground(wallpaper: Wallpaper, modifier: Modifier = Modifier) {
+fun WallpaperBackground(
+    wallpaper: Wallpaper,
+    modifier: Modifier = Modifier,
+    customA: Long = CustomWallpaper.DEFAULT_A,
+    customB: Long = CustomWallpaper.DEFAULT_B
+) {
     Box(
         modifier.drawWithCache {
             // Pintado UMA vez numa imagem de meia resolução (gradientes não perdem nada ao ampliar) e depois
@@ -30,11 +36,13 @@ fun WallpaperBackground(wallpaper: Wallpaper, modifier: Modifier = Modifier) {
             val w = sw.toFloat()
             val h = sh.toFloat()
             val longest = maxOf(w, h)
-            val base = Color(wallpaper.base)
+            val custom = wallpaper == Wallpaper.Custom
+            val base = Color(if (custom) CustomWallpaper.base(customA) else wallpaper.base)
+            val blobs = if (custom) CustomWallpaper.blobs(customA, customB) else wallpaper.blobs
             val bitmap = ImageBitmap(sw, sh)
             CanvasDrawScope().draw(this, layoutDirection, Canvas(bitmap), Size(w, h)) {
                 drawRect(base)
-                wallpaper.blobs.forEach { b ->
+                blobs.forEach { b ->
                     val c = Color(b.color)
                     drawRect(
                         Brush.radialGradient(

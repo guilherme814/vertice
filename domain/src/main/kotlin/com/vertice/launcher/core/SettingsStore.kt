@@ -39,7 +39,9 @@ data class Prefs(
     val labelBold: Boolean = false,
     val indicator: IndicatorStyle = IndicatorStyle.Pill,
     val drawerLayout: DrawerLayout = DrawerLayout.Grid,
-    val drawerColumns: Int = DrawerColumns.DEFAULT
+    val drawerColumns: Int = DrawerColumns.DEFAULT,
+    val customWallpaperA: Long = CustomWallpaper.DEFAULT_A,
+    val customWallpaperB: Long = CustomWallpaper.DEFAULT_B
 )
 
 /**
@@ -76,6 +78,7 @@ interface SettingsStore : LayoutStore {
     suspend fun setLabelBold(on: Boolean)
     suspend fun setIndicator(style: IndicatorStyle)
     suspend fun setDrawerLayout(layout: DrawerLayout)
+    suspend fun setCustomWallpaper(a: Long, b: Long)
     suspend fun setDrawerColumns(n: Int)
     suspend fun setDockOpacity(percent: Int)
     suspend fun setFocusBlocked(keys: Set<String>)

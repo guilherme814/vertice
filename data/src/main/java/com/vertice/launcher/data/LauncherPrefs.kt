@@ -7,12 +7,14 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.DockOpacity
 import com.vertice.launcher.core.DockStyle
+import com.vertice.launcher.core.CustomWallpaper
 import com.vertice.launcher.core.DrawerColumns
 import com.vertice.launcher.core.DrawerLayout
 import com.vertice.launcher.core.FolderCodec
@@ -73,6 +75,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
         val labelBold = booleanPreferencesKey("label_bold")
         val indicator = stringPreferencesKey("page_indicator")
         val drawerLayout = stringPreferencesKey("drawer_layout")
+        val customA = longPreferencesKey("custom_wallpaper_a")
+        val customB = longPreferencesKey("custom_wallpaper_b")
         val drawerColumns = intPreferencesKey("drawer_columns")
         val dockOpacity = intPreferencesKey("dock_opacity")
         val focusBlocked = stringSetPreferencesKey("focus_blocked")
@@ -120,6 +124,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
             labelBold = p[K.labelBold] ?: false,
             indicator = IndicatorStyle.fromName(p[K.indicator]),
             drawerLayout = DrawerLayout.fromName(p[K.drawerLayout]),
+            customWallpaperA = CustomWallpaper.sanitize(p[K.customA] ?: CustomWallpaper.DEFAULT_A),
+            customWallpaperB = CustomWallpaper.sanitize(p[K.customB] ?: CustomWallpaper.DEFAULT_B),
             drawerColumns = DrawerColumns.coerce(p[K.drawerColumns] ?: DrawerColumns.DEFAULT),
             dockOpacity = DockOpacity.coerce(p[K.dockOpacity] ?: DockOpacity.DEFAULT),
             focusBlocked = p[K.focusBlocked] ?: emptySet()
@@ -193,6 +199,13 @@ class LauncherPrefs(context: Context) : SettingsStore {
 
     override suspend fun setLabelSize(size: LabelSize) { store.edit { it[K.labelSize] = size.name } }
 
+    override suspend fun setCustomWallpaper(a: Long, b: Long) {
+        store.edit {
+            it[K.customA] = CustomWallpaper.sanitize(a)
+            it[K.customB] = CustomWallpaper.sanitize(b)
+        }
+    }
+
     override suspend fun setDrawerLayout(layout: DrawerLayout) { store.edit { it[K.drawerLayout] = layout.name } }
 
     override suspend fun setDrawerColumns(n: Int) { store.edit { it[K.drawerColumns] = DrawerColumns.coerce(n) } }
@@ -244,6 +257,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
             it[K.labelBold] = prefs.labelBold
             it[K.indicator] = prefs.indicator.name
             it[K.drawerLayout] = prefs.drawerLayout.name
+            it[K.customA] = CustomWallpaper.sanitize(prefs.customWallpaperA)
+            it[K.customB] = CustomWallpaper.sanitize(prefs.customWallpaperB)
             it[K.drawerColumns] = DrawerColumns.coerce(prefs.drawerColumns)
             it[K.dockOpacity] = DockOpacity.coerce(prefs.dockOpacity)
             it[K.focusBlocked] = prefs.focusBlocked

@@ -32,6 +32,8 @@ class BackupTest {
         indicator = IndicatorStyle.Bar,
         drawerLayout = DrawerLayout.List,
         drawerColumns = 5,
+        customWallpaperA = 0xFFEF4444L,
+        customWallpaperB = 0xFF22D3EEL,
         focusOn = true,
         focusBlocked = setOf("com.game/.Main", "a&b c"),
         hiddenApps = setOf("com.a/.Main", "x=y&z ç")

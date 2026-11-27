@@ -13,7 +13,7 @@ Uma fase por vez, cada uma só fecha com CI verde. Regras fixas:
 | 2 | **Rótulos** | tamanho (3 níveis) e negrito; cor e sombra ficam para a fase 20 | **feita** |
 | 3 | **Indicador de páginas** | pontos, barra ou oculto | **feita** |
 | 4 | **Gaveta** | colunas (3–6) e estilo grade/lista; fundo vidro/sólido fica para a fase 20 | **feita** |
-| 5 | **Papéis de parede** | +8 papéis novos e papel personalizado (2 cores à escolha) | — |
+| 5 | **Papéis de parede** | +8 papéis novos e papel personalizado (2 cores à escolha) | **feita** |
 | 6 | **Relógio** | mais estilos, tamanho, peso da fonte, cor, alinhamento | — |
 | 7 | **Grade fina** | espaçamento e margens; tamanho de ícone contínuo (70–130%) | — |
 | 8 | **Pastas II** | tamanho da capa, fundo, abrir em painel ou tela cheia | — |

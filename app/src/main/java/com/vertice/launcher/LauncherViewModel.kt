@@ -115,6 +115,8 @@ class LauncherViewModel(
             labelBold = p.labelBold,
             indicator = p.indicator,
             drawerLayout = p.drawerLayout,
+            customWallpaperA = p.customWallpaperA,
+            customWallpaperB = p.customWallpaperB,
             drawerColumns = p.drawerColumns,
             dockOpacity = p.dockOpacity,
             focusOn = p.focusOn,
@@ -269,6 +271,8 @@ class LauncherViewModel(
     override fun setIconShadow(on: Boolean) { viewModelScope.launch { prefs.setIconShadow(on) } }
 
     override fun setLabelSize(size: LabelSize) { viewModelScope.launch { prefs.setLabelSize(size) } }
+
+    override fun setCustomWallpaper(a: Long, b: Long) { viewModelScope.launch { prefs.setCustomWallpaper(a, b); prefs.setWallpaper(Wallpaper.Custom) } }
 
     override fun setDrawerLayout(layout: DrawerLayout) { viewModelScope.launch { prefs.setDrawerLayout(layout) } }
 

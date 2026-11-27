@@ -13,6 +13,7 @@ import com.vertice.launcher.core.GridConfig
 import com.vertice.launcher.core.DockOpacity
 import com.vertice.launcher.core.DockStyle
 import com.vertice.launcher.core.DrawerSort
+import com.vertice.launcher.core.CustomWallpaper
 import com.vertice.launcher.core.DrawerColumns
 import com.vertice.launcher.core.DrawerLayout
 import com.vertice.launcher.core.IndicatorStyle
@@ -76,7 +77,9 @@ data class HomeUi(
     val labelBold: Boolean = false,
     val indicator: IndicatorStyle = IndicatorStyle.Pill,
     val drawerLayout: DrawerLayout = DrawerLayout.Grid,
-    val drawerColumns: Int = DrawerColumns.DEFAULT
+    val drawerColumns: Int = DrawerColumns.DEFAULT,
+    val customWallpaperA: Long = CustomWallpaper.DEFAULT_A,
+    val customWallpaperB: Long = CustomWallpaper.DEFAULT_B
 ) {
     /** Com o Foco ligado, app bloqueado não abre e aparece apagado. */
     fun isLocked(key: String) = focusOn && key in focusBlocked
@@ -128,6 +131,7 @@ interface AppearanceActions {
     fun setLabelBold(on: Boolean)
     fun setIndicator(style: IndicatorStyle)
     fun setDrawerLayout(layout: DrawerLayout)
+    fun setCustomWallpaper(a: Long, b: Long)
     fun setDrawerColumns(n: Int)
     fun setDockOpacity(percent: Int)
 }

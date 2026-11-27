@@ -61,6 +61,8 @@ object BackupCodec {
         appendLine("labelBold=${p.labelBold}")
         appendLine("indicator=${p.indicator.name}")
         appendLine("drawerLayout=${p.drawerLayout.name}")
+        appendLine("customWallpaperA=${CustomWallpaper.sanitize(p.customWallpaperA)}")
+        appendLine("customWallpaperB=${CustomWallpaper.sanitize(p.customWallpaperB)}")
         appendLine("drawerColumns=${p.drawerColumns}")
         appendLine("dockOpacity=${p.dockOpacity}")
         p.focusBlocked.toSortedSet().forEach { appendLine("focusBlocked=${enc(it)}") }
@@ -108,6 +110,8 @@ object BackupCodec {
                 }
                 "layout" -> LayoutCodec.decode(value)?.let { layout += it } ?: ignored++
                 "labelSize" -> prefs = prefs.copy(labelSize = LabelSize.fromName(value))
+                "customWallpaperA" -> prefs = prefs.copy(customWallpaperA = CustomWallpaper.sanitize(value.toLongOrNull() ?: CustomWallpaper.DEFAULT_A))
+                "customWallpaperB" -> prefs = prefs.copy(customWallpaperB = CustomWallpaper.sanitize(value.toLongOrNull() ?: CustomWallpaper.DEFAULT_B))
                 "drawerLayout" -> prefs = prefs.copy(drawerLayout = DrawerLayout.fromName(value))
                 "drawerColumns" -> prefs = prefs.copy(drawerColumns = DrawerColumns.coerce(value.toIntOrNull() ?: DrawerColumns.DEFAULT))
                 "indicator" -> prefs = prefs.copy(indicator = IndicatorStyle.fromName(value))
