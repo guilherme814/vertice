@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
+import com.vertice.launcher.core.DrawerColumns
+import com.vertice.launcher.core.DrawerLayout
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
@@ -195,7 +197,7 @@ fun AppDrawer(
             Box(Modifier.fillMaxSize()) {
                 LazyVerticalGrid(
                     state = gridState,
-                    columns = GridCells.Fixed(4),
+                    columns = GridCells.Fixed(if (ui.drawerLayout == DrawerLayout.List) 1 else ui.drawerColumns),
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 24.dp, end = if (sectioned) 22.dp else 0.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -237,7 +239,8 @@ private fun DrawerTile(app: AppEntry, vm: HomeActions, ui: HomeUi, onLaunch: (Ap
     AppTile(
         app = app, vm = vm, animateLaunch = ui.profile.animations,
         showLabel = true, onLaunch = onLaunch,
-        iconSize = 52.dp * ui.iconSize.scale,
+        listRow = ui.drawerLayout == DrawerLayout.List,
+        iconSize = 52.dp * ui.iconSize.scale * (if (ui.drawerLayout == DrawerLayout.List) 0.8f else DrawerColumns.iconScale(ui.drawerColumns)),
         iconStyle = ui.iconStyle,
         locked = ui.isLocked(app.key)
     )

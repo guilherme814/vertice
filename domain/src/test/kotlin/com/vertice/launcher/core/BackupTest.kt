@@ -30,6 +30,8 @@ class BackupTest {
         labelSize = LabelSize.Large,
         labelBold = true,
         indicator = IndicatorStyle.Bar,
+        drawerLayout = DrawerLayout.List,
+        drawerColumns = 5,
         focusOn = true,
         focusBlocked = setOf("com.game/.Main", "a&b c"),
         hiddenApps = setOf("com.a/.Main", "x=y&z ç")

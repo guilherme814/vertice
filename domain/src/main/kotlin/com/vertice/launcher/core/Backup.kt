@@ -60,6 +60,8 @@ object BackupCodec {
         appendLine("labelSize=${p.labelSize.name}")
         appendLine("labelBold=${p.labelBold}")
         appendLine("indicator=${p.indicator.name}")
+        appendLine("drawerLayout=${p.drawerLayout.name}")
+        appendLine("drawerColumns=${p.drawerColumns}")
         appendLine("dockOpacity=${p.dockOpacity}")
         p.focusBlocked.toSortedSet().forEach { appendLine("focusBlocked=${enc(it)}") }
         p.folders.forEach { appendLine("folder=${FolderCodec.encode(it)}") }
@@ -106,6 +108,8 @@ object BackupCodec {
                 }
                 "layout" -> LayoutCodec.decode(value)?.let { layout += it } ?: ignored++
                 "labelSize" -> prefs = prefs.copy(labelSize = LabelSize.fromName(value))
+                "drawerLayout" -> prefs = prefs.copy(drawerLayout = DrawerLayout.fromName(value))
+                "drawerColumns" -> prefs = prefs.copy(drawerColumns = DrawerColumns.coerce(value.toIntOrNull() ?: DrawerColumns.DEFAULT))
                 "indicator" -> prefs = prefs.copy(indicator = IndicatorStyle.fromName(value))
                 "labelBold" -> prefs = prefs.copy(labelBold = value == "true")
                 "dockStyle" -> prefs = prefs.copy(dockStyle = DockStyle.fromName(value))

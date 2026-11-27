@@ -70,6 +70,8 @@ fun AppTile(
     iconSize: Dp = 52.dp,
     labelLines: Int = 2,
     iconStyle: IconStyle = IconStyle(),
+    /** Linha horizontal (ícone + nome) em vez de coluna; usada na gaveta em lista. */
+    listRow: Boolean = false,
     /** Bloqueado pelo Modo Foco: apagado e não abre. */
     locked: Boolean = false,
     /** Se informado, o menu oferece "Mover" (entra no modo de mover da Home). */
@@ -125,6 +127,21 @@ fun AppTile(
             },
         contentAlignment = Alignment.Center
     ) {
+        if (listRow) {
+            androidx.compose.foundation.layout.Row(
+                Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AppIcon(app, vm.icons, iconSize, Modifier.alpha(if (locked) 0.28f else if (app.model.suspended) 0.4f else 1f), iconStyle)
+                Spacer(Modifier.size(14.dp))
+                val ls = LocalLabelStyle.current
+                Text(
+                    app.label, color = Snow, fontSize = (ls.size.sp + 3).sp, maxLines = 1,
+                    fontWeight = if (ls.bold) FontWeight.SemiBold else FontWeight.Normal,
+                    overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)
+                )
+            }
+        } else
         Column(
             Modifier.padding(vertical = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally

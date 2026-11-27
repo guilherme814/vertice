@@ -10,6 +10,7 @@ import com.vertice.launcher.core.AppCategory
 import com.vertice.launcher.core.DockOpacity
 import com.vertice.launcher.core.DockStyle
 import com.vertice.launcher.core.DrawerSort
+import com.vertice.launcher.core.DrawerLayout
 import com.vertice.launcher.core.IndicatorStyle
 import com.vertice.launcher.core.LabelSize
 import com.vertice.launcher.core.GlassLevel
@@ -113,6 +114,8 @@ class LauncherViewModel(
             labelSize = p.labelSize,
             labelBold = p.labelBold,
             indicator = p.indicator,
+            drawerLayout = p.drawerLayout,
+            drawerColumns = p.drawerColumns,
             dockOpacity = p.dockOpacity,
             focusOn = p.focusOn,
             focusBlocked = p.focusBlocked,
@@ -266,6 +269,10 @@ class LauncherViewModel(
     override fun setIconShadow(on: Boolean) { viewModelScope.launch { prefs.setIconShadow(on) } }
 
     override fun setLabelSize(size: LabelSize) { viewModelScope.launch { prefs.setLabelSize(size) } }
+
+    override fun setDrawerLayout(layout: DrawerLayout) { viewModelScope.launch { prefs.setDrawerLayout(layout) } }
+
+    override fun setDrawerColumns(n: Int) { viewModelScope.launch { prefs.setDrawerColumns(n) } }
 
     override fun setIndicator(style: IndicatorStyle) { viewModelScope.launch { prefs.setIndicator(style) } }
 

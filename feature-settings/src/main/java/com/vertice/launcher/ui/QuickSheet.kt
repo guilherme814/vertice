@@ -51,6 +51,8 @@ import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.GridSpec
 import com.vertice.launcher.core.DockOpacity
 import com.vertice.launcher.core.DockStyle
+import com.vertice.launcher.core.DrawerColumns
+import com.vertice.launcher.core.DrawerLayout
 import com.vertice.launcher.core.IconShape
 import com.vertice.launcher.core.IndicatorStyle
 import com.vertice.launcher.core.LabelSize
@@ -287,6 +289,19 @@ private fun VisualTab(vm: HomeActions, ui: HomeUi) {
     SectionLabel("Indicador de páginas")
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         IndicatorStyle.entries.forEach { s -> CategoryChip(s.label, ui.indicator == s) { vm.setIndicator(s) } }
+    }
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Gaveta")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        DrawerLayout.entries.forEach { l -> CategoryChip(l.label, ui.drawerLayout == l) { vm.setDrawerLayout(l) } }
+    }
+    if (ui.drawerLayout == DrawerLayout.Grid) {
+        Spacer(Modifier.height(8.dp))
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            (DrawerColumns.MIN..DrawerColumns.MAX).forEach { n ->
+                CategoryChip("$n colunas", ui.drawerColumns == n) { vm.setDrawerColumns(n) }
+            }
+        }
     }
 }
 

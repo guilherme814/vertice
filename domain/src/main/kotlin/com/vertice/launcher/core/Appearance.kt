@@ -75,3 +75,25 @@ enum class IndicatorStyle(val label: String) {
         fun fromName(name: String?): IndicatorStyle = entries.firstOrNull { it.name == name } ?: Pill
     }
 }
+
+/** Gaveta em grade ou lista. */
+enum class DrawerLayout(val label: String) {
+    Grid("Grade"),
+    List("Lista");
+
+    companion object {
+        fun fromName(name: String?): DrawerLayout = entries.firstOrNull { it.name == name } ?: Grid
+    }
+}
+
+/** Colunas da gaveta em grade. */
+object DrawerColumns {
+    const val MIN = 3
+    const val MAX = 6
+    const val DEFAULT = 4
+
+    fun coerce(n: Int) = n.coerceIn(MIN, MAX)
+
+    /** Os ícones encolhem um pouco com mais colunas e crescem com menos. */
+    fun iconScale(columns: Int): Float = (DEFAULT.toFloat() / coerce(columns)).coerceIn(0.75f, 1.15f)
+}

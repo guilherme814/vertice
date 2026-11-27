@@ -37,7 +37,9 @@ data class Prefs(
     val dockOpacity: Int = DockOpacity.DEFAULT,
     val labelSize: LabelSize = LabelSize.Medium,
     val labelBold: Boolean = false,
-    val indicator: IndicatorStyle = IndicatorStyle.Pill
+    val indicator: IndicatorStyle = IndicatorStyle.Pill,
+    val drawerLayout: DrawerLayout = DrawerLayout.Grid,
+    val drawerColumns: Int = DrawerColumns.DEFAULT
 )
 
 /**
@@ -73,6 +75,8 @@ interface SettingsStore : LayoutStore {
     suspend fun setLabelSize(size: LabelSize)
     suspend fun setLabelBold(on: Boolean)
     suspend fun setIndicator(style: IndicatorStyle)
+    suspend fun setDrawerLayout(layout: DrawerLayout)
+    suspend fun setDrawerColumns(n: Int)
     suspend fun setDockOpacity(percent: Int)
     suspend fun setFocusBlocked(keys: Set<String>)
 

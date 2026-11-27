@@ -13,6 +13,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.DockOpacity
 import com.vertice.launcher.core.DockStyle
+import com.vertice.launcher.core.DrawerColumns
+import com.vertice.launcher.core.DrawerLayout
 import com.vertice.launcher.core.FolderCodec
 import com.vertice.launcher.core.IndicatorStyle
 import com.vertice.launcher.core.LabelSize
@@ -70,6 +72,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
         val labelSize = stringPreferencesKey("label_size")
         val labelBold = booleanPreferencesKey("label_bold")
         val indicator = stringPreferencesKey("page_indicator")
+        val drawerLayout = stringPreferencesKey("drawer_layout")
+        val drawerColumns = intPreferencesKey("drawer_columns")
         val dockOpacity = intPreferencesKey("dock_opacity")
         val focusBlocked = stringSetPreferencesKey("focus_blocked")
         val seeded = booleanPreferencesKey("seeded")
@@ -115,6 +119,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
             labelSize = LabelSize.fromName(p[K.labelSize]),
             labelBold = p[K.labelBold] ?: false,
             indicator = IndicatorStyle.fromName(p[K.indicator]),
+            drawerLayout = DrawerLayout.fromName(p[K.drawerLayout]),
+            drawerColumns = DrawerColumns.coerce(p[K.drawerColumns] ?: DrawerColumns.DEFAULT),
             dockOpacity = DockOpacity.coerce(p[K.dockOpacity] ?: DockOpacity.DEFAULT),
             focusBlocked = p[K.focusBlocked] ?: emptySet()
         )
@@ -187,6 +193,10 @@ class LauncherPrefs(context: Context) : SettingsStore {
 
     override suspend fun setLabelSize(size: LabelSize) { store.edit { it[K.labelSize] = size.name } }
 
+    override suspend fun setDrawerLayout(layout: DrawerLayout) { store.edit { it[K.drawerLayout] = layout.name } }
+
+    override suspend fun setDrawerColumns(n: Int) { store.edit { it[K.drawerColumns] = DrawerColumns.coerce(n) } }
+
     override suspend fun setIndicator(style: IndicatorStyle) { store.edit { it[K.indicator] = style.name } }
 
     override suspend fun setLabelBold(on: Boolean) { store.edit { it[K.labelBold] = on } }
@@ -233,6 +243,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
             it[K.labelSize] = prefs.labelSize.name
             it[K.labelBold] = prefs.labelBold
             it[K.indicator] = prefs.indicator.name
+            it[K.drawerLayout] = prefs.drawerLayout.name
+            it[K.drawerColumns] = DrawerColumns.coerce(prefs.drawerColumns)
             it[K.dockOpacity] = DockOpacity.coerce(prefs.dockOpacity)
             it[K.focusBlocked] = prefs.focusBlocked
             it[K.schemaVersion] = SettingsSchema.CURRENT
