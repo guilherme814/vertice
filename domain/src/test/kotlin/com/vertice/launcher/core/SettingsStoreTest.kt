@@ -24,6 +24,7 @@ class InMemorySettings : SettingsStore {
     }
     override suspend fun setClockStyle(style: ClockStyle) { state.value = state.value.copy(clockStyle = style) }
     override suspend fun setClockLook(color: ClockColor, scale: ClockScale, align: ClockAlign) { state.value = state.value.copy(clockColor = color, clockScale = scale, clockAlign = align) }
+    override suspend fun setGridFine(fine: GridFine) { state.value = state.value.copy(gridFine = fine.sanitized()) }
     override suspend fun setClockFormat(format: ClockFormat) { state.value = state.value.copy(clockFormat = format) }
     override suspend fun setShowDate(show: Boolean) { state.value = state.value.copy(showDate = show) }
     override suspend fun setWallpaper(w: Wallpaper) { state.value = state.value.copy(wallpaper = w) }

@@ -97,3 +97,24 @@ object DrawerColumns {
     /** Os ícones encolhem um pouco com mais colunas e crescem com menos. */
     fun iconScale(columns: Int): Float = (DEFAULT.toFloat() / coerce(columns)).coerceIn(0.75f, 1.15f)
 }
+
+/** Ajuste fino da grade: margens da Home (dp) e tamanho contínuo do ícone (% sobre o nível escolhido). */
+data class GridFine(val marginH: Int = 0, val marginV: Int = 0, val iconPercent: Int = 100) {
+    fun sanitized() = GridFine(
+        marginH.coerceIn(MARGIN_H_MIN, MARGIN_H_MAX),
+        marginV.coerceIn(MARGIN_V_MIN, MARGIN_V_MAX),
+        iconPercent.coerceIn(ICON_MIN, ICON_MAX)
+    )
+
+    /** Escala final do ícone: nível (Pequeno/Médio/Grande) × ajuste fino. */
+    fun iconScale(size: IconSize): Float = size.scale * sanitized().iconPercent / 100f
+
+    companion object {
+        const val MARGIN_H_MIN = 0
+        const val MARGIN_H_MAX = 32
+        const val MARGIN_V_MIN = 0
+        const val MARGIN_V_MAX = 48
+        const val ICON_MIN = 70
+        const val ICON_MAX = 130
+    }
+}

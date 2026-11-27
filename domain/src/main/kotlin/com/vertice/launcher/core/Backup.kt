@@ -41,6 +41,11 @@ object BackupCodec {
         p.profile?.let { appendLine("profile=${it.name}") }
         appendLine("clockStyle=${p.clockStyle.name}")
         appendLine("clockFormat=${p.clockFormat.name}")
+        p.gridFine.sanitized().let {
+            appendLine("gridMarginH=${it.marginH}")
+            appendLine("gridMarginV=${it.marginV}")
+            appendLine("iconPercent=${it.iconPercent}")
+        }
         appendLine("clockColor=${p.clockColor.name}")
         appendLine("clockScale=${p.clockScale.name}")
         appendLine("clockAlign=${p.clockAlign.name}")
@@ -94,6 +99,9 @@ object BackupCodec {
             when (key) {
                 "profile" -> PerformanceProfile.fromName(value)?.let { prefs = prefs.copy(profile = it) } ?: ignored++
                 "clockStyle" -> prefs = prefs.copy(clockStyle = ClockStyle.fromName(value))
+                "gridMarginH" -> prefs = prefs.copy(gridFine = prefs.gridFine.copy(marginH = value.toIntOrNull() ?: 0).sanitized())
+                "gridMarginV" -> prefs = prefs.copy(gridFine = prefs.gridFine.copy(marginV = value.toIntOrNull() ?: 0).sanitized())
+                "iconPercent" -> prefs = prefs.copy(gridFine = prefs.gridFine.copy(iconPercent = value.toIntOrNull() ?: 100).sanitized())
                 "clockColor" -> prefs = prefs.copy(clockColor = ClockColor.fromName(value))
                 "clockScale" -> prefs = prefs.copy(clockScale = ClockScale.fromName(value))
                 "clockAlign" -> prefs = prefs.copy(clockAlign = ClockAlign.fromName(value))

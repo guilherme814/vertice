@@ -240,7 +240,7 @@ private fun DrawerTile(app: AppEntry, vm: HomeActions, ui: HomeUi, onLaunch: (Ap
         app = app, vm = vm, animateLaunch = ui.profile.animations,
         showLabel = true, onLaunch = onLaunch,
         listRow = ui.drawerLayout == DrawerLayout.List,
-        iconSize = 52.dp * ui.iconSize.scale * (if (ui.drawerLayout == DrawerLayout.List) 0.8f else DrawerColumns.iconScale(ui.drawerColumns)),
+        iconSize = 52.dp * ui.iconScale * (if (ui.drawerLayout == DrawerLayout.List) 0.8f else DrawerColumns.iconScale(ui.drawerColumns)),
         iconStyle = ui.iconStyle,
         locked = ui.isLocked(app.key)
     )

@@ -270,7 +270,9 @@ fun HomeScreen(
                 } ?: false
                 HorizontalPager(
                     state = pager, userScrollEnabled = drag == null,
-                    modifier = Modifier.weight(1f).fillMaxWidth().onGloballyPositioned { pagerRect = it.boundsInRoot() }
+                    modifier = Modifier.weight(1f).fillMaxWidth()
+                        .padding(horizontal = ui.gridFine.marginH.dp, vertical = ui.gridFine.marginV.dp)
+                        .onGloballyPositioned { pagerRect = it.boundsInRoot() }
                 ) { page ->
                     HomeGridPage(
                         page = page, ui = ui, vm = vm, moving = moving,
@@ -340,7 +342,7 @@ fun HomeScreen(
                         AppTile(
                             app = app, vm = vm, animateLaunch = ui.profile.animations,
                             showLabel = false, onLaunch = onLaunch,
-                            iconSize = (52.dp * ui.iconSize.scale).coerceAtMost(60.dp),
+                            iconSize = (52.dp * ui.iconScale).coerceAtMost(60.dp),
                             iconStyle = ui.iconStyle,
                             modifier = Modifier
                                 .alpha(if (drag?.takeIf { it.moved }?.key == app.key) 0.25f else 1f)
@@ -375,7 +377,7 @@ fun HomeScreen(
 
         // Ícone que acompanha o dedo.
         drag?.takeIf { it.moved }?.let { d ->
-            val size = 52.dp * ui.iconSize.scale
+            val size = 52.dp * ui.iconScale
             val half = with(density) { size.toPx() / 2 }
             Box(
                 Modifier
@@ -434,7 +436,7 @@ private fun HomeGridPage(
     // O ícone nunca passa do que a célula comporta (grades densas ficam menores sozinhas).
     val labelH = if (ui.showLabels) (ui.labelSize.lineSp + 3).dp else 0.dp
     val iconSize = minOf(
-        48.dp * ui.iconSize.scale,
+        48.dp * ui.iconScale,
         maxHeight / grid.rows - labelH - 8.dp,
         maxWidth / grid.columns - 12.dp
     ).coerceAtLeast(28.dp)

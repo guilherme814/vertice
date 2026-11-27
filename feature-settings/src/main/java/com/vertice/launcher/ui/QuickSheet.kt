@@ -57,6 +57,7 @@ import com.vertice.launcher.core.ClockScale
 import com.vertice.launcher.core.CustomWallpaper
 import com.vertice.launcher.core.DrawerColumns
 import com.vertice.launcher.core.DrawerLayout
+import com.vertice.launcher.core.GridFine
 import com.vertice.launcher.core.IconShape
 import com.vertice.launcher.core.IndicatorStyle
 import com.vertice.launcher.core.LabelSize
@@ -139,6 +140,20 @@ fun QuickSheet(
     }
 }
 
+/** Slider inteiro que só grava ao soltar o dedo (arrastar não escreve no disco a cada pixel). */
+@Composable
+private fun FineSlider(label: String, value: Int, min: Int, max: Int, onDone: (Int) -> Unit) {
+    var live by remember(value) { mutableStateOf(value.toFloat()) }
+    SectionLabel(label)
+    Slider(
+        value = live,
+        onValueChange = { live = it },
+        onValueChangeFinished = { onDone(live.roundToInt()) },
+        valueRange = min.toFloat()..max.toFloat(),
+        colors = SliderDefaults.colors(thumbColor = Mint, activeTrackColor = Mint, inactiveTrackColor = PanelSoft)
+    )
+}
+
 @Composable
 private fun SectionLabel(text: String) {
     Text(text, color = Muted, fontSize = 12.sp, modifier = Modifier.padding(bottom = 8.dp, top = 4.dp))
@@ -215,6 +230,16 @@ private fun GridTab(vm: HomeActions, ui: HomeUi) {
     SectionLabel("Tamanho dos ícones")
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         IconSize.entries.forEach { s -> CategoryChip(s.label, ui.iconSize == s) { vm.setIconSize(s) } }
+    }
+    Spacer(Modifier.height(10.dp))
+    FineSlider("Ajuste fino do ícone · ${ui.gridFine.iconPercent}%", ui.gridFine.iconPercent, GridFine.ICON_MIN, GridFine.ICON_MAX) {
+        vm.setGridFine(ui.gridFine.copy(iconPercent = it))
+    }
+    FineSlider("Margem lateral · ${ui.gridFine.marginH} dp", ui.gridFine.marginH, GridFine.MARGIN_H_MIN, GridFine.MARGIN_H_MAX) {
+        vm.setGridFine(ui.gridFine.copy(marginH = it))
+    }
+    FineSlider("Margem vertical · ${ui.gridFine.marginV} dp", ui.gridFine.marginV, GridFine.MARGIN_V_MIN, GridFine.MARGIN_V_MAX) {
+        vm.setGridFine(ui.gridFine.copy(marginV = it))
     }
     Spacer(Modifier.height(10.dp))
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {

@@ -70,11 +70,11 @@ class LauncherActivity : ComponentActivity() {
 
             // Depois do primeiro quadro, aquece os primeiros ícones da gaveta (mesmo tamanho que ela usa).
             val density = androidx.compose.ui.platform.LocalDensity.current
-            val warmKey = Triple(ui.apps.size, ui.iconStyle.shape, ui.iconSize)
+            val warmKey = Triple(ui.apps.size, ui.iconStyle.shape, ui.iconScale)
             LaunchedEffect(warmKey, ui.loading) {
                 if (ui.loading) return@LaunchedEffect
                 kotlinx.coroutines.delay(400)
-                val px = with(density) { (52.dp * ui.iconSize.scale).toPx() }.roundToInt()
+                val px = with(density) { (52.dp * ui.iconScale).toPx() }.roundToInt()
                 val byKey = ui.apps.associateBy { it.key }
                 val first = com.vertice.launcher.core.DrawerList.sorted(ui.apps.map { it.model }, ui.drawerSort, ui.drawerHidden, ui.usage)
                     .mapNotNull { byKey[it.key] }

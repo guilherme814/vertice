@@ -21,6 +21,7 @@ import com.vertice.launcher.core.CustomWallpaper
 import com.vertice.launcher.core.DrawerColumns
 import com.vertice.launcher.core.DrawerLayout
 import com.vertice.launcher.core.FolderCodec
+import com.vertice.launcher.core.GridFine
 import com.vertice.launcher.core.IndicatorStyle
 import com.vertice.launcher.core.LabelSize
 import com.vertice.launcher.core.UsageCodec
@@ -80,6 +81,9 @@ class LauncherPrefs(context: Context) : SettingsStore {
         val drawerLayout = stringPreferencesKey("drawer_layout")
         val customA = longPreferencesKey("custom_wallpaper_a")
         val clockColor = stringPreferencesKey("clock_color")
+        val gridMarginH = intPreferencesKey("grid_margin_h")
+        val gridMarginV = intPreferencesKey("grid_margin_v")
+        val iconPercent = intPreferencesKey("icon_percent")
         val clockScale = stringPreferencesKey("clock_scale")
         val clockAlign = stringPreferencesKey("clock_align")
         val customB = longPreferencesKey("custom_wallpaper_b")
@@ -130,6 +134,7 @@ class LauncherPrefs(context: Context) : SettingsStore {
             labelBold = p[K.labelBold] ?: false,
             indicator = IndicatorStyle.fromName(p[K.indicator]),
             drawerLayout = DrawerLayout.fromName(p[K.drawerLayout]),
+            gridFine = GridFine(p[K.gridMarginH] ?: 0, p[K.gridMarginV] ?: 0, p[K.iconPercent] ?: 100).sanitized(),
             clockColor = ClockColor.fromName(p[K.clockColor]),
             clockScale = ClockScale.fromName(p[K.clockScale]),
             clockAlign = ClockAlign.fromName(p[K.clockAlign]),
@@ -215,6 +220,15 @@ class LauncherPrefs(context: Context) : SettingsStore {
         }
     }
 
+    override suspend fun setGridFine(fine: GridFine) {
+        val f = fine.sanitized()
+        store.edit {
+            it[K.gridMarginH] = f.marginH
+            it[K.gridMarginV] = f.marginV
+            it[K.iconPercent] = f.iconPercent
+        }
+    }
+
     override suspend fun setClockLook(color: ClockColor, scale: ClockScale, align: ClockAlign) {
         store.edit {
             it[K.clockColor] = color.name
@@ -274,6 +288,11 @@ class LauncherPrefs(context: Context) : SettingsStore {
             it[K.labelBold] = prefs.labelBold
             it[K.indicator] = prefs.indicator.name
             it[K.drawerLayout] = prefs.drawerLayout.name
+            prefs.gridFine.sanitized().let { f ->
+                it[K.gridMarginH] = f.marginH
+                it[K.gridMarginV] = f.marginV
+                it[K.iconPercent] = f.iconPercent
+            }
             it[K.clockColor] = prefs.clockColor.name
             it[K.clockScale] = prefs.clockScale.name
             it[K.clockAlign] = prefs.clockAlign.name

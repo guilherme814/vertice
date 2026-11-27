@@ -44,7 +44,8 @@ data class Prefs(
     val customWallpaperB: Long = CustomWallpaper.DEFAULT_B,
     val clockColor: ClockColor = ClockColor.White,
     val clockScale: ClockScale = ClockScale.Medium,
-    val clockAlign: ClockAlign = ClockAlign.Start
+    val clockAlign: ClockAlign = ClockAlign.Start,
+    val gridFine: GridFine = GridFine()
 )
 
 /**
@@ -63,6 +64,7 @@ interface SettingsStore : LayoutStore {
 
     suspend fun setClockStyle(style: ClockStyle)
     suspend fun setClockFormat(format: ClockFormat)
+    suspend fun setGridFine(fine: GridFine)
     suspend fun setClockLook(color: ClockColor, scale: ClockScale, align: ClockAlign)
     suspend fun setShowDate(show: Boolean)
     suspend fun setWallpaper(w: Wallpaper)

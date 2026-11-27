@@ -32,6 +32,7 @@ class BackupTest {
         indicator = IndicatorStyle.Bar,
         drawerLayout = DrawerLayout.List,
         drawerColumns = 5,
+        gridFine = GridFine(marginH = 12, marginV = 20, iconPercent = 115),
         clockColor = ClockColor.Accent,
         clockScale = ClockScale.Large,
         clockAlign = ClockAlign.Center,

@@ -15,7 +15,7 @@ Uma fase por vez, cada uma só fecha com CI verde. Regras fixas:
 | 4 | **Gaveta** | colunas (3–6) e estilo grade/lista; fundo vidro/sólido fica para a fase 20 | **feita** |
 | 5 | **Papéis de parede** | +8 papéis novos e papel personalizado (2 cores à escolha) | **feita** |
 | 6 | **Relógio** | cor (branco/destaque), tamanho (3 níveis) e alinhamento; novos estilos e peso da fonte ficam para a fase 20 | **feita** |
-| 7 | **Grade fina** | espaçamento e margens; tamanho de ícone contínuo (70–130%) | — |
+| 7 | **Grade fina** | margens lateral e vertical; ajuste contínuo do ícone (70–130%) | **feita** |
 | 8 | **Pastas II** | tamanho da capa, fundo, abrir em painel ou tela cheia | — |
 | 9 | **Temas completos** | claro/escuro/automático e perfis de tema salvos (aplicar com um toque) | — |
 | 10 | **Cores avançadas** | cor de destaque personalizada (hex/matiz), cor do vidro, contraste | — |

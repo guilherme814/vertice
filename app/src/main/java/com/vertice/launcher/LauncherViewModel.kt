@@ -30,6 +30,7 @@ import com.vertice.launcher.core.HomeState
 import com.vertice.launcher.core.GridConfig
 import com.vertice.launcher.core.GridSpec
 import com.vertice.launcher.core.IconShape
+import com.vertice.launcher.core.GridFine
 import com.vertice.launcher.core.IconSize
 import com.vertice.launcher.core.IconStyle
 import com.vertice.launcher.core.LayoutItem
@@ -118,6 +119,7 @@ class LauncherViewModel(
             labelBold = p.labelBold,
             indicator = p.indicator,
             drawerLayout = p.drawerLayout,
+            gridFine = p.gridFine,
             clockColor = p.clockColor,
             clockScale = p.clockScale,
             clockAlign = p.clockAlign,
@@ -279,6 +281,8 @@ class LauncherViewModel(
     override fun setLabelSize(size: LabelSize) { viewModelScope.launch { prefs.setLabelSize(size) } }
 
     override fun setCustomWallpaper(a: Long, b: Long) { viewModelScope.launch { prefs.setCustomWallpaper(a, b); prefs.setWallpaper(Wallpaper.Custom) } }
+
+    override fun setGridFine(fine: GridFine) { viewModelScope.launch { prefs.setGridFine(fine) } }
 
     override fun setClockLook(color: ClockColor, scale: ClockScale, align: ClockAlign) { viewModelScope.launch { prefs.setClockLook(color, scale, align) } }
 
