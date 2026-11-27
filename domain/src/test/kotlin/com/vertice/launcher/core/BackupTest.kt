@@ -29,6 +29,7 @@ class BackupTest {
         dockOpacity = 55,
         labelSize = LabelSize.Large,
         labelBold = true,
+        indicator = IndicatorStyle.Bar,
         focusOn = true,
         focusBlocked = setOf("com.game/.Main", "a&b c"),
         hiddenApps = setOf("com.a/.Main", "x=y&z ç")

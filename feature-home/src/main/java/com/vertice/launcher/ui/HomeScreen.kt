@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.IntOffset
 import com.vertice.launcher.core.DockOpacity
 import com.vertice.launcher.core.DockStyle
 import com.vertice.launcher.core.DragGeometry
+import com.vertice.launcher.core.IndicatorStyle
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 import com.vertice.launcher.HomeUi
@@ -267,13 +268,18 @@ fun HomeScreen(
                         onLaunch = onLaunch
                     )
                 }
-                if (pages > 1) {
+                if (pages > 1 && ui.indicator != IndicatorStyle.Hidden) {
                     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.Center) {
                         repeat(pages) { i ->
                             val active = i == pager.currentPage
+                            val (w, h) = when (ui.indicator) {
+                                IndicatorStyle.Pill -> (if (active) 16.dp else 6.dp) to 6.dp
+                                IndicatorStyle.Dots -> 6.dp to 6.dp
+                                else -> 22.dp to 3.dp // Barra: um segmento por página
+                            }
                             Box(
                                 Modifier.padding(horizontal = 3.dp)
-                                    .size(width = if (active) 16.dp else 6.dp, height = 6.dp)
+                                    .size(width = w, height = h)
                                     .clip(CircleShape)
                                     .background(if (active) Mint else Muted.copy(alpha = 0.5f))
                             )

@@ -14,6 +14,7 @@ import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.DockOpacity
 import com.vertice.launcher.core.DockStyle
 import com.vertice.launcher.core.FolderCodec
+import com.vertice.launcher.core.IndicatorStyle
 import com.vertice.launcher.core.LabelSize
 import com.vertice.launcher.core.UsageCodec
 import com.vertice.launcher.core.UsageOps
@@ -68,6 +69,7 @@ class LauncherPrefs(context: Context) : SettingsStore {
         val dockStyle = stringPreferencesKey("dock_style")
         val labelSize = stringPreferencesKey("label_size")
         val labelBold = booleanPreferencesKey("label_bold")
+        val indicator = stringPreferencesKey("page_indicator")
         val dockOpacity = intPreferencesKey("dock_opacity")
         val focusBlocked = stringSetPreferencesKey("focus_blocked")
         val seeded = booleanPreferencesKey("seeded")
@@ -112,6 +114,7 @@ class LauncherPrefs(context: Context) : SettingsStore {
             dockStyle = DockStyle.fromName(p[K.dockStyle]),
             labelSize = LabelSize.fromName(p[K.labelSize]),
             labelBold = p[K.labelBold] ?: false,
+            indicator = IndicatorStyle.fromName(p[K.indicator]),
             dockOpacity = DockOpacity.coerce(p[K.dockOpacity] ?: DockOpacity.DEFAULT),
             focusBlocked = p[K.focusBlocked] ?: emptySet()
         )
@@ -184,6 +187,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
 
     override suspend fun setLabelSize(size: LabelSize) { store.edit { it[K.labelSize] = size.name } }
 
+    override suspend fun setIndicator(style: IndicatorStyle) { store.edit { it[K.indicator] = style.name } }
+
     override suspend fun setLabelBold(on: Boolean) { store.edit { it[K.labelBold] = on } }
 
     override suspend fun setDockStyle(style: DockStyle) { store.edit { it[K.dockStyle] = style.name } }
@@ -227,6 +232,7 @@ class LauncherPrefs(context: Context) : SettingsStore {
             it[K.dockStyle] = prefs.dockStyle.name
             it[K.labelSize] = prefs.labelSize.name
             it[K.labelBold] = prefs.labelBold
+            it[K.indicator] = prefs.indicator.name
             it[K.dockOpacity] = DockOpacity.coerce(prefs.dockOpacity)
             it[K.focusBlocked] = prefs.focusBlocked
             it[K.schemaVersion] = SettingsSchema.CURRENT

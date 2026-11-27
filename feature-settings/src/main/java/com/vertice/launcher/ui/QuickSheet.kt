@@ -52,6 +52,7 @@ import com.vertice.launcher.core.GridSpec
 import com.vertice.launcher.core.DockOpacity
 import com.vertice.launcher.core.DockStyle
 import com.vertice.launcher.core.IconShape
+import com.vertice.launcher.core.IndicatorStyle
 import com.vertice.launcher.core.LabelSize
 import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.core.IconSize
@@ -282,6 +283,11 @@ private fun VisualTab(vm: HomeActions, ui: HomeUi) {
     }
     Spacer(Modifier.height(14.dp))
     LabelsSection(vm, ui)
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Indicador de páginas")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        IndicatorStyle.entries.forEach { s -> CategoryChip(s.label, ui.indicator == s) { vm.setIndicator(s) } }
+    }
 }
 
 @Composable

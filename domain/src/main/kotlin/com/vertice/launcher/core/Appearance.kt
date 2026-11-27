@@ -63,3 +63,15 @@ enum class LabelSize(val label: String, val sp: Int, val lineSp: Int) {
         fun fromName(name: String?): LabelSize = entries.firstOrNull { it.name == name } ?: Medium
     }
 }
+
+/** Indicador de páginas da Home. */
+enum class IndicatorStyle(val label: String) {
+    Pill("Pílula"),
+    Dots("Pontos"),
+    Bar("Barra"),
+    Hidden("Oculto");
+
+    companion object {
+        fun fromName(name: String?): IndicatorStyle = entries.firstOrNull { it.name == name } ?: Pill
+    }
+}
