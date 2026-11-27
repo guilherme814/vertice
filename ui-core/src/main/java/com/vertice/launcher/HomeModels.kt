@@ -10,6 +10,8 @@ import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.GridConfig
+import com.vertice.launcher.core.DockOpacity
+import com.vertice.launcher.core.DockStyle
 import com.vertice.launcher.core.DrawerSort
 import com.vertice.launcher.core.IconShape
 import com.vertice.launcher.core.IconSize
@@ -63,7 +65,9 @@ data class HomeUi(
     /** Os 5 apps mais abertos (sem ocultos nem bloqueados pelo Foco). */
     val mostUsed: List<AppEntry> = emptyList(),
     val focusOn: Boolean = false,
-    val focusBlocked: Set<String> = emptySet()
+    val focusBlocked: Set<String> = emptySet(),
+    val dockStyle: DockStyle = DockStyle.Glass,
+    val dockOpacity: Int = DockOpacity.DEFAULT
 ) {
     /** Com o Foco ligado, app bloqueado não abre e aparece apagado. */
     fun isLocked(key: String) = focusOn && key in focusBlocked
@@ -110,6 +114,8 @@ interface AppearanceActions {
     fun setGlass(glass: GlassLevel)
     fun setIconShape(shape: IconShape)
     fun setIconShadow(on: Boolean)
+    fun setDockStyle(style: DockStyle)
+    fun setDockOpacity(percent: Int)
 }
 
 /** Modo Foco: bloqueia apps que distraem enquanto estiver ligado. */

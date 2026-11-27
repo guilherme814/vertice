@@ -9,7 +9,7 @@ Uma fase por vez, cada uma só fecha com CI verde. Regras fixas:
 
 | # | Fase | Entrega | Estado |
 |---|---|---|---|
-| 1 | **Dock** | estilo (vidro, compacto, sem fundo) e opacidade | — |
+| 1 | **Dock** | estilo (vidro, compacto, sem fundo) e opacidade | **feita** |
 | 2 | **Rótulos** | tamanho, cor (branco/destaque), sombra, 1 ou 2 linhas | — |
 | 3 | **Indicador de páginas** | pontos, barra ou oculto | — |
 | 4 | **Gaveta** | colunas (3–6), estilo grade/lista, fundo vidro/sólido | — |

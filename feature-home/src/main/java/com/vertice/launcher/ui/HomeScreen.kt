@@ -62,6 +62,8 @@ import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.unit.IntOffset
+import com.vertice.launcher.core.DockOpacity
+import com.vertice.launcher.core.DockStyle
 import com.vertice.launcher.core.DragGeometry
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
@@ -288,11 +290,20 @@ fun HomeScreen(
 
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Row(
-                    Modifier.fillMaxWidth()
+                    Modifier
+                        .then(if (ui.dockStyle == DockStyle.Compact) Modifier.padding(horizontal = 28.dp) else Modifier)
+                        .fillMaxWidth()
                         .onGloballyPositioned { dockRect = it.boundsInRoot() }
-                        .liquidGlass(
-                            RoundedCornerShape(Radius.dock),
-                            alpha = if (drag?.moved == true && dockRect.contains(drag!!.pos)) 0.9f else Glass.panel
+                        .then(
+                            run {
+                                val hovering = drag?.moved == true && dockRect.contains(drag!!.pos)
+                                // Sem fundo: o vidro só aparece enquanto se arrasta um app sobre o dock.
+                                if (ui.dockStyle == DockStyle.Flat && !hovering) Modifier
+                                else Modifier.liquidGlass(
+                                    RoundedCornerShape(Radius.dock),
+                                    alpha = if (hovering) 0.9f else DockOpacity.alpha(Glass.panel, ui.dockOpacity)
+                                )
+                            }
                         )
                         .padding(horizontal = Space.s, vertical = Space.xs + 2.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,

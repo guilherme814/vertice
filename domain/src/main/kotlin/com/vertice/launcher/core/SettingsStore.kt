@@ -32,7 +32,9 @@ data class Prefs(
     val usage: Map<String, Usage> = emptyMap(),
     /** Modo Foco: com ele ligado, os apps de [focusBlocked] somem da gaveta, ficam apagados e não abrem. */
     val focusOn: Boolean = false,
-    val focusBlocked: Set<String> = emptySet()
+    val focusBlocked: Set<String> = emptySet(),
+    val dockStyle: DockStyle = DockStyle.Glass,
+    val dockOpacity: Int = DockOpacity.DEFAULT
 )
 
 /**
@@ -64,6 +66,8 @@ interface SettingsStore : LayoutStore {
     suspend fun setHidden(key: String, hidden: Boolean)
     suspend fun recordUse(key: String, nowMs: Long)
     suspend fun setFocus(on: Boolean)
+    suspend fun setDockStyle(style: DockStyle)
+    suspend fun setDockOpacity(percent: Int)
     suspend fun setFocusBlocked(keys: Set<String>)
 
     /** Substitui todas as preferências (restauração de backup). Grava o formato atual. */

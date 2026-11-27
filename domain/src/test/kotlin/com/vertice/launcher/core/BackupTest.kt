@@ -25,6 +25,8 @@ class BackupTest {
         iconShape = IconShape.Squircle,
         iconShadow = true,
         drawerSort = DrawerSort.Recent,
+        dockStyle = DockStyle.Compact,
+        dockOpacity = 55,
         focusOn = true,
         focusBlocked = setOf("com.game/.Main", "a&b c"),
         hiddenApps = setOf("com.a/.Main", "x=y&z ç")

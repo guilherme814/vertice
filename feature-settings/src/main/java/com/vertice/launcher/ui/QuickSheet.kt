@@ -21,6 +21,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import kotlin.math.roundToInt
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -46,6 +49,8 @@ import com.vertice.launcher.core.Accent
 import com.vertice.launcher.core.ClockStyle
 import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.GridSpec
+import com.vertice.launcher.core.DockOpacity
+import com.vertice.launcher.core.DockStyle
 import com.vertice.launcher.core.IconShape
 import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.core.IconSize
@@ -55,6 +60,7 @@ enum class SheetTab(val label: String) {
     Wallpaper("Papel de parede"),
     Theme("Tema"),
     Grid("Grade e ícones"),
+    Visual("Visual"),
     Clock("Relógio"),
     Focus("Foco"),
     Backup("Backup"),
@@ -114,6 +120,7 @@ fun QuickSheet(
                     SheetTab.Wallpaper -> WallpaperTab(vm, ui)
                     SheetTab.Theme -> ThemeTab(vm, ui)
                     SheetTab.Grid -> GridTab(vm, ui)
+                    SheetTab.Visual -> VisualTab(vm, ui)
                     SheetTab.Clock -> ClockTab(vm, ui)
                     SheetTab.Focus -> FocusTab(vm, ui)
                     SheetTab.Backup -> BackupTab(vm)
@@ -250,6 +257,28 @@ private fun ClockTab(vm: HomeActions, ui: HomeUi) {
         "Toque no relógio para abrir os alarmes e na data para abrir a agenda.",
         color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp)
     )
+}
+
+/** Visual da Home: dock (estilo e opacidade). Próximas fases acrescentam rótulos, indicador e gaveta. */
+@Composable
+private fun VisualTab(vm: HomeActions, ui: HomeUi) {
+    SectionLabel("Estilo do dock")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        DockStyle.entries.forEach { s -> CategoryChip(s.label, ui.dockStyle == s) { vm.setDockStyle(s) } }
+    }
+    if (ui.dockStyle != DockStyle.Flat) {
+        Spacer(Modifier.height(14.dp))
+        SectionLabel("Opacidade do dock · ${ui.dockOpacity}%")
+        // Só grava ao soltar o dedo: arrastar o controle não escreve no disco a cada pixel.
+        var live by remember(ui.dockOpacity) { mutableStateOf(ui.dockOpacity.toFloat()) }
+        Slider(
+            value = live,
+            onValueChange = { live = it },
+            onValueChangeFinished = { vm.setDockOpacity(live.roundToInt()) },
+            valueRange = DockOpacity.MIN.toFloat()..DockOpacity.MAX.toFloat(),
+            colors = SliderDefaults.colors(thumbColor = Mint, activeTrackColor = Mint, inactiveTrackColor = PanelSoft)
+        )
+    }
 }
 
 @Composable

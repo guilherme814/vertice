@@ -7,6 +7,8 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewModelScope
 import com.vertice.launcher.core.Accent
 import com.vertice.launcher.core.AppCategory
+import com.vertice.launcher.core.DockOpacity
+import com.vertice.launcher.core.DockStyle
 import com.vertice.launcher.core.DrawerSort
 import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.BackupCodec
@@ -105,6 +107,8 @@ class LauncherViewModel(
                 apps.map { it.key }.toSet() - p.hiddenApps - (if (p.focusOn) p.focusBlocked else emptySet()),
                 5
             ).mapNotNull { byKey[it] },
+            dockStyle = p.dockStyle,
+            dockOpacity = p.dockOpacity,
             focusOn = p.focusOn,
             focusBlocked = p.focusBlocked,
             iconStyle = IconStyle(p.iconShape, p.iconShadow && (p.profile ?: recommended) != PerformanceProfile.UltraLite)
@@ -255,6 +259,10 @@ class LauncherViewModel(
     override fun setIconShape(shape: IconShape) { viewModelScope.launch { prefs.setIconShape(shape) } }
 
     override fun setIconShadow(on: Boolean) { viewModelScope.launch { prefs.setIconShadow(on) } }
+
+    override fun setDockStyle(style: DockStyle) { viewModelScope.launch { prefs.setDockStyle(style) } }
+
+    override fun setDockOpacity(percent: Int) { viewModelScope.launch { prefs.setDockOpacity(percent) } }
 
     override fun setDrawerSort(sort: DrawerSort) { viewModelScope.launch { prefs.setDrawerSort(sort) } }
 

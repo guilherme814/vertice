@@ -29,3 +29,26 @@ enum class IconShape(val label: String, val percent: Int?) {
 
 /** Estilo dos ícones em toda a launcher (Home, dock, gaveta). */
 data class IconStyle(val shape: IconShape = IconShape.Original, val shadow: Boolean = false)
+
+/** Aparência do dock: vidro de ponta a ponta, vidro compacto (mais estreito) ou sem fundo. */
+enum class DockStyle(val label: String) {
+    Glass("Vidro"),
+    Compact("Compacto"),
+    Flat("Sem fundo");
+
+    companion object {
+        fun fromName(name: String?): DockStyle = entries.firstOrNull { it.name == name } ?: Glass
+    }
+}
+
+/** Opacidade do dock em % do vidro escolhido (100 = como o nível de vidro define). */
+object DockOpacity {
+    const val MIN = 20
+    const val MAX = 100
+    const val DEFAULT = 100
+
+    fun coerce(percent: Int) = percent.coerceIn(MIN, MAX)
+
+    /** Opacidade final do corpo do vidro dado o [base] do nível de vidro. */
+    fun alpha(base: Float, percent: Int): Float = (base * coerce(percent) / 100f).coerceIn(0f, 1f)
+}

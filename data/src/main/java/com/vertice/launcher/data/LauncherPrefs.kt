@@ -11,6 +11,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.vertice.launcher.core.ClockFormat
+import com.vertice.launcher.core.DockOpacity
+import com.vertice.launcher.core.DockStyle
 import com.vertice.launcher.core.FolderCodec
 import com.vertice.launcher.core.UsageCodec
 import com.vertice.launcher.core.UsageOps
@@ -62,6 +64,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
         val hidden = stringSetPreferencesKey("hidden_apps")
         val usage = stringSetPreferencesKey("usage_v1")
         val focusOn = booleanPreferencesKey("focus_on")
+        val dockStyle = stringPreferencesKey("dock_style")
+        val dockOpacity = intPreferencesKey("dock_opacity")
         val focusBlocked = stringSetPreferencesKey("focus_blocked")
         val seeded = booleanPreferencesKey("seeded")
         val categories = stringSetPreferencesKey("category_overrides")
@@ -102,6 +106,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
             hiddenApps = p[K.hidden] ?: emptySet(),
             usage = UsageCodec.decodeAll(p[K.usage] ?: emptySet()),
             focusOn = p[K.focusOn] ?: false,
+            dockStyle = DockStyle.fromName(p[K.dockStyle]),
+            dockOpacity = DockOpacity.coerce(p[K.dockOpacity] ?: DockOpacity.DEFAULT),
             focusBlocked = p[K.focusBlocked] ?: emptySet()
         )
     }.distinctUntilChanged()
@@ -171,6 +177,10 @@ class LauncherPrefs(context: Context) : SettingsStore {
         }
     }
 
+    override suspend fun setDockStyle(style: DockStyle) { store.edit { it[K.dockStyle] = style.name } }
+
+    override suspend fun setDockOpacity(percent: Int) { store.edit { it[K.dockOpacity] = DockOpacity.coerce(percent) } }
+
     override suspend fun setFocus(on: Boolean) { store.edit { it[K.focusOn] = on } }
 
     override suspend fun setFocusBlocked(keys: Set<String>) { store.edit { it[K.focusBlocked] = keys } }
@@ -205,6 +215,8 @@ class LauncherPrefs(context: Context) : SettingsStore {
             it[K.drawerSort] = prefs.drawerSort.name
             it[K.hidden] = prefs.hiddenApps
             it[K.focusOn] = prefs.focusOn
+            it[K.dockStyle] = prefs.dockStyle.name
+            it[K.dockOpacity] = DockOpacity.coerce(prefs.dockOpacity)
             it[K.focusBlocked] = prefs.focusBlocked
             it[K.schemaVersion] = SettingsSchema.CURRENT
             it[K.seeded] = true
