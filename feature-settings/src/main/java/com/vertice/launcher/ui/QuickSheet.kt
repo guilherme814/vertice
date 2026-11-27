@@ -51,6 +51,9 @@ import com.vertice.launcher.core.GlassLevel
 import com.vertice.launcher.core.GridSpec
 import com.vertice.launcher.core.DockOpacity
 import com.vertice.launcher.core.DockStyle
+import com.vertice.launcher.core.ClockAlign
+import com.vertice.launcher.core.ClockColor
+import com.vertice.launcher.core.ClockScale
 import com.vertice.launcher.core.CustomWallpaper
 import com.vertice.launcher.core.DrawerColumns
 import com.vertice.launcher.core.DrawerLayout
@@ -262,6 +265,21 @@ private fun ClockTab(vm: HomeActions, ui: HomeUi) {
         "Toque no relógio para abrir os alarmes e na data para abrir a agenda.",
         color = Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp)
     )
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Cor")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        ClockColor.entries.forEach { c -> CategoryChip(c.label, ui.clockColor == c) { vm.setClockLook(c, ui.clockScale, ui.clockAlign) } }
+    }
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Tamanho")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        ClockScale.entries.forEach { s -> CategoryChip(s.label, ui.clockScale == s) { vm.setClockLook(ui.clockColor, s, ui.clockAlign) } }
+    }
+    Spacer(Modifier.height(14.dp))
+    SectionLabel("Alinhamento")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        ClockAlign.entries.forEach { a -> CategoryChip(a.label, ui.clockAlign == a) { vm.setClockLook(ui.clockColor, ui.clockScale, a) } }
+    }
 }
 
 /** Visual da Home: dock (estilo e opacidade). Próximas fases acrescentam rótulos, indicador e gaveta. */

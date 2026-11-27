@@ -59,6 +59,9 @@ fun ClockWidget(
     style: ClockStyle,
     format: ClockFormat,
     showDate: Boolean,
+    tint: Color = Snow,
+    scale: Float = 1f,
+    align: Alignment.Horizontal = Alignment.Start,
     onClockClick: () -> Unit,
     onDateClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -83,27 +86,27 @@ fun ClockWidget(
     val clickDate = Modifier.pointerInput(Unit) { detectTapGestures { onDateClick() } }
 
     when (style) {
-        ClockStyle.Classic -> Column(modifier) {
+        ClockStyle.Classic -> Column(modifier, horizontalAlignment = align) {
             Text(
                 "$hour:$minute" + if (suffix.isEmpty()) "" else " $suffix",
-                color = Snow, fontSize = 64.sp, lineHeight = 68.sp, fontWeight = FontWeight.Light,
+                color = tint, fontSize = (64 * scale).sp, lineHeight = (68 * scale).sp, fontWeight = FontWeight.Light,
                 style = TextStyle(shadow = textShadow), modifier = clickClock
             )
             if (showDate) Text(dateText, color = Snow.copy(alpha = 0.8f), fontSize = 15.sp, modifier = clickDate)
         }
 
-        ClockStyle.Stacked -> Column(modifier) {
+        ClockStyle.Stacked -> Column(modifier, horizontalAlignment = align) {
             if (showDate) Text(
                 dateText, color = Snow.copy(alpha = 0.85f), fontSize = 15.sp,
                 fontWeight = FontWeight.Medium, modifier = clickDate
             )
             Text(
-                hour, color = Snow, fontSize = 92.sp, lineHeight = 84.sp, fontWeight = FontWeight.ExtraLight,
+                hour, color = tint, fontSize = (92 * scale).sp, lineHeight = (84 * scale).sp, fontWeight = FontWeight.ExtraLight,
                 style = TextStyle(shadow = textShadow), modifier = clickClock
             )
             Row(verticalAlignment = Alignment.Bottom, modifier = clickClock) {
                 Text(
-                    minute, color = Mint, fontSize = 92.sp, lineHeight = 84.sp, fontWeight = FontWeight.ExtraLight,
+                    minute, color = if (tint == Snow) Mint else tint, fontSize = (92 * scale).sp, lineHeight = (84 * scale).sp, fontWeight = FontWeight.ExtraLight,
                     style = TextStyle(shadow = textShadow)
                 )
                 if (suffix.isNotEmpty()) Text(
@@ -116,7 +119,7 @@ fun ClockWidget(
         ClockStyle.Minimal -> Row(modifier, verticalAlignment = Alignment.CenterVertically) {
             Text(
                 "$hour:$minute" + if (suffix.isEmpty()) "" else " $suffix",
-                color = Snow, fontSize = 30.sp, fontWeight = FontWeight.Light,
+                color = tint, fontSize = (30 * scale).sp, fontWeight = FontWeight.Light,
                 style = TextStyle(shadow = textShadow), modifier = clickClock
             )
             if (showDate) Text(
@@ -128,8 +131,8 @@ fun ClockWidget(
             val cal = remember(now) { Calendar.getInstance().apply { timeInMillis = now } }
             val minutes = cal.get(Calendar.MINUTE)
             val hours = cal.get(Calendar.HOUR) // 0..11
-            Column(modifier, horizontalAlignment = Alignment.Start) {
-                AnalogFace(hours, minutes, clickClock)
+            Column(modifier, horizontalAlignment = align) {
+                AnalogFace(hours, minutes, clickClock, scale, tint)
                 if (showDate) {
                     Spacer(Modifier.height(10.dp))
                     Text(dateText, color = Snow.copy(alpha = 0.85f), fontSize = 15.sp, modifier = clickDate)
@@ -140,8 +143,8 @@ fun ClockWidget(
 }
 
 @Composable
-private fun AnalogFace(hours: Int, minutes: Int, modifier: Modifier) {
-    Canvas(modifier.size(150.dp)) {
+private fun AnalogFace(hours: Int, minutes: Int, modifier: Modifier, scale: Float, tint: Color) {
+    Canvas(modifier.size(150.dp * scale)) {
         val c = center
         val r = size.minDimension / 2f
         drawCircle(Color(0x59141C29), radius = r, center = c)
@@ -167,7 +170,7 @@ private fun AnalogFace(hours: Int, minutes: Int, modifier: Modifier) {
                 strokeWidth = width, cap = StrokeCap.Round
             )
         }
-        hand(hours * 30.0 + minutes * 0.5, 0.48f, 9f, Snow)
+        hand(hours * 30.0 + minutes * 0.5, 0.48f, 9f, tint)
         hand(minutes * 6.0, 0.72f, 6f, Mint)
         drawCircle(Mint, radius = 7f, center = c)
     }

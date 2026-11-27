@@ -41,7 +41,10 @@ data class Prefs(
     val drawerLayout: DrawerLayout = DrawerLayout.Grid,
     val drawerColumns: Int = DrawerColumns.DEFAULT,
     val customWallpaperA: Long = CustomWallpaper.DEFAULT_A,
-    val customWallpaperB: Long = CustomWallpaper.DEFAULT_B
+    val customWallpaperB: Long = CustomWallpaper.DEFAULT_B,
+    val clockColor: ClockColor = ClockColor.White,
+    val clockScale: ClockScale = ClockScale.Medium,
+    val clockAlign: ClockAlign = ClockAlign.Start
 )
 
 /**
@@ -60,6 +63,7 @@ interface SettingsStore : LayoutStore {
 
     suspend fun setClockStyle(style: ClockStyle)
     suspend fun setClockFormat(format: ClockFormat)
+    suspend fun setClockLook(color: ClockColor, scale: ClockScale, align: ClockAlign)
     suspend fun setShowDate(show: Boolean)
     suspend fun setWallpaper(w: Wallpaper)
     suspend fun setGrid(grid: GridConfig)

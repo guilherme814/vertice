@@ -62,6 +62,8 @@ import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.unit.IntOffset
+import com.vertice.launcher.core.ClockAlign
+import com.vertice.launcher.core.ClockColor
 import com.vertice.launcher.core.DockOpacity
 import com.vertice.launcher.core.DockStyle
 import com.vertice.launcher.core.DragGeometry
@@ -218,10 +220,26 @@ fun HomeScreen(
                     }
                 }
                 Spacer(Modifier.height(20.dp))
-                ClockWidget(
-                    now = now, style = ui.clockStyle, format = ui.clockFormat, showDate = ui.showDate,
-                    onClockClick = { vm.openClock() }, onDateClick = { vm.openCalendar() }
-                )
+                Box(
+                    Modifier.fillMaxWidth(),
+                    contentAlignment = when (ui.clockAlign) {
+                        ClockAlign.Start -> Alignment.CenterStart
+                        ClockAlign.Center -> Alignment.Center
+                        ClockAlign.End -> Alignment.CenterEnd
+                    }
+                ) {
+                    ClockWidget(
+                        now = now, style = ui.clockStyle, format = ui.clockFormat, showDate = ui.showDate,
+                        tint = if (ui.clockColor == ClockColor.Accent) Mint else Snow,
+                        scale = ui.clockScale.factor,
+                        align = when (ui.clockAlign) {
+                            ClockAlign.Start -> Alignment.Start
+                            ClockAlign.Center -> Alignment.CenterHorizontally
+                            ClockAlign.End -> Alignment.End
+                        },
+                        onClockClick = { vm.openClock() }, onDateClick = { vm.openCalendar() }
+                    )
+                }
             }
 
             Column(Modifier.weight(1f)) {

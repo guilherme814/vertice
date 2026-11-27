@@ -10,6 +10,9 @@ import com.vertice.launcher.core.AppCategory
 import com.vertice.launcher.core.DockOpacity
 import com.vertice.launcher.core.DockStyle
 import com.vertice.launcher.core.DrawerSort
+import com.vertice.launcher.core.ClockAlign
+import com.vertice.launcher.core.ClockColor
+import com.vertice.launcher.core.ClockScale
 import com.vertice.launcher.core.DrawerLayout
 import com.vertice.launcher.core.IndicatorStyle
 import com.vertice.launcher.core.LabelSize
@@ -115,6 +118,9 @@ class LauncherViewModel(
             labelBold = p.labelBold,
             indicator = p.indicator,
             drawerLayout = p.drawerLayout,
+            clockColor = p.clockColor,
+            clockScale = p.clockScale,
+            clockAlign = p.clockAlign,
             customWallpaperA = p.customWallpaperA,
             customWallpaperB = p.customWallpaperB,
             drawerColumns = p.drawerColumns,
@@ -273,6 +279,8 @@ class LauncherViewModel(
     override fun setLabelSize(size: LabelSize) { viewModelScope.launch { prefs.setLabelSize(size) } }
 
     override fun setCustomWallpaper(a: Long, b: Long) { viewModelScope.launch { prefs.setCustomWallpaper(a, b); prefs.setWallpaper(Wallpaper.Custom) } }
+
+    override fun setClockLook(color: ClockColor, scale: ClockScale, align: ClockAlign) { viewModelScope.launch { prefs.setClockLook(color, scale, align) } }
 
     override fun setDrawerLayout(layout: DrawerLayout) { viewModelScope.launch { prefs.setDrawerLayout(layout) } }
 

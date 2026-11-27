@@ -13,6 +13,9 @@ import com.vertice.launcher.core.GridConfig
 import com.vertice.launcher.core.DockOpacity
 import com.vertice.launcher.core.DockStyle
 import com.vertice.launcher.core.DrawerSort
+import com.vertice.launcher.core.ClockAlign
+import com.vertice.launcher.core.ClockColor
+import com.vertice.launcher.core.ClockScale
 import com.vertice.launcher.core.CustomWallpaper
 import com.vertice.launcher.core.DrawerColumns
 import com.vertice.launcher.core.DrawerLayout
@@ -79,7 +82,10 @@ data class HomeUi(
     val drawerLayout: DrawerLayout = DrawerLayout.Grid,
     val drawerColumns: Int = DrawerColumns.DEFAULT,
     val customWallpaperA: Long = CustomWallpaper.DEFAULT_A,
-    val customWallpaperB: Long = CustomWallpaper.DEFAULT_B
+    val customWallpaperB: Long = CustomWallpaper.DEFAULT_B,
+    val clockColor: ClockColor = ClockColor.White,
+    val clockScale: ClockScale = ClockScale.Medium,
+    val clockAlign: ClockAlign = ClockAlign.Start
 ) {
     /** Com o Foco ligado, app bloqueado não abre e aparece apagado. */
     fun isLocked(key: String) = focusOn && key in focusBlocked
@@ -132,6 +138,7 @@ interface AppearanceActions {
     fun setIndicator(style: IndicatorStyle)
     fun setDrawerLayout(layout: DrawerLayout)
     fun setCustomWallpaper(a: Long, b: Long)
+    fun setClockLook(color: ClockColor, scale: ClockScale, align: ClockAlign)
     fun setDrawerColumns(n: Int)
     fun setDockOpacity(percent: Int)
 }

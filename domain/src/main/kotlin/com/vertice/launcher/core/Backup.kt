@@ -41,6 +41,9 @@ object BackupCodec {
         p.profile?.let { appendLine("profile=${it.name}") }
         appendLine("clockStyle=${p.clockStyle.name}")
         appendLine("clockFormat=${p.clockFormat.name}")
+        appendLine("clockColor=${p.clockColor.name}")
+        appendLine("clockScale=${p.clockScale.name}")
+        appendLine("clockAlign=${p.clockAlign.name}")
         appendLine("showDate=${p.showDate}")
         appendLine("wallpaper=${p.wallpaper.name}")
         appendLine("gridColumns=${p.grid.columns}")
@@ -91,6 +94,9 @@ object BackupCodec {
             when (key) {
                 "profile" -> PerformanceProfile.fromName(value)?.let { prefs = prefs.copy(profile = it) } ?: ignored++
                 "clockStyle" -> prefs = prefs.copy(clockStyle = ClockStyle.fromName(value))
+                "clockColor" -> prefs = prefs.copy(clockColor = ClockColor.fromName(value))
+                "clockScale" -> prefs = prefs.copy(clockScale = ClockScale.fromName(value))
+                "clockAlign" -> prefs = prefs.copy(clockAlign = ClockAlign.fromName(value))
                 "clockFormat" -> prefs = prefs.copy(clockFormat = ClockFormat.fromName(value))
                 "showDate" -> prefs = prefs.copy(showDate = value != "false")
                 "wallpaper" -> prefs = prefs.copy(wallpaper = Wallpaper.fromName(value))

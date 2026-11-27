@@ -14,6 +14,9 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.vertice.launcher.core.ClockFormat
 import com.vertice.launcher.core.DockOpacity
 import com.vertice.launcher.core.DockStyle
+import com.vertice.launcher.core.ClockAlign
+import com.vertice.launcher.core.ClockColor
+import com.vertice.launcher.core.ClockScale
 import com.vertice.launcher.core.CustomWallpaper
 import com.vertice.launcher.core.DrawerColumns
 import com.vertice.launcher.core.DrawerLayout
@@ -76,6 +79,9 @@ class LauncherPrefs(context: Context) : SettingsStore {
         val indicator = stringPreferencesKey("page_indicator")
         val drawerLayout = stringPreferencesKey("drawer_layout")
         val customA = longPreferencesKey("custom_wallpaper_a")
+        val clockColor = stringPreferencesKey("clock_color")
+        val clockScale = stringPreferencesKey("clock_scale")
+        val clockAlign = stringPreferencesKey("clock_align")
         val customB = longPreferencesKey("custom_wallpaper_b")
         val drawerColumns = intPreferencesKey("drawer_columns")
         val dockOpacity = intPreferencesKey("dock_opacity")
@@ -124,6 +130,9 @@ class LauncherPrefs(context: Context) : SettingsStore {
             labelBold = p[K.labelBold] ?: false,
             indicator = IndicatorStyle.fromName(p[K.indicator]),
             drawerLayout = DrawerLayout.fromName(p[K.drawerLayout]),
+            clockColor = ClockColor.fromName(p[K.clockColor]),
+            clockScale = ClockScale.fromName(p[K.clockScale]),
+            clockAlign = ClockAlign.fromName(p[K.clockAlign]),
             customWallpaperA = CustomWallpaper.sanitize(p[K.customA] ?: CustomWallpaper.DEFAULT_A),
             customWallpaperB = CustomWallpaper.sanitize(p[K.customB] ?: CustomWallpaper.DEFAULT_B),
             drawerColumns = DrawerColumns.coerce(p[K.drawerColumns] ?: DrawerColumns.DEFAULT),
@@ -206,6 +215,14 @@ class LauncherPrefs(context: Context) : SettingsStore {
         }
     }
 
+    override suspend fun setClockLook(color: ClockColor, scale: ClockScale, align: ClockAlign) {
+        store.edit {
+            it[K.clockColor] = color.name
+            it[K.clockScale] = scale.name
+            it[K.clockAlign] = align.name
+        }
+    }
+
     override suspend fun setDrawerLayout(layout: DrawerLayout) { store.edit { it[K.drawerLayout] = layout.name } }
 
     override suspend fun setDrawerColumns(n: Int) { store.edit { it[K.drawerColumns] = DrawerColumns.coerce(n) } }
@@ -257,6 +274,9 @@ class LauncherPrefs(context: Context) : SettingsStore {
             it[K.labelBold] = prefs.labelBold
             it[K.indicator] = prefs.indicator.name
             it[K.drawerLayout] = prefs.drawerLayout.name
+            it[K.clockColor] = prefs.clockColor.name
+            it[K.clockScale] = prefs.clockScale.name
+            it[K.clockAlign] = prefs.clockAlign.name
             it[K.customA] = CustomWallpaper.sanitize(prefs.customWallpaperA)
             it[K.customB] = CustomWallpaper.sanitize(prefs.customWallpaperB)
             it[K.drawerColumns] = DrawerColumns.coerce(prefs.drawerColumns)
