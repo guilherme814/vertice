@@ -60,6 +60,7 @@ dependencies {
     implementation(project(":feature-home"))
     implementation(project(":feature-drawer"))
     implementation(project(":feature-settings"))
+    implementation(project(":feature-island"))
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)

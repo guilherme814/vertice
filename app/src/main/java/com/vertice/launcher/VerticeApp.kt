@@ -5,6 +5,7 @@ import android.app.Application
 import android.content.ComponentCallbacks2
 import android.os.Bundle
 import com.vertice.launcher.diag.CrashReporter
+import com.vertice.launcher.island.IslandRuntime
 import com.vertice.launcher.diag.ExitReasons
 import com.vertice.launcher.diag.FrameMonitor
 import com.vertice.launcher.diag.StrictModeBridge
@@ -24,6 +25,8 @@ class VerticeApp : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        // A ilha precisa estar pronta antes de o sistema ligar o serviço de notificações (mesmo processo).
+        IslandRuntime.install(this, container.islandStore)
         VLog.init(this)
         CrashReporter.install(this)
         StrictModeBridge.install()

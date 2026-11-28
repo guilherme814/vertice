@@ -3,6 +3,8 @@ package com.vertice.launcher
 import android.app.Application
 import com.vertice.launcher.core.PerformanceProfile
 import com.vertice.launcher.core.SettingsStore
+import com.vertice.launcher.core.island.IslandStore
+import com.vertice.launcher.data.IslandPrefs
 import com.vertice.launcher.data.AppRepository
 import com.vertice.launcher.data.DevicePerformance
 import com.vertice.launcher.data.IconCache
@@ -25,4 +27,5 @@ class AppContainer(private val app: Application) {
     val launcher: AppLauncher get() = appRepository
     val battery: BatteryStatus by lazy { BatteryMonitor(app) }
     val icons: IconCache by lazy { IconCache(app, recommendedProfile) }
+    val islandStore: IslandStore by lazy { IslandPrefs(app) }
 }

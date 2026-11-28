@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Desenhar a cápsula por cima de outros apps (o usuário autoriza em "Exibir sobre outros apps"). -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <application>
+        <!-- O sistema liga este serviço enquanto o usuário mantiver o acesso a notificações concedido. -->
+        <service
+            android:name="com.vertice.launcher.island.IslandNotificationListener"
+            android:exported="true"
+            android:label="Vértice Island"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+    </application>
+
+</manifest>

@@ -72,6 +72,7 @@ enum class SheetTab(val label: String) {
     Visual("Visual"),
     Clock("Relógio"),
     Focus("Foco"),
+    Island("Ilha"),
     Backup("Backup"),
     Diagnostics("Diagnóstico")
 }
@@ -85,6 +86,8 @@ fun QuickSheet(
     vm: HomeActions,
     ui: HomeUi,
     initialTab: SheetTab = SheetTab.Wallpaper,
+    /** Conteúdo da aba "Ilha" (vem de outro módulo); sem ele a aba não aparece. */
+    islandTab: (@Composable () -> Unit)? = null,
     onClose: () -> Unit
 ) {
     var tab by remember { mutableStateOf(initialTab) }
@@ -121,7 +124,7 @@ fun QuickSheet(
                 Modifier.padding(top = 8.dp).horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                SheetTab.entries.forEach { t -> CategoryChip(t.label, tab == t) { tab = t } }
+                SheetTab.entries.filter { it != SheetTab.Island || islandTab != null }.forEach { t -> CategoryChip(t.label, tab == t) { tab = t } }
             }
             Spacer(Modifier.height(14.dp))
             Column(Modifier.verticalScroll(rememberScrollState())) {
@@ -132,6 +135,7 @@ fun QuickSheet(
                     SheetTab.Visual -> VisualTab(vm, ui)
                     SheetTab.Clock -> ClockTab(vm, ui)
                     SheetTab.Focus -> FocusTab(vm, ui)
+                    SheetTab.Island -> islandTab?.invoke()
                     SheetTab.Backup -> BackupTab(vm)
                     SheetTab.Diagnostics -> DiagnosticsTab()
                 }

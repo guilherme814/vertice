@@ -21,7 +21,8 @@ tasks.register("checkArchitecture") {
             "ui-core" to setOf("domain", "data"),
             "feature-home" to setOf("ui-core", "domain", "data"),
             "feature-drawer" to setOf("ui-core", "domain", "data"),
-            "feature-settings" to setOf("ui-core", "domain", "data")
+            "feature-settings" to setOf("ui-core", "domain", "data"),
+            "feature-island" to setOf("ui-core", "domain", "data")
         )
         val errors = mutableListOf<String>()
         val dep = Regex("""project\(":([a-z-]+)"\)""")
@@ -53,7 +54,7 @@ tasks.register("checkArchitecture") {
             "import com.vertice.launcher.data.LauncherPrefs",
             "import com.vertice.launcher.data.AppRepository"
         )
-        listOf("ui-core", "feature-home", "feature-drawer", "feature-settings").forEach { m ->
+        listOf("ui-core", "feature-home", "feature-drawer", "feature-settings", "feature-island").forEach { m ->
             kotlinFiles(m).forEach { f ->
                 f.readLines().forEachIndexed { i, line ->
                     if (forbiddenInUi.any { line.startsWith(it) }) {

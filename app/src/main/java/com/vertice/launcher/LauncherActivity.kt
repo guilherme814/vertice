@@ -38,6 +38,7 @@ import com.vertice.launcher.ui.AppDrawer
 import com.vertice.launcher.ui.HomeScreen
 import com.vertice.launcher.ui.QuickSheet
 import com.vertice.launcher.ui.VerticeTheme
+import com.vertice.launcher.island.ui.IslandSettingsScreen
 import com.vertice.launcher.ui.WallpaperBackground
 import kotlin.math.roundToInt
 
@@ -126,7 +127,10 @@ class LauncherActivity : ComponentActivity() {
                         enter = if (animate) slideInVertically { it / 3 } + fadeIn() else EnterTransition.None,
                         exit = if (animate) slideOutVertically { it / 3 } + fadeOut() else ExitTransition.None
                     ) {
-                        QuickSheet(vm = vm, ui = ui, onClose = { dispatch(NavEvent.Back) })
+                        QuickSheet(
+                            vm = vm, ui = ui, onClose = { dispatch(NavEvent.Back) },
+                            islandTab = { IslandSettingsScreen((application as VerticeApp).container.islandStore) }
+                        )
                     }
                 }
             }
