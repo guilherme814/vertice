@@ -15,7 +15,7 @@ import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
-import androidx.savedstate.ViewTreeSavedStateRegistryOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.vertice.launcher.core.island.IslandSettings
 import com.vertice.launcher.core.island.IslandState
 import com.vertice.launcher.island.ui.IslandHost
@@ -84,7 +84,7 @@ class IslandOverlay(
         val v = ComposeView(context).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
             setViewTreeLifecycleOwner(o)
-            ViewTreeSavedStateRegistryOwner.set(this, o)
+            setViewTreeSavedStateRegistryOwner(o)
             setContent { IslandHost(state.value, settings.value, onTap, onDismiss) }
         }
         try {
