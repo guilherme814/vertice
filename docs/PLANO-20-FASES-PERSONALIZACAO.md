@@ -7,7 +7,7 @@ Uma fase por vez, cada uma só fecha com CI verde. Regras fixas:
 - respeitar os perfis de desempenho (Ultra Lite sem efeitos caros) — o log do A1 mostra que o gargalo é GPU;
 - tudo local, sem rede.
 
-> **Pausa (27/11/2026):** as fases 8–20 ficam congeladas enquanto a Vértice Island é feita (`ESPECIFICACAO-VERTICE-ISLAND.md`, etapas I1–I4). Depois retomam daqui.
+> **Pausa encerrada (27/11/2026):** a Vértice Island (`ESPECIFICACAO-VERTICE-ISLAND.md`, etapas I1–I4) está pronta e verificada pelo CI, ainda sem teste no aparelho. As fases 8–20 retomam daqui.
 
 | # | Fase | Entrega | Estado |
 |---|---|---|---|
