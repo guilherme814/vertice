@@ -59,7 +59,7 @@ fun IslandHost(state: IslandState, settings: IslandSettings, cb: IslandCallbacks
             .widthIn(min = 110.dp, max = settings.width.dp.dp)
             .then(if (settings.animate) Modifier.animateContentSize() else Modifier)
             .clip(shape)
-            .background(Color.Black)
+            .background(Color(settings.background.argb.toInt()).copy(alpha = settings.background.alpha))
             .border(0.5.dp, Hairline, shape)
             .pointerInput(Unit) { detectVerticalDragGestures { _, dy -> if (dy < -8f) cb.onDismiss() } }
             .clickable { cb.onTap() }
@@ -83,8 +83,16 @@ fun IslandHost(state: IslandState, settings: IslandSettings, cb: IslandCallbacks
                 }
             }
             if (!expanded) Box(Modifier.size(6.dp).clip(CircleShape).background(accent(event)))
+            // Mensagem: "abrir o app" fica ao lado do texto (um botão redondo), sem aumentar a altura do painel.
+            if (expanded && event is IslandEvent.Notification) {
+                Text(
+                    "›", color = Color.White, fontSize = 18.sp,
+                    modifier = Modifier.clip(CircleShape).background(Color(0xFF2A2D33)).clickable { cb.onOpen() }
+                        .padding(horizontal = 11.dp, vertical = 2.dp)
+                )
+            }
         }
-        if (expanded) Controls(event, cb)
+        if (expanded && event !is IslandEvent.Notification) Controls(event, cb)
     }
 }
 
@@ -162,7 +170,6 @@ private fun Controls(e: IslandEvent, cb: IslandCallbacks) {
             is IslandEvent.Call -> e.actions.forEachIndexed { i, title ->
                 if (title.isNotBlank()) Pill(title) { cb.onAction(i) }
             }
-            is IslandEvent.Notification -> Pill("Abrir") { cb.onOpen() }
             else -> {}
         }
     }

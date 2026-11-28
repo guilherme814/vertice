@@ -8,7 +8,8 @@ import org.junit.Test
 
 class IslandBackupTest {
     private val snap = IslandSnapshot(
-        IslandSettings(enabled = true, media = false, bluetooth = true, animate = false, tempSeconds = 7, offsetDp = 20, width = IslandWidth.Wide),
+        IslandSettings(enabled = true, media = false, bluetooth = true, animate = false, tempSeconds = 7, offsetDp = 20, width = IslandWidth.Wide,
+            background = IslandBackground.Glass, autoExpand = false, expandSeconds = 6),
         listOf(
             IslandAppConfig("com.whatsapp", true, IslandMode.Persistent, false),
             IslandAppConfig("org.telegram.messenger", false, IslandMode.Temporary, true)

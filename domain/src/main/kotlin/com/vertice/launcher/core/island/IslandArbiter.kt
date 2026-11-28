@@ -11,7 +11,10 @@ package com.vertice.launcher.core.island
  */
 class IslandArbiter(
     private val maxEntries: Int = 6,
-    private val autoExpandMs: Long = AUTO_EXPAND_MS,
+    /** Duração da abertura automática; o controlador ajusta conforme as configurações. */
+    var autoExpandMs: Long = AUTO_EXPAND_MS,
+    /** Desligado: mensagem nova só mostra a cápsula, sem abrir o painel. */
+    var autoExpandEnabled: Boolean = true,
     private val holdMs: Long = HOLD_MS
 ) {
 
@@ -38,15 +41,16 @@ class IslandArbiter(
         clock = now
         val prev = top()
         val isMessage = event is IslandEvent.Notification
+        val opens = isMessage && autoExpandEnabled
         val expiry = when {
             event.persistent -> null
             // Mensagem precisa durar mais que a abertura automática, senão some antes de recolher.
-            isMessage -> now + maxOf(tempMs, autoExpandMs + 1200)
+            opens -> now + maxOf(tempMs, autoExpandMs + 1200)
             else -> now + tempMs
         }
         val old = entries[event.key]
         if (old == null) {
-            entries[event.key] = Entry(event, expiry, ++seq, false, now, isMessage)
+            entries[event.key] = Entry(event, expiry, ++seq, false, now, opens)
             trim()
         } else {
             // Conteúdo novo traz a ilha de volta mesmo que tenha sido dispensada; conteúdo igual, não.
@@ -55,7 +59,7 @@ class IslandArbiter(
             old.event = event
             old.expiresAt = expiry
             old.seq = ++seq
-            old.wantsExpand = isMessage
+            old.wantsExpand = opens
         }
         if (event.priority == IslandPriority.Call) holdKey = null
         else if (isMessage && prev != null && prev.event is IslandEvent.Notification &&

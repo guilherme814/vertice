@@ -1,5 +1,16 @@
 package com.vertice.launcher.core.island
 
+/** Fundo da cápsula: preto (HyperOS), grafite ou vidro (preto levemente translúcido). */
+enum class IslandBackground(val label: String, val argb: Long, val alpha: Float) {
+    Black("Preto", 0xFF000000, 1f),
+    Graphite("Grafite", 0xFF1C1F26, 1f),
+    Glass("Vidro", 0xFF000000, 0.82f);
+
+    companion object {
+        fun fromName(name: String?) = entries.firstOrNull { it.name == name } ?: Black
+    }
+}
+
 enum class IslandWidth(val label: String, val dp: Int) {
     Compact("Compacta", 150),
     Medium("Média", 200),
@@ -34,12 +45,20 @@ data class IslandSettings(
     /** Distância do topo da tela (dp). */
     val offsetDp: Int = 8,
     val width: IslandWidth = IslandWidth.Medium,
-    val theme: IslandTheme = IslandTheme.HyperOS
+    val theme: IslandTheme = IslandTheme.HyperOS,
+    val background: IslandBackground = IslandBackground.Black,
+    /** Mensagem nova abre o painel sozinha. */
+    val autoExpand: Boolean = true,
+    /** Quanto tempo o painel fica aberto sozinho. */
+    val expandSeconds: Int = 4
 ) {
     fun sanitized() = copy(
         tempSeconds = tempSeconds.coerceIn(TEMP_MIN, TEMP_MAX),
-        offsetDp = offsetDp.coerceIn(OFFSET_MIN, OFFSET_MAX)
+        offsetDp = offsetDp.coerceIn(OFFSET_MIN, OFFSET_MAX),
+        expandSeconds = expandSeconds.coerceIn(EXPAND_MIN, EXPAND_MAX)
     )
+
+    val expandMs: Long get() = sanitized().expandSeconds * 1000L
 
     val tempMs: Long get() = sanitized().tempSeconds * 1000L
 
@@ -58,6 +77,8 @@ data class IslandSettings(
         const val TEMP_MAX = 10
         const val OFFSET_MIN = 0
         const val OFFSET_MAX = 60
+        const val EXPAND_MIN = 2
+        const val EXPAND_MAX = 8
     }
 }
 

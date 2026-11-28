@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.vertice.launcher.core.island.IslandAppConfig
+import com.vertice.launcher.core.island.IslandBackground
 import com.vertice.launcher.core.island.IslandAppsCodec
 import com.vertice.launcher.core.island.IslandSettings
 import com.vertice.launcher.core.island.IslandSnapshot
@@ -32,6 +33,9 @@ class IslandPrefs(context: Context) : IslandStore {
         val charging = booleanPreferencesKey("charging")
         val bluetooth = booleanPreferencesKey("bluetooth")
         val animate = booleanPreferencesKey("animate")
+        val background = stringPreferencesKey("background")
+        val autoExpand = booleanPreferencesKey("auto_expand")
+        val expandSeconds = intPreferencesKey("expand_seconds")
         val tempSeconds = intPreferencesKey("temp_seconds")
         val offsetDp = intPreferencesKey("offset_dp")
         val width = stringPreferencesKey("width")
@@ -52,7 +56,10 @@ class IslandPrefs(context: Context) : IslandStore {
             tempSeconds = p[K.tempSeconds] ?: d.tempSeconds,
             offsetDp = p[K.offsetDp] ?: d.offsetDp,
             width = IslandWidth.fromName(p[K.width]),
-            theme = IslandTheme.fromName(p[K.theme])
+            theme = IslandTheme.fromName(p[K.theme]),
+            background = IslandBackground.fromName(p[K.background]),
+            autoExpand = p[K.autoExpand] ?: d.autoExpand,
+            expandSeconds = p[K.expandSeconds] ?: d.expandSeconds
         ).sanitized()
     }
 
@@ -73,6 +80,9 @@ class IslandPrefs(context: Context) : IslandStore {
             it[K.offsetDp] = s.offsetDp
             it[K.width] = s.width.name
             it[K.theme] = s.theme.name
+            it[K.background] = s.background.name
+            it[K.autoExpand] = s.autoExpand
+            it[K.expandSeconds] = s.expandSeconds
         }
     }
 

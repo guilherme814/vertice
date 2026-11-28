@@ -24,6 +24,9 @@ object IslandBackup {
             add("${PREFIX}offsetDp=${v.offsetDp}")
             add("${PREFIX}width=${v.width.name}")
             add("${PREFIX}theme=${v.theme.name}")
+            add("${PREFIX}background=${v.background.name}")
+            add("${PREFIX}autoExpand=${v.autoExpand}")
+            add("${PREFIX}expandSeconds=${v.expandSeconds}")
             s.apps.sortedBy { it.packageName }.forEach {
                 add("${PREFIX}app=" + URLEncoder.encode(it.packageName, "UTF-8") + "|${it.enabled}|${it.mode.name}|${it.showContent}")
             }
@@ -45,7 +48,10 @@ object IslandBackup {
             tempSeconds = kv["tempSeconds"]?.toIntOrNull() ?: d.tempSeconds,
             offsetDp = kv["offsetDp"]?.toIntOrNull() ?: d.offsetDp,
             width = IslandWidth.fromName(kv["width"]),
-            theme = IslandTheme.fromName(kv["theme"])
+            theme = IslandTheme.fromName(kv["theme"]),
+            background = IslandBackground.fromName(kv["background"]),
+            autoExpand = bool("autoExpand", d.autoExpand),
+            expandSeconds = kv["expandSeconds"]?.toIntOrNull() ?: d.expandSeconds
         ).sanitized()
         val apps = appLines.mapNotNull { line ->
             val p = line.split('|')

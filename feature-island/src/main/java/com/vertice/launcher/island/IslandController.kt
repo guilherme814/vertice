@@ -12,6 +12,7 @@ import com.vertice.launcher.core.island.IslandSettings
 import com.vertice.launcher.core.island.IslandState
 import com.vertice.launcher.core.island.IslandStore
 import com.vertice.launcher.core.island.RawNotification
+import com.vertice.launcher.ui.IslandSignal
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -80,6 +81,7 @@ class IslandController(private val context: Context, private val store: IslandSt
     fun onNotification(raw: RawNotification, content: PendingIntent? = null, actions: List<PendingIntent> = emptyList()) {
         val s = _settings.value
         val event = IslandClassifier.classify(raw, s, apps) ?: return
+        syncArbiter(s)
         handles[raw.key] = Handles(content, actions)
         if (event is IslandEvent.Notification) {
             // Rajada de mensagens da mesma conversa: espera um pouco e mostra só a última, numa animação só.
@@ -102,6 +104,7 @@ class IslandController(private val context: Context, private val store: IslandSt
     fun push(event: IslandEvent) {
         val s = _settings.value
         if (!s.allows(event)) return
+        syncArbiter(s)
         apply(arbiter.onEvent(event, now(), s.tempMs))
     }
 
@@ -125,10 +128,17 @@ class IslandController(private val context: Context, private val store: IslandSt
     /** Botão "Testar ilha" das configurações: funciona mesmo com a ilha desligada. */
     fun test() {
         val s = _settings.value.copy(enabled = true)
+        syncArbiter(s)
         apply(arbiter.onEvent(
             IslandEvent.Notification("teste", context.packageName, "Vértice Island", "Está funcionando", false, false),
             now(), s.tempMs
         ), s)
+    }
+
+    /** As configurações de abertura automática valem já para o próximo evento. */
+    private fun syncArbiter(s: IslandSettings) {
+        arbiter.autoExpandEnabled = s.autoExpand
+        arbiter.autoExpandMs = s.expandMs
     }
 
     private fun toggle() = apply(arbiter.toggleExpand(now(), _settings.value.tempMs))
@@ -145,6 +155,7 @@ class IslandController(private val context: Context, private val store: IslandSt
 
     private fun apply(state: IslandState, s: IslandSettings = _settings.value) {
         overlayState = state
+        IslandSignal.expanded = state is IslandState.Expanded
         overlay.render(state, s)
         wake?.cancel()
         val at = arbiter.nextWakeAt() ?: return
@@ -164,6 +175,7 @@ class IslandController(private val context: Context, private val store: IslandSt
         wake?.cancel()
         arbiter.clear()
         overlay.hide()
+        IslandSignal.expanded = false
     }
 
     private companion object { const val DEBOUNCE_MS = 300L }

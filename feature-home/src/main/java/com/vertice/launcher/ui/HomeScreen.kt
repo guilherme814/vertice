@@ -45,6 +45,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -189,7 +191,14 @@ fun HomeScreen(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                // Com a ilha aberta por cima, a linha de botões esmaece e não recebe toque (nada fica "sob" a ilha).
+                val headerHidden = IslandSignal.expanded && ui.islandInsetDp > 0
+                val headerAlpha by animateFloatAsState(if (headerHidden) 0f else 1f, tween(160), label = "headerAlpha")
+                Box {
+                Row(
+                    Modifier.fillMaxWidth().graphicsLayer { alpha = headerAlpha },
+                    horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text("VÉRTICE", color = Mint, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Surface(
@@ -219,6 +228,10 @@ fun HomeScreen(
                         )
                     }
                     }
+                }
+                if (headerHidden) {
+                    Box(Modifier.matchParentSize().pointerInput(Unit) { detectTapGestures { } })
+                }
                 }
                 Spacer(Modifier.height(20.dp))
                 Box(

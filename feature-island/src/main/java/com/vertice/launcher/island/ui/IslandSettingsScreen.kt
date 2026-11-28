@@ -44,6 +44,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.vertice.launcher.core.island.IslandBackground
 import com.vertice.launcher.core.island.IslandSettings
 import com.vertice.launcher.core.island.IslandStore
 import com.vertice.launcher.core.island.IslandWidth
@@ -142,6 +143,17 @@ fun IslandSettingsScreen(store: IslandStore) {
     if (manager) {
         Spacer(Modifier.height(10.dp))
         IslandAppManager(store)
+    }
+
+    Spacer(Modifier.height(14.dp))
+    Label("Fundo da cápsula")
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        IslandBackground.entries.forEach { b -> CategoryChip(b.label, s.background == b) { save(s.copy(background = b)) } }
+    }
+    Spacer(Modifier.height(8.dp))
+    Toggle("Abrir mensagens sozinha", s.autoExpand) { save(s.copy(autoExpand = it)) }
+    if (s.autoExpand) {
+        Slide("Duração da abertura · ${s.expandSeconds} s", s.expandSeconds, IslandSettings.EXPAND_MIN, IslandSettings.EXPAND_MAX) { save(s.copy(expandSeconds = it)) }
     }
 
     Spacer(Modifier.height(14.dp))
