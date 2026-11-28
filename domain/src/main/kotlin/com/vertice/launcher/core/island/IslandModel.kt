@@ -15,6 +15,8 @@ data class RawNotification(
     /** Início do cronômetro (ms), se a notificação mostra um. */
     val chronometerBase: Long? = null,
     val hasCallActions: Boolean = false,
+    /** Rótulos das ações (ex.: "Recusar", "Atender"). Só os nomes: a ação em si fica no Android. */
+    val actions: List<String> = emptyList(),
     val title: String? = null,
     val text: String? = null
 ) {
@@ -55,7 +57,8 @@ sealed interface IslandEvent {
         val caller: String?,
         /** Já em andamento (cronômetro) em vez de tocando. */
         val inProgress: Boolean,
-        val chronometerBase: Long?
+        val chronometerBase: Long?,
+        val actions: List<String> = emptyList()
     ) : IslandEvent {
         override val priority get() = IslandPriority.Call
         override val persistent get() = true

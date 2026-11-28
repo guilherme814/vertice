@@ -26,8 +26,7 @@ import com.vertice.launcher.island.ui.IslandHost
  */
 class IslandOverlay(
     private val context: Context,
-    private val onTap: () -> Unit,
-    private val onDismiss: () -> Unit
+    private val callbacks: IslandCallbacks
 ) {
     private val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val state = mutableStateOf<IslandState>(IslandState.Hidden)
@@ -85,7 +84,7 @@ class IslandOverlay(
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
             setViewTreeLifecycleOwner(o)
             setViewTreeSavedStateRegistryOwner(o)
-            setContent { IslandHost(state.value, settings.value, onTap, onDismiss) }
+            setContent { IslandHost(state.value, settings.value, callbacks) }
         }
         try {
             wm.addView(v, params(s))

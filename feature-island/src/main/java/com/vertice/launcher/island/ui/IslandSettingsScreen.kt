@@ -1,6 +1,12 @@
 package com.vertice.launcher.island.ui
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
@@ -103,7 +109,14 @@ fun IslandSettingsScreen(store: IslandStore) {
     Toggle("Chamadas", s.calls) { save(s.copy(calls = it)) }
     Toggle("Timer e cronômetro", s.timers) { save(s.copy(timers = it)) }
     Toggle("Carregamento", s.charging) { save(s.copy(charging = it)) }
-    Text("Música e carregamento passam a funcionar nas próximas versões; chamadas e timers vêm das notificações.", color = Muted, fontSize = 11.sp)
+    val btPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { /* o aviso funciona com ou sem o nome */ }
+    Toggle("Bluetooth conectado", s.bluetooth) { on ->
+        save(s.copy(bluetooth = on))
+        if (on && Build.VERSION.SDK_INT >= 31 &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
+        ) btPermission.launch(Manifest.permission.BLUETOOTH_CONNECT)
+    }
+    Text("Chamadas e timers vêm das notificações do app de telefone/relógio. Bluetooth sem a permissão mostra só \"Bluetooth conectado\".", color = Muted, fontSize = 11.sp)
 
     Spacer(Modifier.height(14.dp))
     Label("Apps")

@@ -29,6 +29,7 @@ class IslandPrefs(context: Context) : IslandStore {
         val calls = booleanPreferencesKey("calls")
         val timers = booleanPreferencesKey("timers")
         val charging = booleanPreferencesKey("charging")
+        val bluetooth = booleanPreferencesKey("bluetooth")
         val tempSeconds = intPreferencesKey("temp_seconds")
         val offsetDp = intPreferencesKey("offset_dp")
         val width = stringPreferencesKey("width")
@@ -44,6 +45,7 @@ class IslandPrefs(context: Context) : IslandStore {
             calls = p[K.calls] ?: d.calls,
             timers = p[K.timers] ?: d.timers,
             charging = p[K.charging] ?: d.charging,
+            bluetooth = p[K.bluetooth] ?: d.bluetooth,
             tempSeconds = p[K.tempSeconds] ?: d.tempSeconds,
             offsetDp = p[K.offsetDp] ?: d.offsetDp,
             width = IslandWidth.fromName(p[K.width]),
@@ -62,6 +64,7 @@ class IslandPrefs(context: Context) : IslandStore {
             it[K.calls] = s.calls
             it[K.timers] = s.timers
             it[K.charging] = s.charging
+            it[K.bluetooth] = s.bluetooth
             it[K.tempSeconds] = s.tempSeconds
             it[K.offsetDp] = s.offsetDp
             it[K.width] = s.width.name

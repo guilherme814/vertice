@@ -16,7 +16,8 @@ object IslandClassifier {
             return IslandEvent.Call(
                 key = n.key, packageName = n.packageName,
                 caller = if (n.isSecret) null else n.title,
-                inProgress = n.chronometerBase != null, chronometerBase = n.chronometerBase
+                inProgress = n.chronometerBase != null, chronometerBase = n.chronometerBase,
+                actions = n.actions.take(3)
             )
         }
 

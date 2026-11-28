@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import com.vertice.launcher.core.island.IslandEvent
 import com.vertice.launcher.core.island.IslandSettings
 import com.vertice.launcher.core.island.IslandState
+import com.vertice.launcher.island.IslandCallbacks
 
 private val Soft = Color(0xFFB8BEC8)
 private val Hairline = Color.White.copy(alpha = 0.12f)
@@ -40,7 +41,7 @@ private val Hairline = Color.White.copy(alpha = 0.12f)
  * Arrastar para cima dispensa; tocar abre/fecha o painel.
  */
 @Composable
-fun IslandHost(state: IslandState, settings: IslandSettings, onTap: () -> Unit, onDismiss: () -> Unit) {
+fun IslandHost(state: IslandState, settings: IslandSettings, cb: IslandCallbacks) {
     val event = state.currentEvent ?: return
     val expanded = state is IslandState.Expanded
     val shape = RoundedCornerShape(if (expanded) 30.dp else 50.dp)
@@ -51,8 +52,8 @@ fun IslandHost(state: IslandState, settings: IslandSettings, onTap: () -> Unit, 
             .clip(shape)
             .background(Color.Black)
             .border(0.5.dp, Hairline, shape)
-            .pointerInput(Unit) { detectVerticalDragGestures { _, dy -> if (dy < -8f) onDismiss() } }
-            .clickable { onTap() }
+            .pointerInput(Unit) { detectVerticalDragGestures { _, dy -> if (dy < -8f) cb.onDismiss() } }
+            .clickable { cb.onTap() }
             .padding(horizontal = if (expanded) 16.dp else 10.dp, vertical = if (expanded) 14.dp else 7.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -70,6 +71,7 @@ fun IslandHost(state: IslandState, settings: IslandSettings, onTap: () -> Unit, 
             }
             if (!expanded) Box(Modifier.size(6.dp).clip(CircleShape).background(accent(event)))
         }
+        if (expanded) Controls(event, cb)
     }
 }
 
@@ -127,4 +129,35 @@ private fun detail(e: IslandEvent): String = when (e) {
     is IslandEvent.Timer -> "Em contagem"
     is IslandEvent.Charging -> ""
     is IslandEvent.Bluetooth -> ""
+}
+
+/** Botões do painel expandido: música (anterior/tocar/próxima), chamada (as ações do próprio app) e "Abrir". */
+@Composable
+private fun Controls(e: IslandEvent, cb: IslandCallbacks) {
+    Row(
+        Modifier.padding(top = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically
+    ) {
+        when (e) {
+            is IslandEvent.Media -> {
+                Pill("⏮") { cb.onPrevious() }
+                Pill(if (e.playing) "⏸" else "▶") { cb.onPlayPause() }
+                Pill("⏭") { cb.onNext() }
+            }
+            is IslandEvent.Call -> e.actions.forEachIndexed { i, title ->
+                if (title.isNotBlank()) Pill(title) { cb.onAction(i) }
+            }
+            is IslandEvent.Notification -> Pill("Abrir") { cb.onOpen() }
+            else -> {}
+        }
+    }
+}
+
+@Composable
+private fun Pill(text: String, onClick: () -> Unit) {
+    Text(
+        text, color = Color.White, fontSize = 13.sp, maxLines = 1,
+        modifier = Modifier.clip(CircleShape).background(Color(0xFF2A2D33)).clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 7.dp)
+    )
 }

@@ -24,7 +24,7 @@ class IslandNotificationListener : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         if (sbn.packageName == packageName) return   // as notificações da própria launcher não entram
         val controller = IslandRuntime.controller() ?: return
-        controller.onNotification(toRaw(sbn))
+        controller.onNotification(toRaw(sbn), sbn.notification.contentIntent, sbn.notification.actions?.mapNotNull { it.actionIntent }.orEmpty())
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification) {
@@ -48,6 +48,7 @@ class IslandNotificationListener : NotificationListenerService() {
             isSecret = n.visibility == Notification.VISIBILITY_SECRET,
             chronometerBase = if (extras?.getBoolean(Notification.EXTRA_SHOW_CHRONOMETER) == true) n.`when` else null,
             hasCallActions = n.category == Notification.CATEGORY_CALL && (n.actions?.isNotEmpty() == true),
+            actions = n.actions?.map { it.title?.toString().orEmpty().take(24) }.orEmpty(),
             title = extras?.getCharSequence(Notification.EXTRA_TITLE)?.toString()?.take(120),
             text = extras?.getCharSequence(Notification.EXTRA_TEXT)?.toString()?.take(200)
         )

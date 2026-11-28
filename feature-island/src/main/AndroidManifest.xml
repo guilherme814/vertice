@@ -4,6 +4,9 @@
     <!-- Desenhar a cápsula por cima de outros apps (o usuário autoriza em "Exibir sobre outros apps"). -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
+    <!-- Só para mostrar o nome do aparelho Bluetooth conectado (opcional; pedida quando o usuário liga o aviso). -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
     <application>
         <!-- O sistema liga este serviço enquanto o usuário mantiver o acesso a notificações concedido. -->
         <service

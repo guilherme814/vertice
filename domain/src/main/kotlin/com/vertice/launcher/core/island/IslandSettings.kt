@@ -25,6 +25,8 @@ data class IslandSettings(
     val calls: Boolean = true,
     val timers: Boolean = true,
     val charging: Boolean = true,
+    /** Aviso de Bluetooth conectado (exige a permissão BLUETOOTH_CONNECT para mostrar o nome). */
+    val bluetooth: Boolean = false,
     /** Quanto tempo uma notificação temporária fica na tela. */
     val tempSeconds: Int = 5,
     /** Distância do topo da tela (dp). */
@@ -38,6 +40,16 @@ data class IslandSettings(
     )
 
     val tempMs: Long get() = sanitized().tempSeconds * 1000L
+
+    /** O interruptor do tipo de evento está ligado? (Notificações dependem do Gerenciador, não daqui.) */
+    fun allows(event: IslandEvent): Boolean = enabled && when (event) {
+        is IslandEvent.Media -> media
+        is IslandEvent.Call -> calls
+        is IslandEvent.Timer -> timers
+        is IslandEvent.Charging -> charging
+        is IslandEvent.Bluetooth -> bluetooth
+        is IslandEvent.Notification -> true
+    }
 
     companion object {
         const val TEMP_MIN = 2
