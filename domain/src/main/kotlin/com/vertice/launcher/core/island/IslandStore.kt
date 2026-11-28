@@ -10,4 +10,7 @@ interface IslandStore {
     suspend fun setSettings(settings: IslandSettings)
     suspend fun setApp(config: IslandAppConfig)
     suspend fun removeApp(packageName: String)
+
+    /** Troca tudo de uma vez (restauração de backup). */
+    suspend fun replaceAll(snapshot: IslandSnapshot)
 }

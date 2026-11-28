@@ -90,6 +90,22 @@ fun IslandSettingsScreen(store: IslandStore) {
         color = Muted, fontSize = 11.sp, modifier = Modifier.padding(top = 6.dp, bottom = 10.dp)
     )
 
+    val running = IslandRuntime.controller()?.isRunning == true
+    Text(
+        "Serviço: " + if (running) "conectado" else if (listenerOk) "aguardando o sistema conectar" else "parado (falta o acesso a notificações)",
+        color = if (running) Mint else Muted, fontSize = 12.sp, modifier = Modifier.padding(bottom = 6.dp)
+    )
+    if (listenerOk && !running) {
+        CategoryChip("Reconectar serviço", false) {
+            try {
+                android.service.notification.NotificationListenerService.requestRebind(
+                    android.content.ComponentName(context, com.vertice.launcher.island.IslandNotificationListener::class.java)
+                )
+            } catch (_: Throwable) {}
+            tick++
+        }
+        Spacer(Modifier.height(8.dp))
+    }
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
         Text("Vértice Island", color = Snow, fontSize = 15.sp)
         Switch(
@@ -109,6 +125,7 @@ fun IslandSettingsScreen(store: IslandStore) {
     Toggle("Chamadas", s.calls) { save(s.copy(calls = it)) }
     Toggle("Timer e cronômetro", s.timers) { save(s.copy(timers = it)) }
     Toggle("Carregamento", s.charging) { save(s.copy(charging = it)) }
+    Toggle("Animação da cápsula", s.animate) { save(s.copy(animate = it)) }
     val btPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { /* o aviso funciona com ou sem o nome */ }
     Toggle("Bluetooth conectado", s.bluetooth) { on ->
         save(s.copy(bluetooth = on))

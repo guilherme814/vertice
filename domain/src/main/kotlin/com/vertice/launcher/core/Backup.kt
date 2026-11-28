@@ -29,14 +29,14 @@ object BackupCodec {
     const val VERSION = 1
 
     sealed interface Result {
-        data class Ok(val prefs: Prefs, val ignoredLines: Int) : Result
+        data class Ok(val prefs: Prefs, val ignoredLines: Int, val island: com.vertice.launcher.core.island.IslandSnapshot? = null) : Result
         data class Fail(val reason: String) : Result
     }
 
     private fun enc(s: String) = URLEncoder.encode(s, "UTF-8")
     private fun dec(s: String) = URLDecoder.decode(s, "UTF-8")
 
-    fun encode(p: Prefs): String = buildString {
+    fun encode(p: Prefs, island: com.vertice.launcher.core.island.IslandSnapshot? = null): String = buildString {
         appendLine("$HEADER $VERSION")
         p.profile?.let { appendLine("profile=${it.name}") }
         appendLine("clockStyle=${p.clockStyle.name}")
@@ -75,6 +75,7 @@ object BackupCodec {
         appendLine("dockOpacity=${p.dockOpacity}")
         p.focusBlocked.toSortedSet().forEach { appendLine("focusBlocked=${enc(it)}") }
         p.folders.forEach { appendLine("folder=${FolderCodec.encode(it)}") }
+        island?.let { com.vertice.launcher.core.island.IslandBackup.encode(it).forEach(::appendLine) }
     }
 
     fun decode(text: String): Result {
@@ -91,11 +92,18 @@ object BackupCodec {
         val folders = ArrayList<Folder>()
         val blocked = LinkedHashSet<String>()
         var ignored = 0
+        val islandKv = LinkedHashMap<String, String>()
+        val islandApps = ArrayList<String>()
         for (line in lines.drop(1)) {
             val i = line.indexOf('=')
             if (i <= 0) { ignored++; continue }
             val key = line.substring(0, i)
             val value = line.substring(i + 1)
+            if (key.startsWith(com.vertice.launcher.core.island.IslandBackup.PREFIX)) {
+                val k = key.removePrefix(com.vertice.launcher.core.island.IslandBackup.PREFIX)
+                if (k == "app") islandApps += value else islandKv[k] = value
+                continue
+            }
             when (key) {
                 "profile" -> PerformanceProfile.fromName(value)?.let { prefs = prefs.copy(profile = it) } ?: ignored++
                 "clockStyle" -> prefs = prefs.copy(clockStyle = ClockStyle.fromName(value))
@@ -138,6 +146,7 @@ object BackupCodec {
                 else -> ignored++
             }
         }
-        return Result.Ok(prefs.copy(layout = layout, categoryOverrides = categories, hiddenApps = hidden, folders = folders, focusBlocked = blocked), ignored)
+        return Result.Ok(prefs.copy(layout = layout, categoryOverrides = categories, hiddenApps = hidden, folders = folders, focusBlocked = blocked), ignored,
+            if (islandKv.isEmpty() && islandApps.isEmpty()) null else com.vertice.launcher.core.island.IslandBackup.decode(islandKv, islandApps))
     }
 }

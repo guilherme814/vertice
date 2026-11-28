@@ -33,6 +33,7 @@ object IslandIcons {
             bmp.asImageBitmap().also { cache.put(pkg, it) }
         } catch (_: Throwable) {
             // App fora da visibilidade de pacotes (ou removido): cai no símbolo.
+            if (missing.size > 200) missing.clear()
             missing += pkg
             null
         }

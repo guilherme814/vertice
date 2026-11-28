@@ -67,7 +67,8 @@ class LauncherViewModel(
     private val launcher: AppLauncher,
     battery: BatteryStatus,
     override val icons: IconCache,
-    private val recommended: PerformanceProfile
+    private val recommended: PerformanceProfile,
+    private val island: com.vertice.launcher.core.island.IslandStore
 ) : ViewModel(), HomeActions {
 
     // Classificação automática só depende do app: calculada uma vez, não a cada edição de preferência.
@@ -331,12 +332,16 @@ class LauncherViewModel(
         viewModelScope.launch { prefs.setProfile(profile) }
     }
 
-    override suspend fun backupText(): String = BackupCodec.encode(prefs.current())
+    override suspend fun backupText(): String = BackupCodec.encode(
+        prefs.current(),
+        com.vertice.launcher.core.island.IslandSnapshot(island.settings.first(), island.apps.first().values.toList())
+    )
 
     override suspend fun restoreBackup(text: String): String = when (val r = BackupCodec.decode(text)) {
         is BackupCodec.Result.Fail -> { VLog.w("Backup", "Restauração recusada: ${r.reason}"); r.reason }
         is BackupCodec.Result.Ok -> {
             prefs.restore(r.prefs)
+            r.island?.let { island.replaceAll(it) }
             VLog.i("Backup", "Backup restaurado: ${r.prefs.layout.size} itens de layout, ${r.ignoredLines} linhas ignoradas")
             "Backup restaurado" + if (r.ignoredLines > 0) " (${r.ignoredLines} linhas ignoradas)" else ""
         }
@@ -362,7 +367,7 @@ class LauncherViewModel(
             initializer {
                 LauncherViewModel(
                     container.settings, container.catalog, container.launcher, container.battery,
-                    container.icons, container.recommendedProfile
+                    container.icons, container.recommendedProfile, container.islandStore
                 )
             }
         }

@@ -110,7 +110,7 @@ trocar depois sem migração. Tudo entra no backup (sem conteúdo de notificaç�
 | I1 Fundação | módulo `:feature-island` + regras no `checkArchitecture`; domínio completo (eventos, classificador, árbitro, config) com testes JVM; `IslandStore` + backup; manifest (listener + overlay); checklist de permissões; cápsula de teste ("Testar ilha") | **feita** |
 | I2 Interface HyperOS | cápsula compacta/expandida, transições leves, Gerenciador da Ilha, aba "Ilha" no QuickSheet, deslocamento/largura | **feita** |
 | I3 Integrações | música, notificações por app (WhatsApp, Instagram, Telegram), chamadas, timer, carregamento; Bluetooth opcional | **feita** |
-| I4 Estabilidade | `requestRebind`, recuperação após reinício, limites de memória/fila, diagnóstico da ilha em `DiagnosticsTab`, teste nos 3 aparelhos | — |
+| I4 Estabilidade | `requestRebind`, recuperação após reinício, limites de memória/fila, diagnóstico da ilha em `DiagnosticsTab`, teste nos 3 aparelhos | **feita** |
 
 Critérios de aceite comuns: testes JVM do domínio verdes; `checkArchitecture` verde; APK release dentro do limite de tamanho;
 ilha oculta = nenhuma janela de overlay no `dumpsys window`; log do A1 sem quadros novos acima de 100 ms causados pela ilha.

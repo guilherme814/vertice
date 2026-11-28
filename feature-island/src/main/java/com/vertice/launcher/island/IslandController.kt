@@ -53,6 +53,9 @@ class IslandController(private val context: Context, private val store: IslandSt
     private var wake: Job? = null
     private var started = false
 
+    /** O serviço de notificações está conectado e a ilha pronta? */
+    val isRunning: Boolean get() = started
+
     private fun now() = SystemClock.elapsedRealtime()
 
     /** Chamado quando o serviço conecta. Idempotente. */

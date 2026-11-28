@@ -27,6 +27,8 @@ data class IslandSettings(
     val charging: Boolean = true,
     /** Aviso de Bluetooth conectado (exige a permissão BLUETOOTH_CONNECT para mostrar o nome). */
     val bluetooth: Boolean = false,
+    /** Transição de tamanho da cápsula. Desligar poupa GPU em aparelho fraco. */
+    val animate: Boolean = true,
     /** Quanto tempo uma notificação temporária fica na tela. */
     val tempSeconds: Int = 5,
     /** Distância do topo da tela (dp). */

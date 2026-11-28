@@ -48,7 +48,7 @@ fun IslandHost(state: IslandState, settings: IslandSettings, cb: IslandCallbacks
     Column(
         Modifier
             .widthIn(min = 110.dp, max = settings.width.dp.dp)
-            .animateContentSize()
+            .then(if (settings.animate) Modifier.animateContentSize() else Modifier)
             .clip(shape)
             .background(Color.Black)
             .border(0.5.dp, Hairline, shape)
