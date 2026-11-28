@@ -98,6 +98,23 @@ fun IslandSettingsScreen(store: IslandStore) {
     CategoryChip("Testar ilha", false) { IslandRuntime.controller()?.apply { start(); test() } }
 
     Spacer(Modifier.height(14.dp))
+    Label("Mostrar na ilha")
+    Toggle("Música", s.media) { save(s.copy(media = it)) }
+    Toggle("Chamadas", s.calls) { save(s.copy(calls = it)) }
+    Toggle("Timer e cronômetro", s.timers) { save(s.copy(timers = it)) }
+    Toggle("Carregamento", s.charging) { save(s.copy(charging = it)) }
+    Text("Música e carregamento passam a funcionar nas próximas versões; chamadas e timers vêm das notificações.", color = Muted, fontSize = 11.sp)
+
+    Spacer(Modifier.height(14.dp))
+    Label("Apps")
+    var manager by remember { mutableStateOf(false) }
+    CategoryChip(if (manager) "Fechar Gerenciador da Ilha" else "Abrir Gerenciador da Ilha", manager) { manager = !manager }
+    if (manager) {
+        Spacer(Modifier.height(10.dp))
+        IslandAppManager(store)
+    }
+
+    Spacer(Modifier.height(14.dp))
     Label("Largura")
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         IslandWidth.entries.forEach { w -> CategoryChip(w.label, s.width == w) { save(s.copy(width = w)) } }
@@ -109,6 +126,20 @@ fun IslandSettingsScreen(store: IslandStore) {
 
 private fun open(context: Context, intent: Intent) {
     try { context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (_: Throwable) {}
+}
+
+@Composable
+private fun Toggle(title: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(title, color = Snow, fontSize = 14.sp)
+        Switch(
+            checked = checked, onCheckedChange = onChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Ink, checkedTrackColor = Mint,
+                uncheckedThumbColor = Muted, uncheckedTrackColor = PanelSoft
+            )
+        )
+    }
 }
 
 @Composable

@@ -108,7 +108,7 @@ trocar depois sem migração. Tudo entra no backup (sem conteúdo de notificaç�
 | Etapa | Entrega | Estado |
 |---|---|---|
 | I1 Fundação | módulo `:feature-island` + regras no `checkArchitecture`; domínio completo (eventos, classificador, árbitro, config) com testes JVM; `IslandStore` + backup; manifest (listener + overlay); checklist de permissões; cápsula de teste ("Testar ilha") | **feita** |
-| I2 Interface HyperOS | cápsula compacta/expandida, transições leves, Gerenciador da Ilha, aba "Ilha" no QuickSheet, deslocamento/largura | — |
+| I2 Interface HyperOS | cápsula compacta/expandida, transições leves, Gerenciador da Ilha, aba "Ilha" no QuickSheet, deslocamento/largura | **feita** |
 | I3 Integrações | música, notificações por app (WhatsApp, Instagram, Telegram), chamadas, timer, carregamento; Bluetooth opcional | — |
 | I4 Estabilidade | `requestRebind`, recuperação após reinício, limites de memória/fila, diagnóstico da ilha em `DiagnosticsTab`, teste nos 3 aparelhos | — |
 
