@@ -54,6 +54,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -76,7 +77,10 @@ class LauncherViewModel(
 
     override val batteryPercent = battery.percent
 
-    override val ui: StateFlow<HomeUi> = combine(catalog.apps, prefs.prefs) { apps, p ->
+    override val ui: StateFlow<HomeUi> = combine(
+        catalog.apps, prefs.prefs,
+        island.settings.map { if (it.enabled) it.offsetDp + 20 else 0 }.distinctUntilChanged()
+    ) { apps, p, islandInset ->
         val byKey = apps.associateBy { it.key }
         // Toda a regra (layout, dock, páginas, categorias) vive no domínio; aqui só trocamos chaves por apps.
         val state = HomeState.from(apps.map { it.model }, p) { m ->
@@ -121,6 +125,7 @@ class LauncherViewModel(
             indicator = p.indicator,
             drawerLayout = p.drawerLayout,
             gridFine = p.gridFine,
+            islandInsetDp = islandInset,
             clockColor = p.clockColor,
             clockScale = p.clockScale,
             clockAlign = p.clockAlign,

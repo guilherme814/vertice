@@ -15,13 +15,60 @@ class IslandArbiterTest {
         assertEquals(IslandState.Hidden, IslandArbiter().tick(0))
     }
 
-    @Test fun `temporaria aparece e expira`() {
+    @Test fun `mensagem abre sozinha, recolhe e depois expira`() {
         val a = IslandArbiter()
-        assertTrue(a.onEvent(note("n"), 0, temp) is IslandState.Compact)
-        assertEquals(temp, a.nextWakeAt())
-        assertTrue(a.tick(temp - 1) is IslandState.Compact)
+        assertTrue(a.onEvent(note("n"), 0, temp) is IslandState.Expanded)
+        assertEquals(IslandArbiter.AUTO_EXPAND_MS, a.nextWakeAt())
+        assertTrue(a.tick(IslandArbiter.AUTO_EXPAND_MS - 1) is IslandState.Expanded)
+        assertTrue(a.tick(IslandArbiter.AUTO_EXPAND_MS) is IslandState.Compact)
         assertEquals(IslandState.Hidden, a.tick(temp))
         assertNull(a.nextWakeAt())
+    }
+
+    @Test fun `nao notificacao nao abre sozinha`() {
+        val a = IslandArbiter()
+        assertTrue(a.onEvent(IslandEvent.Charging(percent = 40), 0, temp) is IslandState.Compact)
+    }
+
+    @Test fun `mensagem nova na mesma conversa atualiza no lugar e renova o tempo`() {
+        val a = IslandArbiter()
+        a.onEvent(note("n", "um"), 0, temp)
+        val s = a.onEvent(note("n", "dois"), 3000, temp)
+        assertTrue(s is IslandState.Expanded)
+        assertEquals("dois", (s.currentEvent as IslandEvent.Notification).text)
+        assertEquals(1, a.size())
+        assertEquals(3000 + IslandArbiter.AUTO_EXPAND_MS, a.nextWakeAt())
+        assertTrue(a.tick(3000 + IslandArbiter.AUTO_EXPAND_MS - 1) is IslandState.Expanded)
+    }
+
+    @Test fun `depois de recolher, mensagem nova reabre`() {
+        val a = IslandArbiter()
+        a.onEvent(note("n", "um"), 0, temp)
+        assertTrue(a.tick(IslandArbiter.AUTO_EXPAND_MS) is IslandState.Compact)
+        assertTrue(a.onEvent(note("n", "dois"), IslandArbiter.AUTO_EXPAND_MS + 10, temp) is IslandState.Expanded)
+    }
+
+    @Test fun `conversa recem aberta nao e interrompida por outra`() {
+        val a = IslandArbiter()
+        a.onEvent(note("A"), 0, temp)
+        assertEquals("A", a.onEvent(note("B"), 500, temp).currentEvent!!.key)
+        assertEquals("A", a.tick(1799).currentEvent!!.key)
+        val s = a.tick(IslandArbiter.HOLD_MS)
+        assertEquals("B", s.currentEvent!!.key)
+        assertTrue(s is IslandState.Expanded)   // a conversa que esperou abre quando chega a vez
+    }
+
+    @Test fun `chamada fura a trava`() {
+        val a = IslandArbiter()
+        a.onEvent(note("A"), 0, temp)
+        a.onEvent(note("B"), 100, temp)
+        assertEquals("call", a.onEvent(call(), 200, temp).currentEvent!!.key)
+    }
+
+    @Test fun `depois da trava a conversa nova vence normalmente`() {
+        val a = IslandArbiter()
+        a.onEvent(note("A"), 0, temp)
+        assertEquals("B", a.onEvent(note("B"), IslandArbiter.HOLD_MS + 1, temp).currentEvent!!.key)
     }
 
     @Test fun `persistente fica ate ser removida`() {
@@ -46,8 +93,8 @@ class IslandArbiterTest {
         a.onEvent(note("n", "dois"), 100, temp)
         assertEquals(1, a.size())
         assertEquals("dois", (a.tick(101).currentEvent as IslandEvent.Notification).text)
-        // Repostar renova o prazo.
-        assertEquals(100 + temp, a.nextWakeAt())
+        // Repostar renova a abertura automática.
+        assertEquals(100 + IslandArbiter.AUTO_EXPAND_MS, a.nextWakeAt())
     }
 
     @Test fun `fila e limitada e cai o de menor prioridade`() {

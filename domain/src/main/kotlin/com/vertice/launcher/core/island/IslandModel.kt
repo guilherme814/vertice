@@ -18,7 +18,11 @@ data class RawNotification(
     /** Rótulos das ações (ex.: "Recusar", "Atender"). Só os nomes: a ação em si fica no Android. */
     val actions: List<String> = emptyList(),
     val title: String? = null,
-    val text: String? = null
+    val text: String? = null,
+    /** Últimas mensagens da conversa (no máximo 2, da mais antiga para a mais nova), se a notificação for de mensagens. */
+    val messages: List<String> = emptyList(),
+    /** Quantas mensagens a conversa tem na notificação (para o selo "• 4 msgs"). */
+    val unreadCount: Int = 1
 ) {
     override fun toString() = "RawNotification(pacote=$packageName, categoria=$category)"
 
@@ -45,7 +49,10 @@ sealed interface IslandEvent {
         val title: String?,
         val text: String?,
         val contentHidden: Boolean,
-        override val persistent: Boolean
+        override val persistent: Boolean,
+        /** Penúltima mensagem da conversa, mostrada esmaecida. */
+        val previous: String? = null,
+        val unread: Int = 1
     ) : IslandEvent {
         override val priority get() = IslandPriority.Notification
         override fun toString() = "Notification(pacote=$packageName, oculto=$contentHidden)"

@@ -51,6 +51,7 @@ class IslandController(private val context: Context, private val store: IslandSt
     val settings: StateFlow<IslandSettings> = _settings
     private var apps: Map<String, IslandAppConfig> = emptyMap()
     private var wake: Job? = null
+    private val pending = HashMap<String, Job>()
     private var started = false
 
     /** O serviço de notificações está conectado e a ilha pronta? */
@@ -80,10 +81,19 @@ class IslandController(private val context: Context, private val store: IslandSt
         val s = _settings.value
         val event = IslandClassifier.classify(raw, s, apps) ?: return
         handles[raw.key] = Handles(content, actions)
-        push(event)
+        if (event is IslandEvent.Notification) {
+            // Rajada de mensagens da mesma conversa: espera um pouco e mostra só a última, numa animação só.
+            pending.remove(event.key)?.cancel()
+            pending[event.key] = scope.launch {
+                delay(DEBOUNCE_MS)
+                pending.remove(event.key)
+                push(event)
+            }
+        } else push(event)
     }
 
     fun onNotificationRemoved(key: String) {
+        pending.remove(key)?.cancel()
         handles.remove(key)
         apply(arbiter.onRemoved(key, now()))
     }
@@ -125,6 +135,8 @@ class IslandController(private val context: Context, private val store: IslandSt
     private fun dismiss() = apply(arbiter.dismiss(now()))
 
     private fun clear() {
+        pending.values.forEach { it.cancel() }
+        pending.clear()
         arbiter.clear()
         apply(IslandState.Hidden)
     }
@@ -146,9 +158,13 @@ class IslandController(private val context: Context, private val store: IslandSt
     fun stop() {
         started = false
         media.stop(); system.stop()
+        pending.values.forEach { it.cancel() }
+        pending.clear()
         handles.clear()
         wake?.cancel()
         arbiter.clear()
         overlay.hide()
     }
+
+    private companion object { const val DEBOUNCE_MS = 300L }
 }

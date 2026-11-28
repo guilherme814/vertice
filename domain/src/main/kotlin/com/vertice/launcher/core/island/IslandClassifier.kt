@@ -35,9 +35,11 @@ object IslandClassifier {
         return IslandEvent.Notification(
             key = n.key, packageName = n.packageName,
             title = if (hide) null else n.title,
-            text = if (hide) null else n.text,
+            text = if (hide) null else (n.messages.lastOrNull() ?: n.text),
             contentHidden = hide,
-            persistent = cfg.mode == IslandMode.Persistent
+            persistent = cfg.mode == IslandMode.Persistent,
+            previous = if (hide) null else n.messages.dropLast(1).lastOrNull(),
+            unread = n.unreadCount.coerceAtLeast(1)
         )
     }
 }

@@ -184,6 +184,7 @@ fun HomeScreen(
     ) {
         Column(
             Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()
+                .padding(top = ui.islandInsetDp.dp)
                 .padding(horizontal = 24.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {

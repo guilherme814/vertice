@@ -87,7 +87,9 @@ data class HomeUi(
     val clockColor: ClockColor = ClockColor.White,
     val clockScale: ClockScale = ClockScale.Medium,
     val clockAlign: ClockAlign = ClockAlign.Start,
-    val gridFine: GridFine = GridFine()
+    val gridFine: GridFine = GridFine(),
+    /** Espaço extra no topo da Home para a Vértice Island não cobrir os botões (0 = ilha desligada). */
+    val islandInsetDp: Int = 0
 ) {
     /** Escala final dos ícones (nível × ajuste fino); use esta em vez de iconSize.scale. */
     val iconScale: Float get() = gridFine.iconScale(iconSize)

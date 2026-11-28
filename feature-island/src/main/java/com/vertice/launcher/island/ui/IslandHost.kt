@@ -1,6 +1,12 @@
 package com.vertice.launcher.island.ui
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,6 +16,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -59,14 +68,18 @@ fun IslandHost(state: IslandState, settings: IslandSettings, cb: IslandCallbacks
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             EventIcon(event, if (expanded) 36.dp else 24.dp)
             Column(Modifier.weight(1f, fill = false)) {
-                Text(
-                    headline(event), color = Color.White, fontSize = if (expanded) 15.sp else 13.sp,
-                    fontWeight = if (expanded) FontWeight.SemiBold else FontWeight.Normal,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis
-                )
-                if (expanded) {
-                    val d = detail(event)
-                    if (d.isNotEmpty()) Text(d, color = Soft, fontSize = 12.sp, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                if (expanded && event is IslandEvent.Notification && !event.contentHidden) {
+                    ExpandedMessageContent(event, settings.animate)
+                } else {
+                    Text(
+                        headline(event), color = Color.White, fontSize = if (expanded) 15.sp else 13.sp,
+                        fontWeight = if (expanded) FontWeight.SemiBold else FontWeight.Normal,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis
+                    )
+                    if (expanded) {
+                        val d = detail(event)
+                        if (d.isNotEmpty()) Text(d, color = Soft, fontSize = 12.sp, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                    }
                 }
             }
             if (!expanded) Box(Modifier.size(6.dp).clip(CircleShape).background(accent(event)))
@@ -115,7 +128,9 @@ private fun glyph(e: IslandEvent) = when (e) {
 
 private fun headline(e: IslandEvent): String = when (e) {
     is IslandEvent.Media -> e.title ?: "Tocando"
-    is IslandEvent.Notification -> if (e.contentHidden) "Nova notificação" else (e.title ?: "Notificação")
+    is IslandEvent.Notification ->
+        if (e.contentHidden) "Nova notificação"
+        else (e.title ?: "Notificação") + if (e.unread > 1) " • ${e.unread}" else ""
     is IslandEvent.Call -> e.caller ?: if (e.inProgress) "Em chamada" else "Chamada"
     is IslandEvent.Timer -> e.label ?: "Cronômetro"
     is IslandEvent.Charging -> "Carregando ${e.percent}%"
@@ -160,4 +175,43 @@ private fun Pill(text: String, onClick: () -> Unit) {
         modifier = Modifier.clip(CircleShape).background(Color(0xFF2A2D33)).clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 7.dp)
     )
+}
+
+/**
+ * Mensagem organizada: remetente em destaque + selo "• N msgs", penúltima esmaecida, última em até 2 linhas.
+ * Mensagem nova na mesma conversa desliza para dentro do painel já aberto (sem fechar e abrir de novo).
+ */
+@Composable
+private fun ExpandedMessageContent(e: IslandEvent.Notification, animate: Boolean) {
+    Column(Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(
+                e.title ?: "Mensagem", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false)
+            )
+            if (e.unread > 1) {
+                Text("• ${e.unread} msgs", color = Color(0xFFA3E635), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+        val body: @Composable (Pair<String?, String?>) -> Unit = { (prev, last) ->
+            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                if (prev != null) {
+                    Text(prev, color = Color.White.copy(alpha = 0.58f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                Text(
+                    last.orEmpty(), color = Color.White.copy(alpha = 0.95f), fontSize = 13.sp,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+        val content = e.previous to e.text
+        if (animate) {
+            AnimatedContent(
+                targetState = content,
+                transitionSpec = { (fadeIn(tween(180)) + slideInVertically { it / 3 }).togetherWith(fadeOut(tween(120))) },
+                label = "island_msg"
+            ) { body(it) }
+        } else body(content)
+    }
 }

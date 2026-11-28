@@ -38,6 +38,11 @@ class IslandNotificationListener : NotificationListenerService() {
             val r = Ranking()
             currentRanking.getRanking(sbn.key, r) && r.importance < android.app.NotificationManager.IMPORTANCE_DEFAULT
         } catch (_: Throwable) { false }
+        // Estilo de mensagens (WhatsApp, Telegram...): só as 2 últimas viram texto; o resto vira o contador.
+        val parsed = try {
+            extras?.getParcelableArray(Notification.EXTRA_MESSAGES)
+                ?.let { Notification.MessagingStyle.Message.getMessagesFromBundleArray(it) }
+        } catch (_: Throwable) { null }
         return RawNotification(
             key = sbn.key,
             packageName = sbn.packageName,
@@ -50,7 +55,9 @@ class IslandNotificationListener : NotificationListenerService() {
             hasCallActions = n.category == Notification.CATEGORY_CALL && (n.actions?.isNotEmpty() == true),
             actions = n.actions?.map { it.title?.toString().orEmpty().take(24) }.orEmpty(),
             title = extras?.getCharSequence(Notification.EXTRA_TITLE)?.toString()?.take(120),
-            text = extras?.getCharSequence(Notification.EXTRA_TEXT)?.toString()?.take(200)
+            text = extras?.getCharSequence(Notification.EXTRA_TEXT)?.toString()?.take(200),
+            messages = parsed.orEmpty().takeLast(2).mapNotNull { it.text?.toString()?.take(160) },
+            unreadCount = parsed?.size ?: 1
         )
     }
 }
